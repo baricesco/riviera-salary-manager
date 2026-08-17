@@ -54,6 +54,27 @@
   .cs-item .cs-value { font-size: 20px; font-weight: bold; }
   .cs-item.highlight { background: #c0392b; }
 
+  .month-strip { display: flex; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; }
+  .month-tile {
+    border: 2px solid #ddd; border-radius: 10px; padding: 9px 14px; min-width: 150px;
+    background: #fff; cursor: pointer; user-select: none; transition: border-color .12s, background .12s;
+  }
+  .month-tile:hover { border-color: #999; }
+  .month-tile .mt-label { font-size: 13px; font-weight: bold; }
+  .month-tile .mt-sub { font-size: 11px; color: #777; text-transform: uppercase; letter-spacing: .03em; margin-top: 3px; }
+  .month-tile .mt-amount { font-size: 15px; font-weight: bold; margin-top: 2px; }
+  .month-tile.active { border-color: #000; background: #000; color: #fff; }
+  .month-tile.active .mt-sub { color: rgba(255,255,255,.65); }
+  .month-tile.add {
+    border-style: dashed; display: flex; align-items: center; justify-content: center;
+    min-width: 150px; font-weight: bold; color: #333;
+  }
+  .month-tile.add:hover { border-color: #000; color: #000; }
+  .mt-amount.neg { color: #c0392b; }
+  .mt-amount.pos { color: #1e7d3a; }
+  .month-tile.active .mt-amount.neg,
+  .month-tile.active .mt-amount.pos { color: #fff; }
+
   .toolbar { margin: 12px 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .toolbar label { margin: 0; }
   #statusMsg { font-size: 13px; color: #666; margin-left: auto; white-space: nowrap; }
@@ -173,10 +194,9 @@
   </div>
 </div>
 
+<div class="month-strip" id="monthStrip"></div>
+
 <div class="toolbar">
-  <label for="monthSelect" style="text-transform:none; font-weight:bold;">Month:</label>
-  <select id="monthSelect" onchange="switchMonth(this.value)" style="width:auto;"></select>
-  <button type="button" onclick="newMonth()">+ New Month</button>
   <button type="button" class="primary" onclick="openAddEmployeeModal()">+ Add Employee</button>
   <button type="button" onclick="window.print()">Print</button>
   <div class="rd-switch" id="viewSwitch">
@@ -317,17 +337,6 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="newMonthModal">
-  <div class="modal-box">
-    <p>Select the month to open:</p>
-    <input type="month" id="newMonthInput">
-    <div class="modal-actions">
-      <button type="button" onclick="newMonthCancel()">Cancel</button>
-      <button type="button" onclick="newMonthConfirm()">Create</button>
-    </div>
-  </div>
-</div>
-
 <div class="modal-overlay" id="addEmployeeModal">
   <div class="modal-box">
     <p>Add a new employee to <b id="addEmpMonthLabel"></b>:</p>
@@ -440,6 +449,8 @@ function infoModalOk() {
 // ---------------------------------------------------------------------
 let currentMonth = null;
 let viewMode = 'cards';
+let monthsCache = [];
+let monthTotals = {};
 
 function formatMonthLabel(month) {
   const [year, m] = month.split('-');
@@ -523,7 +534,12 @@ async function recalcForward(employeeId, fromMonth) {
 }
 
 async function fetchMonthCombined(month) {
-  const rows = await sbGet(`${SM_URL}?select=*,employee:riviera_employees(id,name,role,date_left,deleted)&month=eq.${month}&deleted=eq.false&order=created_at.asc`);
+  // Drive the list off the *active* employee set, so a removed person can
+  // never reappear via a leftover salary_months row.
+  const active = await fetchActiveEmployees();
+  if (!active.length) return [];
+  const activeIds = new Set(active.map(e => e.id));
+  const rows = await sbGet(`${SM_URL}?select=*,employee:riviera_employees(id,name,role,date_left,deleted)&employee_id=in.(${active.map(e => e.id).join(',')})&month=eq.${month}&deleted=eq.false&order=created_at.asc`);
   const ids = rows.map(r => r.id);
   let paidMap = {};
   if (ids.length) {
@@ -533,7 +549,7 @@ async function fetchMonthCombined(month) {
   // Soft-deleting an employee only marks riviera_employees.deleted — their
   // salary_months row for this month still exists, so it must be filtered
   // out here too or the removed person keeps showing up on the list.
-  return rows.filter(r => r.employee && !r.employee.deleted).map(r => {
+  return rows.filter(r => r.employee && !r.employee.deleted && activeIds.has(r.employee_id)).map(r => {
     const paid = paidMap[r.id] || 0;
     const prorated = proratedSalary(r.base_salary, r.days_worked);
     const prevPending = parseFloat(r.prev_pending) || 0;
@@ -551,7 +567,8 @@ async function fetchMonthCombined(month) {
 // ---------------------------------------------------------------------
 async function loadMonth(month) {
   currentMonth = month;
-  document.getElementById('monthSelect').value = month;
+  if (!monthsCache.includes(month)) { monthsCache.push(month); monthsCache.sort(); }
+  renderMonthStrip();
   document.getElementById('monthTitle').textContent = formatMonthLabel(month);
   document.getElementById('peopleContainer').innerHTML = '<div class="empty-note">Loading...</div>';
   try {
@@ -560,6 +577,7 @@ async function loadMonth(month) {
     peopleCache = combined;
     renderPeople();
     refreshCompanySnapshot();
+    refreshMonthTotals();
   } catch (e) {
     console.error('Load failed', e);
     document.getElementById('peopleContainer').innerHTML =
@@ -684,15 +702,17 @@ function escapeHtml(s) {
 
 async function switchMonth(month) {
   currentMonth = month;
+  if (!monthsCache.includes(month)) { monthsCache.push(month); monthsCache.sort(); }
   if (detailEmployeeId) {
     // Stay on the same person's page — just move them to the new month.
-    document.getElementById('monthSelect').value = month;
+    renderMonthStrip();
     document.getElementById('monthTitle').textContent = formatMonthLabel(month);
     document.getElementById('dMonthLabel').textContent = formatMonthLabel(month);
     setStatus('Loading...');
     try {
       await ensureMonthEntries(month);
       await loadDetail();
+      refreshMonthTotals();
       setStatus('');
     } catch (e) {
       console.error(e);
@@ -714,30 +734,81 @@ async function loadMonthList() {
     return [];
   }
 }
-function populateMonthSelect(months) {
-  const select = document.getElementById('monthSelect');
-  select.innerHTML = '';
-  months.forEach(m => {
-    const opt = document.createElement('option');
-    opt.value = m;
-    opt.textContent = formatMonthLabel(m);
-    select.appendChild(opt);
+// Months are plain clickable divs — no dropdown. Each tile carries that
+// month's own totals so you can see the whole timeline at a glance.
+function renderMonthStrip() {
+  const strip = document.getElementById('monthStrip');
+  const tiles = monthsCache.map(m => {
+    const t = monthTotals[m];
+    const active = m === currentMonth ? ' active' : '';
+    let body;
+    if (!t) {
+      body = `<div class="mt-sub">Tap to open</div>`;
+    } else {
+      body = `
+        <div class="mt-sub">Pending</div>
+        <div class="mt-amount ${t.remaining > 0 ? 'neg' : 'pos'}">Rs. ${money(t.remaining)}</div>
+        <div class="mt-sub">${money(t.paid)} paid of ${money(t.salary)}</div>`;
+    }
+    return `<div class="month-tile${active}" onclick="switchMonth('${m}')">
+      <div class="mt-label">${formatMonthLabel(m)}</div>
+      ${body}
+    </div>`;
   });
+  const next = monthsCache.length ? ymAdd(monthsCache[monthsCache.length - 1], 1) : currentMonth;
+  tiles.push(`<div class="month-tile add" onclick="addNextMonth()">+ ${formatMonthLabel(next)}</div>`);
+  strip.innerHTML = tiles.join('');
 }
 
-function newMonth() {
-  document.getElementById('newMonthInput').value = currentMonth || '';
-  document.getElementById('newMonthModal').classList.add('active');
+// Creates the month right after the last one on record and rolls every
+// active employee's salary + pending balance into it. No month picker.
+async function addNextMonth() {
+  const base = monthsCache.length ? monthsCache[monthsCache.length - 1] : currentMonth;
+  const next = ymAdd(base, 1);
+  setStatus('Adding ' + formatMonthLabel(next) + '...');
+  try {
+    await ensureMonthEntries(next);
+    if (!monthsCache.includes(next)) { monthsCache.push(next); monthsCache.sort(); }
+    setStatus('');
+    await switchMonth(next);
+  } catch (e) {
+    console.error(e);
+    setStatus('Could not add month', true);
+  }
 }
-function newMonthCancel() { document.getElementById('newMonthModal').classList.remove('active'); }
-async function newMonthConfirm() {
-  const input = document.getElementById('newMonthInput').value;
-  if (!input || !/^\d{4}-\d{2}$/.test(input)) { showInfo('Please select a valid month.'); return; }
-  document.getElementById('newMonthModal').classList.remove('active');
-  let months = await loadMonthList();
-  if (!months.includes(input)) { months.push(input); months.sort(); }
-  populateMonthSelect(months);
-  await switchMonth(input);
+
+// Per-month totals for the strip tiles: one pass over every non-deleted
+// month row belonging to a still-active employee.
+async function refreshMonthTotals() {
+  try {
+    const employees = await fetchActiveEmployees();
+    monthTotals = {};
+    if (!employees.length) { renderMonthStrip(); return; }
+    const ids = employees.map(e => e.id);
+    const rows = await sbGet(`${SM_URL}?select=*&employee_id=in.(${ids.join(',')})&deleted=eq.false&order=month.asc`);
+    const smIds = rows.map(r => r.id);
+    const paidMap = {};
+    if (smIds.length) {
+      const pays = await sbGet(`${PAY_URL}?select=salary_month_id,amount&salary_month_id=in.(${smIds.join(',')})&deleted=eq.false`);
+      pays.forEach(p => { paidMap[p.salary_month_id] = (paidMap[p.salary_month_id] || 0) + (parseFloat(p.amount) || 0); });
+    }
+    rows.forEach(r => {
+      const t = monthTotals[r.month] || (monthTotals[r.month] = { salary: 0, paid: 0, prevPending: 0, remaining: 0, people: 0 });
+      const paid = paidMap[r.id] || 0;
+      const prorated = proratedSalary(r.base_salary, r.days_worked);
+      const prevPending = parseFloat(r.prev_pending) || 0;
+      t.salary += prorated;
+      t.paid += paid;
+      t.prevPending += prevPending;
+      t.remaining += prorated - paid + prevPending;
+      t.people += 1;
+    });
+    monthsCache = [...new Set(Object.keys(monthTotals).concat(currentMonth ? [currentMonth] : []))].sort();
+    renderMonthStrip();
+  } catch (e) {
+    console.error('Month totals failed', e);
+    renderMonthStrip();
+  }
 }
 
 // ---------------------------------------------------------------------
@@ -936,7 +1007,10 @@ async function deleteEmployee() {
   if (!confirmed) return;
   setStatus('Removing...');
   try {
-    await sbPatch(`${EMP_URL}?id=eq.${detailEmployeeId}`, { deleted: true, deleted_at: new Date().toISOString() });
+    const now = new Date().toISOString();
+    await sbPatch(`${EMP_URL}?id=eq.${detailEmployeeId}`, { deleted: true, deleted_at: now });
+    // Also retire their month rows so no stale totals survive anywhere.
+    await sbPatch(`${SM_URL}?employee_id=eq.${detailEmployeeId}`, { deleted: true, deleted_at: now });
     setStatus('Removed');
     showListView();
     await loadMonth(currentMonth);
@@ -1003,7 +1077,7 @@ async function init() {
     const now = new Date();
     months = [`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`];
   }
-  populateMonthSelect(months);
+  monthsCache = months;
   await switchMonth(months[months.length - 1]);
 }
 
