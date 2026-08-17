@@ -592,8 +592,24 @@ function escapeHtml(s) {
 }
 
 async function switchMonth(month) {
-  showListView();
-  await loadMonth(month);
+  currentMonth = month;
+  if (detailEmployeeId) {
+    // Stay on the same person's page — just move them to the new month.
+    document.getElementById('monthSelect').value = month;
+    document.getElementById('monthTitle').textContent = formatMonthLabel(month);
+    document.getElementById('dMonthLabel').textContent = formatMonthLabel(month);
+    setStatus('Loading...');
+    try {
+      await ensureMonthEntries(month);
+      await loadDetail();
+      setStatus('');
+    } catch (e) {
+      console.error(e);
+      setStatus('Failed to load', true);
+    }
+  } else {
+    await loadMonth(month);
+  }
 }
 
 async function loadMonthList() {
