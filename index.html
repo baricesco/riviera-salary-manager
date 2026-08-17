@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Riviera Salary Manager</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background: #f4f6f8;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 24px;
+    border-radius: 12px;
+    border: 2px solid #000;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  h1 {
+    margin-bottom: 10px;
+  }
+  table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    border: 1px solid #999;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  th, td {
+    border: 1px solid #999;
+    padding: 6px;
+    text-align: left;
+  }
+  th {
+    background: #000;
+    color: #fff;
+  }
+  tfoot td {
+    background: #f0f0f0;
+    border-top: 2px solid #000;
+  }
+  input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 4px;
+    font-size: 14px;
+  }
+  input[readonly] {
+    background: #f7f7f7;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .toolbar {
+    margin: 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .toolbar label {
+    font-weight: bold;
+  }
+  select {
+    padding: 6px;
+    font-size: 14px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+  }
+  button {
+    padding: 6px 14px;
+    cursor: pointer;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+  }
+  #monthTitle {
+    margin-top: 20px;
+    padding: 4px 0;
+  }
+  #statusMsg {
+    font-size: 13px;
+    color: #666;
+    margin-left: auto;
+  }
+  #pendingBadge {
+    display: none;
+    font-size: 12px;
+    font-weight: bold;
+    color: #fff;
+    background: #c0392b;
+    padding: 3px 10px;
+    border-radius: 8px;
+  }
+  tr.pending-sync td {
+    background: #fff8e1;
+  }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  .modal-overlay.active {
+    display: flex;
+  }
+  .modal-box {
+    background: #fff;
+    border: 2px solid #000;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 340px;
+    width: 90%;
+  }
+  .modal-box p {
+    margin-top: 0;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    justify-content: flex-end;
+  }
+  .modal-actions button.confirm-danger {
+    background: #c0392b;
+    color: #fff;
+    border-color: #c0392b;
+  }
+
+  @media print {
+    .container {
+      max-width: 100%;
+      box-shadow: none;
+      border: none;
+      padding: 0;
+    }
+    .toolbar, .remove-col {
+      display: none !important;
+    }
+    input {
+      border: none;
+      background: transparent;
+      padding: 2px;
+    }
+    button {
+      display: none;
+    }
+    table {
+      width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<h1>Riviera Salary Manager</h1>
+
+<div class="toolbar">
+  <label for="monthSelect">Month:</label>
+  <select id="monthSelect" onchange="switchMonth(this.value)"></select>
+  <button type="button" onclick="newMonth()">+ New Month</button>
+  <button type="button" onclick="window.print()">Print</button>
+  <span id="pendingBadge"></span>
+  <span id="statusMsg"></span>
+</div>
+
+<h2 id="monthTitle"></h2>
+
+<table border="1" cellpadding="5" cellspacing="0">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Role</th>
+      <th>Advance (Given)</th>
+      <th>Total Salary</th>
+      <th>Prev Month Pending</th>
+      <th>Remaining to Give</th>
+      <th>Notes</th>
+      <th>Date Left</th>
+      <th class="remove-col">🗑️</th>
+    </tr>
+  </thead>
+  <tbody id="tableBody">
+    <tr><td colspan="9">Loading...</td></tr>
+  </tbody>
+  <tfoot>
+    <tr id="totalsRow">
+      <td colspan="2" style="text-align:right; font-weight:bold;">TOTAL</td>
+      <td id="totalAdvance" style="font-weight:bold;">0</td>
+      <td id="totalTotal" style="font-weight:bold;">0</td>
+      <td id="totalPrevPending" style="font-weight:bold;">0</td>
+      <td id="totalRemaining" style="font-weight:bold;">0</td>
+      <td></td>
+      <td></td>
+      <td class="remove-col"></td>
+    </tr>
+  </tfoot>
+</table>
+
+<br>
+<button type="button" onclick="addRow()">Add Employee</button>
+
+</div>
+
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box">
+    <p id="confirmMessage">Are you sure?</p>
+    <input type="text" id="confirmInput" placeholder='Type DELETE to confirm'>
+    <div class="modal-actions">
+      <button type="button" onclick="confirmModalCancel()">Cancel</button>
+      <button type="button" class="confirm-danger" onclick="confirmModalOk()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="infoModal">
+  <div class="modal-box">
+    <p id="infoMessage"></p>
+    <div class="modal-actions">
+      <button type="button" onclick="infoModalOk()">OK</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="newMonthModal">
+  <div class="modal-box">
+    <p>Select the month to open:</p>
+    <input type="month" id="newMonthInput">
+    <div class="modal-actions">
+      <button type="button" onclick="newMonthCancel()">Cancel</button>
+      <button type="button" onclick="newMonthConfirm()">Create</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://hlucnaqttbweikceutlt.supabase.co";
+const SUPABASE_KEY = "sb_publishable_fenOA9Bs7g1T6ADn_FujMw_rZESIU_6";
+const REST_URL = `${SUPABASE_URL}/rest/v1/riviera_salary_employees`;
+
+function sbHeaders(extra) {
+  return Object.assign({
+    'apikey': SUPABASE_KEY,
+    'Authorization': `Bearer ${SUPABASE_KEY}`,
+    'Content-Type': 'application/json'
+  }, extra || {});
+}
+
+function setStatus(msg, isError) {
+  const el = document.getElementById('statusMsg');
+  el.textContent = msg;
+  el.style.color = isError ? '#c0392b' : '#666';
+  if (msg) setTimeout(() => { if (el.textContent === msg) el.textContent = ''; }, 2500);
+}
+
+// ---- Offline-resilient sync queue ----
+// Every unsaved change (edit or delete) sits in pendingTasks until it's
+// confirmed synced to Supabase. If the request fails (offline, dropped
+// connection, etc.) it stays queued and is retried automatically — on a
+// timer and immediately when the browser regains connectivity.
+const pendingTasks = new Map(); // uid -> { type: 'save', row } | { type: 'delete', id }
+
+function updatePendingUI() {
+  const badge = document.getElementById('pendingBadge');
+  const count = pendingTasks.size;
+  if (count > 0) {
+    badge.textContent = `⏳ ${count} unsynced change${count > 1 ? 's' : ''}`;
+    badge.style.display = 'inline-block';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+async function attemptSaveRow(row) {
+  const id = row.dataset.id;
+  const payload = rowToPayload(row);
+  try {
+    if (id) {
+      const res = await fetch(`${REST_URL}?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: sbHeaders(),
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(await res.text());
+    } else {
+      const res = await fetch(REST_URL, {
+        method: 'POST',
+        headers: sbHeaders({ 'Prefer': 'return=representation' }),
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const created = await res.json();
+      if (created && created[0]) row.dataset.id = created[0].id;
+    }
+    return true;
+  } catch (e) {
+    console.error('Sync (save) failed, will retry', e);
+    return false;
+  }
+}
+
+async function attemptDeleteRow(id) {
+  try {
+    const res = await fetch(`${REST_URL}?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: sbHeaders(),
+      body: JSON.stringify({ deleted: true, deleted_at: new Date().toISOString() })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return true;
+  } catch (e) {
+    console.error('Sync (delete) failed, will retry', e);
+    return false;
+  }
+}
+
+async function trySync(uid) {
+  const task = pendingTasks.get(uid);
+  if (!task) return;
+
+  let success = false;
+  if (task.type === 'save') {
+    if (!document.body.contains(task.row)) {
+      // Row was removed from the page before it ever synced — drop the task.
+      pendingTasks.delete(uid);
+      updatePendingUI();
+      return;
+    }
+    success = await attemptSaveRow(task.row);
+    if (success) task.row.classList.remove('pending-sync');
+    else task.row.classList.add('pending-sync');
+  } else if (task.type === 'delete') {
+    success = await attemptDeleteRow(task.id);
+  }
+
+  if (success) {
+    pendingTasks.delete(uid);
+    setStatus(task.type === 'delete' ? 'Removed' : 'Saved');
+  } else {
+    setStatus(navigator.onLine ? 'Sync failed — retrying...' : 'Offline — will retry', true);
+  }
+  updatePendingUI();
+}
+
+function retryAllPending() {
+  pendingTasks.forEach((_, uid) => trySync(uid));
+}
+
+setInterval(() => {
+  if (pendingTasks.size > 0 && navigator.onLine) retryAllPending();
+}, 4000);
+
+window.addEventListener('online', () => {
+  setStatus('Back online — syncing...');
+  retryAllPending();
+});
+window.addEventListener('offline', () => {
+  setStatus('You are offline', true);
+});
+
+// Block the tab from closing while anything is still unsynced.
+window.addEventListener('beforeunload', (e) => {
+  if (pendingTasks.size > 0) {
+    e.preventDefault();
+    e.returnValue = 'You have unsynced changes. Leave anyway?';
+    return e.returnValue;
+  }
+});
+
+let confirmResolve = null;
+
+function askDeleteConfirmation(message) {
+  return new Promise((resolve) => {
+    confirmResolve = resolve;
+    document.getElementById('confirmMessage').textContent = message;
+    const inputEl = document.getElementById('confirmInput');
+    inputEl.value = '';
+    document.getElementById('confirmModal').classList.add('active');
+    inputEl.focus();
+  });
+}
+
+function confirmModalCancel() {
+  document.getElementById('confirmModal').classList.remove('active');
+  if (confirmResolve) confirmResolve(false);
+  confirmResolve = null;
+}
+
+function confirmModalOk() {
+  const val = document.getElementById('confirmInput').value.trim().toUpperCase();
+  if (val !== 'DELETE') {
+    showInfo('Please type DELETE exactly to confirm.');
+    return;
+  }
+  document.getElementById('confirmModal').classList.remove('active');
+  if (confirmResolve) confirmResolve(true);
+  confirmResolve = null;
+}
+
+let infoResolve = null;
+
+function showInfo(message) {
+  return new Promise((resolve) => {
+    infoResolve = resolve;
+    document.getElementById('infoMessage').textContent = message;
+    document.getElementById('infoModal').classList.add('active');
+  });
+}
+
+function infoModalOk() {
+  document.getElementById('infoModal').classList.remove('active');
+  if (infoResolve) infoResolve();
+  infoResolve = null;
+}
+
+let currentMonth = null;
+
+function formatMonthLabel(month) {
+  const [year, m] = month.split('-');
+  const date = new Date(parseInt(year), parseInt(m) - 1, 1);
+  return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+}
+
+function calcRemaining(row) {
+  const total = parseFloat(row.querySelector('.total').value) || 0;
+  const advance = parseFloat(row.querySelector('.advance').value) || 0;
+  const prevPending = parseFloat(row.querySelector('.prevPending').value) || 0;
+  row.querySelector('.remaining').value = (total - advance + prevPending).toFixed(2);
+  updateTotals();
+}
+
+function updateTotals() {
+  const rows = document.querySelectorAll('#tableBody tr');
+  let totalSum = 0, advanceSum = 0, remainingSum = 0, prevPendingSum = 0;
+  rows.forEach(row => {
+    const totalEl = row.querySelector('.total');
+    const advanceEl = row.querySelector('.advance');
+    const remainingEl = row.querySelector('.remaining');
+    const prevPendingEl = row.querySelector('.prevPending');
+    if (!totalEl) return;
+    totalSum += parseFloat(totalEl.value) || 0;
+    advanceSum += parseFloat(advanceEl.value) || 0;
+    remainingSum += parseFloat(remainingEl.value) || 0;
+    prevPendingSum += parseFloat(prevPendingEl?.value) || 0;
+  });
+  document.getElementById('totalTotal').textContent = totalSum.toFixed(2);
+  document.getElementById('totalAdvance').textContent = advanceSum.toFixed(2);
+  document.getElementById('totalRemaining').textContent = remainingSum.toFixed(2);
+  document.getElementById('totalPrevPending').textContent = prevPendingSum.toFixed(2);
+}
+
+function rowToPayload(row) {
+  return {
+    month: currentMonth,
+    name: row.querySelector('.name').value,
+    role: row.querySelector('.role').value,
+    total: row.querySelector('.total').value === '' ? null : parseFloat(row.querySelector('.total').value),
+    advance: row.querySelector('.advance').value === '' ? null : parseFloat(row.querySelector('.advance').value),
+    remaining: row.querySelector('.remaining').value === '' ? null : parseFloat(row.querySelector('.remaining').value),
+    prev_month_pending: row.querySelector('.prevPending').value === '' ? null : parseFloat(row.querySelector('.prevPending').value),
+    notes: row.querySelector('.notes').value || null,
+    date_left: row.querySelector('.dateLeft').value || null
+  };
+}
+
+async function saveRow(row) {
+  calcRemaining(row);
+  const uid = row.dataset.uid;
+  pendingTasks.set(uid, { type: 'save', row });
+  updatePendingUI();
+  await trySync(uid);
+}
+
+async function removeRow(btn) {
+  const row = btn.closest('tr');
+  const id = row.dataset.id;
+  const uid = row.dataset.uid;
+
+  if (!id) {
+    // Unsaved row, nothing in the database yet — just remove from view
+    pendingTasks.delete(uid);
+    row.remove();
+    updateTotals();
+    updatePendingUI();
+    return;
+  }
+
+  const confirmed = await askDeleteConfirmation(
+    `This will soft-delete ${row.querySelector('.name').value || 'this employee'}'s record. Type DELETE to confirm.`
+  );
+  if (!confirmed) return;
+
+  row.remove();
+  updateTotals();
+
+  pendingTasks.set(uid, { type: 'delete', id });
+  updatePendingUI();
+  await trySync(uid);
+}
+
+function addRow(data) {
+  data = data || {};
+  const tbody = document.getElementById('tableBody');
+  const row = document.createElement('tr');
+  if (data.id) row.dataset.id = data.id;
+  row.dataset.uid = 'r' + Date.now() + Math.random().toString(36).slice(2);
+
+  function makeInput(type, className, value, opts) {
+    opts = opts || {};
+    const td = document.createElement('td');
+    const input = document.createElement('input');
+    input.type = type;
+    input.className = className;
+    if (value !== undefined && value !== null) input.value = value;
+    if (opts.readonly) {
+      input.readOnly = true;
+      input.tabIndex = -1; // skip in tab order — auto-calculated field
+    }
+    if (opts.skipTab) {
+      input.tabIndex = -1; // skip in tab order per request (e.g. Date Left)
+    }
+    td.appendChild(input);
+    return td;
+  }
+
+  row.appendChild(makeInput('text', 'name', data.name || ''));
+  row.appendChild(makeInput('text', 'role', data.role || ''));
+  row.appendChild(makeInput('number', 'advance', data.advance ?? ''));
+  row.appendChild(makeInput('number', 'total', data.total ?? ''));
+  row.appendChild(makeInput('number', 'prevPending', data.prev_month_pending ?? ''));
+  row.appendChild(makeInput('number', 'remaining', data.remaining ?? 0, { readonly: true }));
+  row.appendChild(makeInput('text', 'notes', data.notes || ''));
+  row.appendChild(makeInput('date', 'dateLeft', data.date_left || '', { skipTab: true }));
+
+  const removeTd = document.createElement('td');
+  removeTd.className = 'remove-col';
+  const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.textContent = '🗑️';
+  removeBtn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:16px;padding:2px 6px;';
+  removeBtn.addEventListener('click', () => removeRow(removeBtn));
+  removeTd.appendChild(removeBtn);
+  row.appendChild(removeTd);
+
+  tbody.appendChild(row);
+
+  row.querySelector('.total').addEventListener('input', () => calcRemaining(row));
+  row.querySelector('.advance').addEventListener('input', () => calcRemaining(row));
+  row.querySelector('.prevPending').addEventListener('input', () => calcRemaining(row));
+  row.querySelectorAll('input').forEach(el => el.addEventListener('change', () => {
+    saveRow(row);
+    maybeAutoAddRow(row);
+  }));
+
+  calcRemaining(row);
+}
+
+function isLastRow(row) {
+  return row === document.querySelector('#tableBody tr:last-child');
+}
+
+function maybeAutoAddRow(row) {
+  // Once the last row has its core fields filled in, silently append a fresh
+  // empty row so data entry can continue without clicking "Add Employee".
+  if (!isLastRow(row)) return;
+  const name = row.querySelector('.name').value.trim();
+  const role = row.querySelector('.role').value.trim();
+  const total = row.querySelector('.total').value;
+  const advance = row.querySelector('.advance').value;
+  if (name && role && total !== '' && advance !== '') {
+    addRow();
+    // Move focus forward to the new row's Name field, continuing the flow
+    const newRow = document.querySelector('#tableBody tr:last-child');
+    if (newRow) newRow.querySelector('.name')?.focus();
+  }
+}
+
+async function loadTableForMonth(month) {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '<tr><td colspan="7">Loading...</td></tr>';
+  try {
+    const res = await fetch(`${REST_URL}?select=*&month=eq.${month}&deleted=eq.false&order=created_at.asc`, {
+      headers: sbHeaders()
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    tbody.innerHTML = '';
+    if (data.length > 0) {
+      data.forEach(d => addRow(d));
+    } else {
+      addRow();
+    }
+    updateTotals();
+  } catch (e) {
+    console.error('Load failed', e);
+    tbody.innerHTML = '<tr><td colspan="9">Failed to load data. Check your Supabase table/policy setup.</td></tr>';
+    setStatus('Load failed', true);
+  }
+}
+
+async function loadMonthList() {
+  try {
+    const res = await fetch(`${REST_URL}?select=month&deleted=eq.false`, { headers: sbHeaders() });
+    if (!res.ok) throw new Error(await res.text());
+    const rows = await res.json();
+    const months = [...new Set(rows.map(r => r.month))].sort();
+    return months;
+  } catch (e) {
+    console.error('Failed to load months', e);
+    setStatus('Could not load months', true);
+    return [];
+  }
+}
+
+function populateMonthSelect(months) {
+  const select = document.getElementById('monthSelect');
+  select.innerHTML = '';
+  months.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = formatMonthLabel(m);
+    select.appendChild(opt);
+  });
+}
+
+async function switchMonth(month) {
+  currentMonth = month;
+  document.getElementById('monthSelect').value = month;
+  document.getElementById('monthTitle').textContent = formatMonthLabel(month);
+  await loadTableForMonth(month);
+}
+
+function newMonth() {
+  document.getElementById('newMonthInput').value = currentMonth || '';
+  document.getElementById('newMonthModal').classList.add('active');
+}
+
+function newMonthCancel() {
+  document.getElementById('newMonthModal').classList.remove('active');
+}
+
+async function newMonthConfirm() {
+  const input = document.getElementById('newMonthInput').value;
+  if (!input || !/^\d{4}-\d{2}$/.test(input)) {
+    showInfo('Please select a valid month.');
+    return;
+  }
+  document.getElementById('newMonthModal').classList.remove('active');
+
+  let months = await loadMonthList();
+  if (!months.includes(input)) {
+    months.push(input);
+    months.sort();
+  }
+  populateMonthSelect(months);
+  await switchMonth(input);
+}
+
+async function init() {
+  let months = await loadMonthList();
+  if (months.length === 0) {
+    const now = new Date();
+    const defaultMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    months = [defaultMonth];
+  }
+  populateMonthSelect(months);
+  await switchMonth(months[0]);
+}
+
+init();
+</script>
+
+</body>
+</html>
