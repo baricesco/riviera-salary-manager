@@ -46,6 +46,7 @@
   }
   button.primary { background: #000; color: #fff; border-color: #000; }
   button.danger { background: #c0392b; color: #fff; border-color: #c0392b; }
+  button.link-btn { border: none; background: none; padding: 2px 4px; font-size: 12px; font-weight: bold; text-decoration: underline; color: #1a54c4; }
   button:disabled { opacity: .5; cursor: not-allowed; }
 
   .company-snapshot { display: flex; gap: 12px; margin: 4px 0 16px; flex-wrap: wrap; }
@@ -53,27 +54,6 @@
   .cs-item .cs-label { font-size: 11px; text-transform: uppercase; opacity: .7; letter-spacing: .03em; }
   .cs-item .cs-value { font-size: 20px; font-weight: bold; }
   .cs-item.highlight { background: #c0392b; }
-
-  .month-strip { display: flex; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; }
-  .month-tile {
-    border: 2px solid #ddd; border-radius: 10px; padding: 9px 14px; min-width: 150px;
-    background: #fff; cursor: pointer; user-select: none; transition: border-color .12s, background .12s;
-  }
-  .month-tile:hover { border-color: #999; }
-  .month-tile .mt-label { font-size: 13px; font-weight: bold; }
-  .month-tile .mt-sub { font-size: 11px; color: #777; text-transform: uppercase; letter-spacing: .03em; margin-top: 3px; }
-  .month-tile .mt-amount { font-size: 15px; font-weight: bold; margin-top: 2px; }
-  .month-tile.active { border-color: #000; background: #000; color: #fff; }
-  .month-tile.active .mt-sub { color: rgba(255,255,255,.65); }
-  .month-tile.add {
-    border-style: dashed; display: flex; align-items: center; justify-content: center;
-    min-width: 150px; font-weight: bold; color: #333;
-  }
-  .month-tile.add:hover { border-color: #000; color: #000; }
-  .mt-amount.neg { color: #c0392b; }
-  .mt-amount.pos { color: #1e7d3a; }
-  .month-tile.active .mt-amount.neg,
-  .month-tile.active .mt-amount.pos { color: #fff; }
 
   .toolbar { margin: 12px 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .toolbar label { margin: 0; }
@@ -95,7 +75,8 @@
 
   .empty-note { color: #666; padding: 14px 2px; }
 
-  /* Person cards (list view) */
+  /* Person cards (list view) — same "total / given / pending" ledger-card
+     treatment as a hotel guest card (Total / Paid / Due). */
   .people-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
   .person-card {
     background: #fff; border: 1px solid #999; border-radius: 10px; padding: 14px 16px;
@@ -113,8 +94,9 @@
   .status-pill.pending { background: #fce8ef; color: #c0392b; }
 
   .pc-divider { border-top: 1px dashed #ccc; margin: 12px 0 10px; }
-  .pc-pending-split { display: flex; gap: 8px; }
-  .pc-pending-box { flex: 1; background: #f4f6f8; border-radius: 8px; padding: 8px 10px; text-align: center; }
+  .pc-pending-box { background: #f4f6f8; border-radius: 8px; padding: 8px 10px; text-align: center; }
+  .pc-pending-box.pc-pending-full { background: #fce8ef; }
+  .pc-pending-box.pc-pending-full.pc-paid-out { background: #e6f4ea; }
   .pc-pending-lbl { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #666; letter-spacing: .02em; margin-bottom: 3px; }
   .pc-pending-val { font-size: 16px; font-weight: bold; }
   .pc-pending-val.neg { color: #c0392b; }
@@ -144,6 +126,8 @@
   .detail-side > div { min-width: 150px; }
 
   .panel { background: #fff; border: 1px solid #999; border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; }
+  .panel-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .panel-head h2 { margin: 0; }
   .grid-2col { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
   .readout { margin-top: 10px; font-size: 13px; color: #444; background: #f4f6f8; border-radius: 8px; padding: 8px 10px; }
   .hint { font-size: 11px; color: #888; font-weight: normal; text-transform: none; display: block; margin-top: 3px; }
@@ -154,13 +138,24 @@
   .payment-add-row { display: grid; grid-template-columns: 130px 130px 1fr auto; gap: 8px; align-items: end; }
   .icon-btn { background: none; border: none; cursor: pointer; font-size: 15px; padding: 2px 6px; }
 
+  /* Month+Salary row pickers — same "add a row" idiom as Guest Entry's
+     room rows (Room+Rent), just Month+Salary instead. Used both when
+     creating an employee and for bulk-adding months on their own page. */
+  .ms-row-head { display: grid; grid-template-columns: 170px 1fr 32px; gap: 8px; margin-bottom: 4px; }
+  .ms-rows { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+  .ms-row { display: grid; grid-template-columns: 170px 1fr 32px; gap: 8px; align-items: center; }
+
   .summary-bar { display: flex; gap: 0; border: 1px solid #999; border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
   .summary-box { flex: 1; padding: 12px 14px; border-right: 1px solid #999; }
   .summary-box:last-child { border-right: none; }
   .summary-box .lbl { font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 4px; }
   .summary-box .val { font-size: 18px; font-weight: bold; }
 
+  .ledger-table tbody tr { cursor: pointer; }
+  .ledger-table tbody tr:hover { background: #f4f6f8 !important; }
+  .ledger-table tr.editing-row { background: #eef0fd !important; }
   .ledger-table td.this-month { background: #fff8e1; }
+  .ledger-table tr.editing-row td.this-month { background: #fdeec2; }
 
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
   .modal-overlay.active { display: flex; }
@@ -172,7 +167,7 @@
 
   @media print {
     .container { max-width: 100%; box-shadow: none; border: none; padding: 0; }
-    .toolbar, .backlink, .icon-btn, #addPaymentBtn, .payment-add-row, button { display: none !important; }
+    .toolbar, .backlink, .icon-btn, #addPaymentBtn, .payment-add-row, #addMonthsPanel, button { display: none !important; }
     input { border: none; background: transparent; padding: 2px; }
   }
 </style>
@@ -182,19 +177,6 @@
 <div class="container">
 
 <h1>Riviera Salary Manager</h1>
-
-<div class="company-snapshot" id="companySnapshot">
-  <div class="cs-item">
-    <span class="cs-label">Active Employees</span>
-    <span class="cs-value" id="csCount">—</span>
-  </div>
-  <div class="cs-item highlight">
-    <span class="cs-label">Company-Wide Pending — Right Now</span>
-    <span class="cs-value" id="csPending">—</span>
-  </div>
-</div>
-
-<div class="month-strip" id="monthStrip"></div>
 
 <div class="toolbar">
   <button type="button" class="primary" onclick="openAddEmployeeModal()">+ Add Employee</button>
@@ -206,30 +188,31 @@
   <span id="statusMsg"></span>
 </div>
 
-<h2 id="monthTitle" style="margin-top:6px;"></h2>
-
 <div class="view active" id="view-list">
+
+  <div class="company-snapshot" id="companySnapshot">
+    <div class="cs-item">
+      <span class="cs-label">Active Employees</span>
+      <span class="cs-value" id="csCount">—</span>
+    </div>
+    <div class="cs-item highlight">
+      <span class="cs-label">Company-Wide Pending — Right Now</span>
+      <span class="cs-value" id="csPending">—</span>
+    </div>
+  </div>
 
   <div class="stats-grid">
     <div class="stat-card">
-      <div class="stat-head"><span class="stat-icon" style="background:#eaf2fe;">💰</span><span class="stat-label">Total Salary</span></div>
+      <div class="stat-head"><span class="stat-icon" style="background:#eaf2fe;">💰</span><span class="stat-label">Total Salary (Lifetime)</span></div>
       <div class="stat-value" id="statSalary">0</div>
     </div>
     <div class="stat-card">
-      <div class="stat-head"><span class="stat-icon" style="background:#e6f4ea;">💵</span><span class="stat-label">Total Paid</span></div>
-      <div class="stat-value" id="statPaid">0</div>
+      <div class="stat-head"><span class="stat-icon" style="background:#e6f4ea;">💵</span><span class="stat-label">Total Given (Lifetime)</span></div>
+      <div class="stat-value" id="statGiven">0</div>
     </div>
     <div class="stat-card">
-      <div class="stat-head"><span class="stat-icon" style="background:#eef0fd;">📅</span><span class="stat-label">This Month Pending</span></div>
-      <div class="stat-value" id="statThisMonth">0</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-head"><span class="stat-icon" style="background:#fff4d6;">⏳</span><span class="stat-label">Prev Pending In</span></div>
-      <div class="stat-value" id="statPrevPending">0</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-head"><span class="stat-icon" style="background:#fce8ef;">📋</span><span class="stat-label">Total Pending (All Time)</span></div>
-      <div class="stat-value" id="statRemaining">0</div>
+      <div class="stat-head"><span class="stat-icon" style="background:#fce8ef;">📋</span><span class="stat-label">Total Pending — Right Now</span></div>
+      <div class="stat-value" id="statPending">0</div>
     </div>
   </div>
 
@@ -256,7 +239,10 @@
   </div>
 
   <div class="panel">
-    <h2>This Month — <span id="dMonthLabel"></span></h2>
+    <div class="panel-head">
+      <h2>Editing — <span id="dMonthLabel"></span></h2>
+      <button type="button" class="link-btn" id="jumpCurrentBtn" onclick="jumpToCurrentMonth()" style="display:none;">Back to current month</button>
+    </div>
     <div class="grid-2col">
       <div>
         <label>Base Salary (full month)</label>
@@ -280,7 +266,7 @@
   </div>
 
   <div class="panel">
-    <h2>Payments This Month</h2>
+    <h2>Payments — <span id="dPaymentsMonthLabel"></span></h2>
     <div class="payments-list" id="paymentsList"></div>
     <div class="payment-add-row">
       <div><label>Date</label><input type="date" id="newPayDate"></div>
@@ -292,25 +278,35 @@
 
   <div class="summary-bar">
     <div class="summary-box"><div class="lbl">Prorated Salary</div><div class="val" id="sumProrated">0</div></div>
-    <div class="summary-box"><div class="lbl">Total Paid</div><div class="val" id="sumPaid">0</div></div>
+    <div class="summary-box"><div class="lbl">Given</div><div class="val" id="sumPaid">0</div></div>
     <div class="summary-box"><div class="lbl">Prev Pending</div><div class="val" id="sumPrevPending">0</div></div>
-    <div class="summary-box"><div class="lbl">Remaining</div><div class="val" id="sumRemaining">0</div></div>
+    <div class="summary-box"><div class="lbl">Pending</div><div class="val" id="sumRemaining">0</div></div>
     <div class="summary-box"><div class="lbl">Status</div><div class="val"><span class="status-pill" id="sumStatus">—</span></div></div>
   </div>
 
   <div class="panel">
     <h2>Ledger — All Months</h2>
+    <div class="hint" style="margin-bottom:10px;">Click any month below to edit it above — no date picker needed.</div>
     <div style="overflow-x:auto;">
       <table class="ledger-table">
         <thead>
           <tr>
             <th>Month</th><th>Base Salary</th><th>Days</th><th>Prorated</th>
-            <th>Paid</th><th>This Month Pending</th><th>Prev Pending In</th><th>Total Pending</th><th>Status</th>
+            <th>Given</th><th>This Month Pending</th><th>Prev Pending In</th><th>Total Pending</th><th>Status</th>
           </tr>
         </thead>
         <tbody id="ledgerBody"><tr><td colspan="9" class="empty-note">Loading...</td></tr></tbody>
       </table>
     </div>
+  </div>
+
+  <div class="panel" id="addMonthsPanel">
+    <h2>+ Add Months</h2>
+    <div class="hint" style="margin-bottom:10px;">Queue up several months at once, same as adding room rows to a booking — pick a month, type its salary, add another row. Any month already on the ledger below is skipped automatically.</div>
+    <div class="ms-row-head"><label>Month</label><label>Salary</label><span></span></div>
+    <div class="ms-rows" id="bulkRowsList"></div>
+    <button type="button" onclick="bulkAddRow()">+ Add Row</button>
+    <button type="button" class="primary" style="margin-left:8px;" onclick="saveBulkMonths()">Save Months</button>
   </div>
 
 </div>
@@ -338,11 +334,15 @@
 </div>
 
 <div class="modal-overlay" id="addEmployeeModal">
-  <div class="modal-box">
-    <p>Add a new employee to <b id="addEmpMonthLabel"></b>:</p>
+  <div class="modal-box" style="max-width:440px;">
+    <p>Add a new employee — one row per month, same as adding rooms to a booking:</p>
     <div class="field"><label>Name</label><input type="text" id="newEmpName"></div>
     <div class="field"><label>Role</label><input type="text" id="newEmpRole"></div>
-    <div class="field"><label>Base Salary (full month)</label><input type="number" id="newEmpSalary" placeholder="0"></div>
+    <div class="field">
+      <div class="ms-row-head"><label>Month</label><label>Salary</label><span></span></div>
+      <div class="ms-rows" id="addEmpRowsList"></div>
+      <button type="button" onclick="addEmpAddRow()">+ Add Row</button>
+    </div>
     <div class="modal-actions">
       <button type="button" onclick="addEmployeeCancel()">Cancel</button>
       <button type="button" class="primary" onclick="addEmployeeConfirm()">Create</button>
@@ -394,14 +394,29 @@ function money(n) {
   return n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
 
-function daysInStandardMonth() { return STANDARD_DAYS; }
-
 function proratedSalary(base, daysWorked) {
   base = parseFloat(base) || 0;
   if (daysWorked === null || daysWorked === undefined || daysWorked === '') return base;
   const dw = parseFloat(daysWorked);
   if (isNaN(dw)) return base;
   return base * (dw / STANDARD_DAYS);
+}
+
+// No date picker anywhere in this app — "now" always means the real
+// calendar month, computed once here rather than asked for.
+function currentCalendarMonth() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+function formatMonthLabel(month) {
+  const [year, m] = month.split('-');
+  const date = new Date(parseInt(year), parseInt(m) - 1, 1);
+  return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+}
+function ymAdd(month, delta) {
+  const [y, m] = month.split('-').map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
 // ---------------------------------------------------------------------
@@ -444,31 +459,13 @@ function infoModalOk() {
   infoResolve = null;
 }
 
-// ---------------------------------------------------------------------
-// Month helpers
-// ---------------------------------------------------------------------
-let currentMonth = null;
-let viewMode = 'cards';
-let monthsCache = [];
-let monthTotals = {};
-
-function formatMonthLabel(month) {
-  const [year, m] = month.split('-');
-  const date = new Date(parseInt(year), parseInt(m) - 1, 1);
-  return date.toLocaleString('default', { month: 'long', year: 'numeric' });
-}
-function ymAdd(month, delta) {
-  const [y, m] = month.split('-').map(Number);
-  const d = new Date(y, m - 1 + delta, 1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-}
-
 function setViewMode(mode) {
   viewMode = mode;
   document.getElementById('switchCards').classList.toggle('active', mode === 'cards');
   document.getElementById('switchTable').classList.toggle('active', mode === 'table');
   renderPeople();
 }
+let viewMode = 'cards';
 
 // ---------------------------------------------------------------------
 // Data access
@@ -485,26 +482,53 @@ async function fetchPaymentsSum(salaryMonthId) {
   return rows.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
 }
 
-// Make sure every active employee has a salary_months row for `month`,
-// carrying forward base salary + remaining-from-last-month automatically.
-async function ensureMonthEntries(month) {
-  const employees = await fetchActiveEmployees();
-  const activeForMonth = employees.filter(e => !e.date_left || e.date_left >= `${month}-01`);
-  const monthRows = await sbGet(`${SM_URL}?select=employee_id&month=eq.${month}&deleted=eq.false`);
-  const have = new Set(monthRows.map(r => r.employee_id));
-  for (const emp of activeForMonth) {
-    if (have.has(emp.id)) continue;
-    const prior = await fetchLatestPriorSalaryMonth(emp.id, month);
-    if (!prior) continue; // brand-new employees are created directly into a month via the Add Employee modal
+// Makes sure ONE employee has a salary_months row for `month`, carrying
+// forward base salary + remaining-from-last-month automatically. No-ops if
+// the row already exists, if there's no prior month to carry forward from
+// (brand-new employees are seeded directly by Add Employee instead), or if
+// the employee had already left before `month` started.
+async function ensureEmployeeMonth(employeeId, month, dateLeft) {
+  if (dateLeft && dateLeft < `${month}-01`) return;
+  const existing = await sbGet(`${SM_URL}?select=id&employee_id=eq.${employeeId}&month=eq.${month}&deleted=eq.false`);
+  if (existing.length) return;
+  const prior = await fetchLatestPriorSalaryMonth(employeeId, month);
+  if (!prior) return;
+  const paid = await fetchPaymentsSum(prior.id);
+  const prorated = proratedSalary(prior.base_salary, prior.days_worked);
+  const remaining = prorated - paid + (parseFloat(prior.prev_pending) || 0);
+  await sbPost(SM_URL, {
+    employee_id: employeeId, month,
+    base_salary: parseFloat(prior.base_salary) || 0,
+    days_worked: null,
+    prev_pending: remaining
+  });
+}
+
+// Creates one salary_months row for `month` at an explicit salary, with
+// prev_pending computed from whatever's already on record — the same
+// formula ensureEmployeeMonth uses, just driven by a typed-in salary
+// instead of carrying the prior month's base forward unchanged. Re-queries
+// live each call, so calling this in a month-ascending loop correctly
+// chains off rows the loop itself just created.
+async function createSalaryMonthRow(employeeId, month, salary) {
+  const prior = await fetchLatestPriorSalaryMonth(employeeId, month);
+  let prevPending = 0;
+  if (prior) {
     const paid = await fetchPaymentsSum(prior.id);
     const prorated = proratedSalary(prior.base_salary, prior.days_worked);
-    const remaining = prorated - paid + (parseFloat(prior.prev_pending) || 0);
-    await sbPost(SM_URL, {
-      employee_id: emp.id, month,
-      base_salary: parseFloat(prior.base_salary) || 0,
-      days_worked: null,
-      prev_pending: remaining
-    });
+    prevPending = prorated - paid + (parseFloat(prior.prev_pending) || 0);
+  }
+  return sbPost(SM_URL, { employee_id: employeeId, month, base_salary: salary, days_worked: null, prev_pending: prevPending });
+}
+
+// Run once up front so every active employee already has a row for the
+// real current month before the list renders — this is what replaces the
+// old "+ Add Month" tile: the current month simply always exists.
+async function ensureAllCurrentMonth() {
+  const employees = await fetchActiveEmployees();
+  const month = currentCalendarMonth();
+  for (const emp of employees) {
+    await ensureEmployeeMonth(emp.id, month, emp.date_left);
   }
 }
 
@@ -533,51 +557,55 @@ async function recalcForward(employeeId, fromMonth) {
   }
 }
 
-async function fetchMonthCombined(month) {
-  // Drive the list off the *active* employee set, so a removed person can
-  // never reappear via a leftover salary_months row.
-  const active = await fetchActiveEmployees();
-  if (!active.length) return [];
-  const activeIds = new Set(active.map(e => e.id));
-  const rows = await sbGet(`${SM_URL}?select=*,employee:riviera_employees(id,name,role,date_left,deleted)&employee_id=in.(${active.map(e => e.id).join(',')})&month=eq.${month}&deleted=eq.false&order=created_at.asc`);
-  const ids = rows.map(r => r.id);
+// The one query the whole list view runs off: every active employee's
+// FULL history in one pass — lifetime salary earned, lifetime given, and
+// pending right now (their latest month's remaining, which already folds
+// in every earlier month via the prev_pending chain). This is what makes
+// the list a complete ledger with no month to pick.
+async function fetchAllEmployeesFullLedger() {
+  const employees = await fetchActiveEmployees();
+  if (!employees.length) return [];
+  const ids = employees.map(e => e.id);
+  const months = await sbGet(`${SM_URL}?select=*&employee_id=in.(${ids.join(',')})&deleted=eq.false&order=month.asc`);
+  const smIds = months.map(m => m.id);
   let paidMap = {};
-  if (ids.length) {
-    const pays = await sbGet(`${PAY_URL}?select=salary_month_id,amount&salary_month_id=in.(${ids.join(',')})&deleted=eq.false`);
+  if (smIds.length) {
+    const pays = await sbGet(`${PAY_URL}?select=salary_month_id,amount&salary_month_id=in.(${smIds.join(',')})&deleted=eq.false`);
     pays.forEach(p => { paidMap[p.salary_month_id] = (paidMap[p.salary_month_id] || 0) + (parseFloat(p.amount) || 0); });
   }
-  // Soft-deleting an employee only marks riviera_employees.deleted — their
-  // salary_months row for this month still exists, so it must be filtered
-  // out here too or the removed person keeps showing up on the list.
-  return rows.filter(r => r.employee && !r.employee.deleted && activeIds.has(r.employee_id)).map(r => {
-    const paid = paidMap[r.id] || 0;
-    const prorated = proratedSalary(r.base_salary, r.days_worked);
-    const prevPending = parseFloat(r.prev_pending) || 0;
-    const thisMonthOwed = prorated - paid;
+  const byEmp = {};
+  months.forEach(m => { (byEmp[m.employee_id] || (byEmp[m.employee_id] = [])).push(m); });
+
+  return employees.map(emp => {
+    const ms = (byEmp[emp.id] || []).slice().sort((a, b) => a.month.localeCompare(b.month));
+    let total = 0, given = 0, pending = 0;
+    ms.forEach((m, i) => {
+      const paid = paidMap[m.id] || 0;
+      const prorated = proratedSalary(m.base_salary, m.days_worked);
+      const prevPending = parseFloat(m.prev_pending) || 0;
+      total += prorated;
+      given += paid;
+      if (i === ms.length - 1) pending = prorated - paid + prevPending;
+    });
     return {
-      salaryMonthId: r.id, employeeId: r.employee.id, name: r.employee.name, role: r.employee.role,
-      baseSalary: parseFloat(r.base_salary) || 0, daysWorked: r.days_worked,
-      prorated, paid, prevPending, thisMonthOwed, remaining: thisMonthOwed + prevPending
+      employeeId: emp.id, name: emp.name, role: emp.role, dateLeft: emp.date_left,
+      total, given, pending, monthsCount: ms.length
     };
   });
 }
 
 // ---------------------------------------------------------------------
-// List view
+// List view — a flat, complete ledger of every person, no date to pick.
 // ---------------------------------------------------------------------
-async function loadMonth(month) {
-  currentMonth = month;
-  if (!monthsCache.includes(month)) { monthsCache.push(month); monthsCache.sort(); }
-  renderMonthStrip();
-  document.getElementById('monthTitle').textContent = formatMonthLabel(month);
+let peopleCache = [];
+
+async function loadList() {
   document.getElementById('peopleContainer').innerHTML = '<div class="empty-note">Loading...</div>';
   try {
-    await ensureMonthEntries(month);
-    const combined = await fetchMonthCombined(month);
-    peopleCache = combined;
+    await ensureAllCurrentMonth();
+    peopleCache = await fetchAllEmployeesFullLedger();
     renderPeople();
-    refreshCompanySnapshot();
-    refreshMonthTotals();
+    renderCompanySnapshot();
   } catch (e) {
     console.error('Load failed', e);
     document.getElementById('peopleContainer').innerHTML =
@@ -586,52 +614,18 @@ async function loadMonth(month) {
   }
 }
 
-// Company-wide snapshot: each active employee's LATEST recorded month,
-// regardless of which month is currently selected in the dropdown — this
-// is the one number that always reflects "what do we currently owe".
-async function fetchCompanySnapshot() {
-  const employees = await fetchActiveEmployees();
-  if (!employees.length) return { count: 0, totalPending: 0 };
-  const ids = employees.map(e => e.id);
-  const rows = await sbGet(`${SM_URL}?select=*&employee_id=in.(${ids.join(',')})&deleted=eq.false&order=month.desc`);
-  const latestByEmp = {};
-  rows.forEach(r => { if (!latestByEmp[r.employee_id]) latestByEmp[r.employee_id] = r; });
-  const latestRows = Object.values(latestByEmp);
-  const smIds = latestRows.map(r => r.id);
-  let paidMap = {};
-  if (smIds.length) {
-    const pays = await sbGet(`${PAY_URL}?select=salary_month_id,amount&salary_month_id=in.(${smIds.join(',')})&deleted=eq.false`);
-    pays.forEach(p => { paidMap[p.salary_month_id] = (paidMap[p.salary_month_id] || 0) + (parseFloat(p.amount) || 0); });
-  }
-  let totalPending = 0;
-  latestRows.forEach(r => {
-    const paid = paidMap[r.id] || 0;
-    const prorated = proratedSalary(r.base_salary, r.days_worked);
-    const prevPending = parseFloat(r.prev_pending) || 0;
-    totalPending += prorated - paid + prevPending;
-  });
-  return { count: employees.length, totalPending };
+function renderCompanySnapshot() {
+  const totalPending = peopleCache.reduce((s, p) => s + p.pending, 0);
+  document.getElementById('csCount').textContent = peopleCache.length;
+  document.getElementById('csPending').textContent = 'Rs. ' + money(totalPending);
 }
-async function refreshCompanySnapshot() {
-  try {
-    const snap = await fetchCompanySnapshot();
-    document.getElementById('csCount').textContent = snap.count;
-    document.getElementById('csPending').textContent = 'Rs. ' + money(snap.totalPending);
-  } catch (e) {
-    console.error('Snapshot failed', e);
-  }
-}
-
-let peopleCache = [];
 
 function renderStats(list) {
-  let salary = 0, paid = 0, thisMonth = 0, prevPending = 0, remaining = 0;
-  list.forEach(p => { salary += p.prorated; paid += p.paid; thisMonth += p.thisMonthOwed; prevPending += p.prevPending; remaining += p.remaining; });
-  document.getElementById('statSalary').textContent = money(salary);
-  document.getElementById('statPaid').textContent = money(paid);
-  document.getElementById('statThisMonth').textContent = money(thisMonth);
-  document.getElementById('statPrevPending').textContent = money(prevPending);
-  document.getElementById('statRemaining').textContent = money(remaining);
+  let total = 0, given = 0, pending = 0;
+  list.forEach(p => { total += p.total; given += p.given; pending += p.pending; });
+  document.getElementById('statSalary').textContent = money(total);
+  document.getElementById('statGiven').textContent = money(given);
+  document.getElementById('statPending').textContent = money(pending);
 }
 
 function renderPeople() {
@@ -647,20 +641,16 @@ function renderPeople() {
       <tr class="person-row" onclick="openDetail('${p.employeeId}')">
         <td>${escapeHtml(p.name)}</td>
         <td>${escapeHtml(p.role || '')}</td>
-        <td class="num">${p.daysWorked ? p.daysWorked + ' / ' + STANDARD_DAYS : 'Full'}</td>
-        <td class="num">${money(p.prorated)}</td>
-        <td class="num">${money(p.paid)}</td>
-        <td class="num ${p.thisMonthOwed > 0 ? 'neg' : 'pos'}">${money(p.thisMonthOwed)}</td>
-        <td class="num">${money(p.prevPending)}</td>
-        <td class="num ${p.remaining > 0 ? 'neg' : 'pos'}"><b>${money(p.remaining)}</b></td>
-        <td>${statusPillHtml(p.remaining)}</td>
+        <td class="num">${money(p.total)}</td>
+        <td class="num">${money(p.given)}</td>
+        <td class="num ${p.pending > 0 ? 'neg' : 'pos'}"><b>${money(p.pending)}</b></td>
+        <td>${statusPillHtml(p.pending)}</td>
       </tr>`).join('');
     container.innerHTML = `
       <div style="overflow-x:auto;">
         <table>
           <thead><tr>
-            <th>Name</th><th>Role</th><th>Days</th><th>Prorated</th><th>Paid</th>
-            <th>This Month Pending</th><th>Prev Pending</th><th>Total Pending</th><th>Status</th>
+            <th>Name</th><th>Role</th><th>Total Salary</th><th>Given</th><th>Pending</th><th>Status</th>
           </tr></thead>
           <tbody>${rows}</tbody>
         </table>
@@ -670,29 +660,23 @@ function renderPeople() {
       <div class="person-card" onclick="openDetail('${p.employeeId}')">
         <div class="pc-top">
           <div><div class="pc-name">${escapeHtml(p.name)}</div><div class="pc-role">${escapeHtml(p.role || '')}</div></div>
-          ${statusPillHtml(p.remaining)}
+          ${statusPillHtml(p.pending)}
         </div>
         <div class="pc-rows">
-          <div class="pc-row"><span class="lbl">Salary${p.daysWorked ? ' (' + p.daysWorked + '/' + STANDARD_DAYS + ' days)' : ''}</span><span>Rs. ${money(p.prorated)}</span></div>
-          <div class="pc-row"><span class="lbl">Paid</span><span>Rs. ${money(p.paid)}</span></div>
+          <div class="pc-row"><span class="lbl">Total Salary</span><span>Rs. ${money(p.total)}</span></div>
+          <div class="pc-row"><span class="lbl">Given</span><span>Rs. ${money(p.given)}</span></div>
         </div>
         <div class="pc-divider"></div>
-        <div class="pc-pending-split">
-          <div class="pc-pending-box">
-            <div class="pc-pending-lbl">This Month</div>
-            <div class="pc-pending-val ${p.thisMonthOwed > 0 ? 'neg' : 'pos'}">Rs. ${money(p.thisMonthOwed)}</div>
-          </div>
-          <div class="pc-pending-box">
-            <div class="pc-pending-lbl">Total — All Months</div>
-            <div class="pc-pending-val ${p.remaining > 0 ? 'neg' : 'pos'}">Rs. ${money(p.remaining)}</div>
-          </div>
+        <div class="pc-pending-box pc-pending-full ${p.pending > 0 ? '' : 'pc-paid-out'}">
+          <div class="pc-pending-lbl">Pending</div>
+          <div class="pc-pending-val ${p.pending > 0 ? 'neg' : 'pos'}">Rs. ${money(p.pending)}</div>
         </div>
       </div>`).join('')}</div>`;
   }
 }
 
-function statusPillHtml(remaining) {
-  return remaining > 0
+function statusPillHtml(pending) {
+  return pending > 0
     ? `<span class="status-pill pending">Pending</span>`
     : `<span class="status-pill paid">Paid</span>`;
 }
@@ -700,202 +684,239 @@ function escapeHtml(s) {
   return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-async function switchMonth(month) {
-  currentMonth = month;
-  if (!monthsCache.includes(month)) { monthsCache.push(month); monthsCache.sort(); }
-  if (detailEmployeeId) {
-    // Stay on the same person's page — just move them to the new month.
-    renderMonthStrip();
-    document.getElementById('monthTitle').textContent = formatMonthLabel(month);
-    document.getElementById('dMonthLabel').textContent = formatMonthLabel(month);
-    setStatus('Loading...');
-    try {
-      await ensureMonthEntries(month);
-      await loadDetail();
-      refreshMonthTotals();
-      setStatus('');
-    } catch (e) {
-      console.error(e);
-      setStatus('Failed to load', true);
-    }
-  } else {
-    await loadMonth(month);
-  }
-}
-
-async function loadMonthList() {
-  try {
-    const rows = await sbGet(`${SM_URL}?select=month&deleted=eq.false`);
-    const months = [...new Set(rows.map(r => r.month))].sort();
-    return months;
-  } catch (e) {
-    console.error('Failed to load months', e);
-    setStatus('Could not load months — have you run supabase_schema.sql?', true);
-    return [];
-  }
-}
-// Months are plain clickable divs — no dropdown. Each tile carries that
-// month's own totals so you can see the whole timeline at a glance.
-function renderMonthStrip() {
-  const strip = document.getElementById('monthStrip');
-  const tiles = monthsCache.map(m => {
-    const t = monthTotals[m];
-    const active = m === currentMonth ? ' active' : '';
-    let body;
-    if (!t) {
-      body = `<div class="mt-sub">Tap to open</div>`;
-    } else {
-      body = `
-        <div class="mt-sub">Pending</div>
-        <div class="mt-amount ${t.remaining > 0 ? 'neg' : 'pos'}">Rs. ${money(t.remaining)}</div>
-        <div class="mt-sub">${money(t.paid)} paid of ${money(t.salary)}</div>`;
-    }
-    return `<div class="month-tile${active}" onclick="switchMonth('${m}')">
-      <div class="mt-label">${formatMonthLabel(m)}</div>
-      ${body}
-    </div>`;
-  });
-  const next = monthsCache.length ? ymAdd(monthsCache[monthsCache.length - 1], 1) : currentMonth;
-  tiles.push(`<div class="month-tile add" onclick="addNextMonth()">+ ${formatMonthLabel(next)}</div>`);
-  strip.innerHTML = tiles.join('');
-}
-
-// Creates the month right after the last one on record and rolls every
-// active employee's salary + pending balance into it. No month picker.
-async function addNextMonth() {
-  const base = monthsCache.length ? monthsCache[monthsCache.length - 1] : currentMonth;
-  const next = ymAdd(base, 1);
-  setStatus('Adding ' + formatMonthLabel(next) + '...');
-  try {
-    await ensureMonthEntries(next);
-    if (!monthsCache.includes(next)) { monthsCache.push(next); monthsCache.sort(); }
-    setStatus('');
-    await switchMonth(next);
-  } catch (e) {
-    console.error(e);
-    setStatus('Could not add month', true);
-  }
-}
-
-// Per-month totals for the strip tiles: one pass over every non-deleted
-// month row belonging to a still-active employee.
-async function refreshMonthTotals() {
-  try {
-    const employees = await fetchActiveEmployees();
-    monthTotals = {};
-    if (!employees.length) { renderMonthStrip(); return; }
-    const ids = employees.map(e => e.id);
-    const rows = await sbGet(`${SM_URL}?select=*&employee_id=in.(${ids.join(',')})&deleted=eq.false&order=month.asc`);
-    const smIds = rows.map(r => r.id);
-    const paidMap = {};
-    if (smIds.length) {
-      const pays = await sbGet(`${PAY_URL}?select=salary_month_id,amount&salary_month_id=in.(${smIds.join(',')})&deleted=eq.false`);
-      pays.forEach(p => { paidMap[p.salary_month_id] = (paidMap[p.salary_month_id] || 0) + (parseFloat(p.amount) || 0); });
-    }
-    rows.forEach(r => {
-      const t = monthTotals[r.month] || (monthTotals[r.month] = { salary: 0, paid: 0, prevPending: 0, remaining: 0, people: 0 });
-      const paid = paidMap[r.id] || 0;
-      const prorated = proratedSalary(r.base_salary, r.days_worked);
-      const prevPending = parseFloat(r.prev_pending) || 0;
-      t.salary += prorated;
-      t.paid += paid;
-      t.prevPending += prevPending;
-      t.remaining += prorated - paid + prevPending;
-      t.people += 1;
-    });
-    monthsCache = [...new Set(Object.keys(monthTotals).concat(currentMonth ? [currentMonth] : []))].sort();
-    renderMonthStrip();
-  } catch (e) {
-    console.error('Month totals failed', e);
-    renderMonthStrip();
-  }
-}
-
 // ---------------------------------------------------------------------
-// Add Employee modal
+// Add Employee modal — one row per month (Month + Salary), same idiom as
+// adding room rows in Guest Entry, instead of a single "starting salary"
+// field. At least one row is always present; "+ Add Row" defaults the
+// next one to the month right after the last row on the list.
 // ---------------------------------------------------------------------
+let addEmpRows = [];
+
 function openAddEmployeeModal() {
-  document.getElementById('addEmpMonthLabel').textContent = formatMonthLabel(currentMonth);
   document.getElementById('newEmpName').value = '';
   document.getElementById('newEmpRole').value = '';
-  document.getElementById('newEmpSalary').value = '';
+  addEmpRows = [{ month: currentCalendarMonth(), salary: '' }];
+  renderAddEmpRows();
   document.getElementById('addEmployeeModal').classList.add('active');
 }
 function addEmployeeCancel() { document.getElementById('addEmployeeModal').classList.remove('active'); }
+
+function renderAddEmpRows() {
+  const el = document.getElementById('addEmpRowsList');
+  el.innerHTML = addEmpRows.map((row, idx) => `
+    <div class="ms-row">
+      <div><input type="month" value="${row.month}" onchange="addEmpSetMonth(${idx}, this.value)"></div>
+      <div><input type="number" placeholder="0" value="${row.salary}" oninput="addEmpSetSalary(${idx}, this.value)"></div>
+      <button type="button" class="icon-btn" onclick="addEmpRemoveRow(${idx})" ${addEmpRows.length <= 1 ? 'disabled' : ''}>🗑️</button>
+    </div>`).join('');
+}
+function addEmpSetMonth(idx, val) { addEmpRows[idx].month = val; }
+function addEmpSetSalary(idx, val) { addEmpRows[idx].salary = val; }
+function addEmpAddRow() {
+  const last = addEmpRows[addEmpRows.length - 1];
+  addEmpRows.push({ month: last && last.month ? ymAdd(last.month, 1) : currentCalendarMonth(), salary: '' });
+  renderAddEmpRows();
+}
+function addEmpRemoveRow(idx) {
+  if (addEmpRows.length <= 1) return;
+  addEmpRows.splice(idx, 1);
+  renderAddEmpRows();
+}
+
 async function addEmployeeConfirm() {
   const name = document.getElementById('newEmpName').value.trim();
   const role = document.getElementById('newEmpRole').value.trim();
-  const salary = parseFloat(document.getElementById('newEmpSalary').value) || 0;
   if (!name) { showInfo('Please enter a name.'); return; }
+  const rows = addEmpRows
+    .filter(r => r.month)
+    .map(r => ({ month: r.month, salary: parseFloat(r.salary) || 0 }));
+  if (!rows.length) { showInfo('Add at least one month.'); return; }
+  const months = rows.map(r => r.month);
+  if (new Set(months).size !== months.length) { showInfo('Each month can only be added once — remove the duplicate row.'); return; }
+  rows.sort((a, b) => a.month.localeCompare(b.month));
+
   document.getElementById('addEmployeeModal').classList.remove('active');
+  const btn = document.querySelector('#addEmployeeModal .primary');
+  if (btn) btn.disabled = true;
   setStatus('Creating...');
   try {
     const emp = await sbPost(EMP_URL, { name, role: role || null });
-    await sbPost(SM_URL, { employee_id: emp.id, month: currentMonth, base_salary: salary, days_worked: null, prev_pending: 0 });
+    for (const r of rows) {
+      await createSalaryMonthRow(emp.id, r.month, r.salary);
+    }
     setStatus('Added');
-    await loadMonth(currentMonth);
+    await loadList();
   } catch (e) {
     console.error(e);
     setStatus('Failed to create employee', true);
+  } finally {
+    if (btn) btn.disabled = false;
   }
 }
 
 // ---------------------------------------------------------------------
-// Detail view
+// Detail view — full per-employee ledger. Defaults to the current month;
+// click any row in the ledger table to edit a different one instead.
 // ---------------------------------------------------------------------
 let detailEmployeeId = null;
 let detailSalaryMonthId = null;
+let detailMonth = null;
 
 function showListView() {
   document.getElementById('view-list').classList.add('active');
   document.getElementById('view-detail').classList.remove('active');
-  document.getElementById('viewSwitch').style.display = '';
   detailEmployeeId = null;
   detailSalaryMonthId = null;
+  detailMonth = null;
+  loadList();
 }
 
 async function openDetail(employeeId) {
   detailEmployeeId = employeeId;
   document.getElementById('view-list').classList.remove('active');
   document.getElementById('view-detail').classList.add('active');
-  document.getElementById('viewSwitch').style.display = 'none';
-  document.getElementById('dMonthLabel').textContent = formatMonthLabel(currentMonth);
-  await loadDetail();
-}
-
-async function loadDetail() {
   setStatus('Loading...');
   try {
-    const emp = (await sbGet(`${EMP_URL}?select=*&id=eq.${detailEmployeeId}`))[0];
+    const emp = (await sbGet(`${EMP_URL}?select=*&id=eq.${employeeId}`))[0];
     document.getElementById('dName').value = emp.name || '';
     document.getElementById('dRole').value = emp.role || '';
     document.getElementById('dDateLeft').value = emp.date_left || '';
 
-    let smRows = await sbGet(`${SM_URL}?select=*&employee_id=eq.${detailEmployeeId}&month=eq.${currentMonth}&deleted=eq.false`);
-    let sm = smRows[0];
-    if (!sm) {
-      sm = await sbPost(SM_URL, { employee_id: detailEmployeeId, month: currentMonth, base_salary: 0, days_worked: null, prev_pending: 0 });
-    }
-    detailSalaryMonthId = sm.id;
-    document.getElementById('dBaseSalary').value = sm.base_salary ?? 0;
-    document.getElementById('dDaysWorked').value = sm.days_worked ?? '';
-    document.getElementById('dPrevPending').value = sm.prev_pending ?? 0;
-    document.getElementById('dNotes').value = sm.notes || '';
+    await ensureEmployeeMonth(employeeId, currentCalendarMonth(), emp.date_left);
+    const latest = await sbGet(`${SM_URL}?select=month&employee_id=eq.${employeeId}&deleted=eq.false&order=month.desc&limit=1`);
+    const targetMonth = latest.length ? latest[0].month : currentCalendarMonth();
 
-    const prior = await fetchLatestPriorSalaryMonth(detailEmployeeId, currentMonth);
-    document.getElementById('dPrevPendingHint').textContent = prior
-      ? `Carried from ${formatMonthLabel(prior.month)} — edit if needed.`
-      : 'No earlier month on record.';
+    bulkRows = [{ month: ymAdd(targetMonth, 1), salary: '' }];
+    renderBulkRows();
 
-    await loadPayments();
+    await loadMonthPanel(targetMonth);
     await refreshLedger();
-    refreshCompanySnapshot();
     setStatus('');
   } catch (e) {
     console.error(e);
     setStatus('Failed to load employee', true);
   }
 }
+
+// ---------------------------------------------------------------------
+// "+ Add Months" — bulk row picker on the detail page, same idiom as Add
+// Employee's rows: queue up several Month+Salary rows, save them all at
+// once. Any month already on this employee's ledger is skipped rather
+// than overwritten — edit an existing month from the ledger table instead.
+// ---------------------------------------------------------------------
+let bulkRows = [];
+
+function renderBulkRows() {
+  const el = document.getElementById('bulkRowsList');
+  if (!el) return;
+  el.innerHTML = bulkRows.map((row, idx) => `
+    <div class="ms-row">
+      <div><input type="month" value="${row.month}" onchange="bulkSetMonth(${idx}, this.value)"></div>
+      <div><input type="number" placeholder="0" value="${row.salary}" oninput="bulkSetSalary(${idx}, this.value)"></div>
+      <button type="button" class="icon-btn" onclick="bulkRemoveRow(${idx})" ${bulkRows.length <= 1 ? 'disabled' : ''}>🗑️</button>
+    </div>`).join('');
+}
+function bulkSetMonth(idx, val) { bulkRows[idx].month = val; }
+function bulkSetSalary(idx, val) { bulkRows[idx].salary = val; }
+function bulkAddRow() {
+  const last = bulkRows[bulkRows.length - 1];
+  bulkRows.push({ month: last && last.month ? ymAdd(last.month, 1) : currentCalendarMonth(), salary: '' });
+  renderBulkRows();
+}
+function bulkRemoveRow(idx) {
+  if (bulkRows.length <= 1) return;
+  bulkRows.splice(idx, 1);
+  renderBulkRows();
+}
+
+async function saveBulkMonths() {
+  const rows = bulkRows
+    .filter(r => r.month)
+    .map(r => ({ month: r.month, salary: parseFloat(r.salary) || 0 }));
+  if (!rows.length) { showInfo('Add at least one month.'); return; }
+  const months = rows.map(r => r.month);
+  if (new Set(months).size !== months.length) { showInfo('Each month can only be added once — remove the duplicate row.'); return; }
+  rows.sort((a, b) => a.month.localeCompare(b.month));
+
+  const btn = document.querySelector('#addMonthsPanel .primary');
+  if (btn) btn.disabled = true;
+  setStatus('Saving...');
+  try {
+    const existing = await sbGet(`${SM_URL}?select=month&employee_id=eq.${detailEmployeeId}&deleted=eq.false&month=in.(${months.join(',')})`);
+    const already = new Set(existing.map(e => e.month));
+    const toCreate = rows.filter(r => !already.has(r.month));
+
+    if (!toCreate.length) {
+      showInfo('Every one of those months is already on this employee’s ledger — click it in the table below to edit it instead.');
+      setStatus('');
+      return;
+    }
+
+    for (const r of toCreate) {
+      await createSalaryMonthRow(detailEmployeeId, r.month, r.salary);
+    }
+    await recalcForward(detailEmployeeId, toCreate[0].month);
+
+    const lastMonth = rows[rows.length - 1].month;
+    bulkRows = [{ month: ymAdd(lastMonth, 1), salary: '' }];
+    renderBulkRows();
+    // A backfilled month earlier than the one on screen can change its
+    // prev_pending via recalcForward above — reload the open panel so it
+    // never shows a stale number after a bulk save.
+    if (toCreate.some(r => r.month <= detailMonth)) await loadMonthPanel(detailMonth);
+    await refreshLedger();
+    setStatus(already.size ? `Added ${toCreate.length}, skipped ${already.size} already on record` : 'Saved');
+  } catch (e) {
+    console.error(e);
+    setStatus('Failed to save months', true);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+// Loads (creating if needed) the salary_months row for `month` into the
+// editing panel + payments list. This is the one thing that changes when
+// you click a different row in the ledger table — nothing else reloads.
+async function loadMonthPanel(month) {
+  detailMonth = month;
+  const isCurrent = month === currentCalendarMonth();
+  const label = formatMonthLabel(month) + (isCurrent ? ' (current month)' : '');
+  document.getElementById('dMonthLabel').textContent = label;
+  document.getElementById('dPaymentsMonthLabel').textContent = formatMonthLabel(month);
+  document.getElementById('jumpCurrentBtn').style.display = isCurrent ? 'none' : '';
+
+  let smRows = await sbGet(`${SM_URL}?select=*&employee_id=eq.${detailEmployeeId}&month=eq.${month}&deleted=eq.false`);
+  let sm = smRows[0];
+  if (!sm) {
+    sm = await sbPost(SM_URL, { employee_id: detailEmployeeId, month, base_salary: 0, days_worked: null, prev_pending: 0 });
+  }
+  detailSalaryMonthId = sm.id;
+  document.getElementById('dBaseSalary').value = sm.base_salary ?? 0;
+  document.getElementById('dDaysWorked').value = sm.days_worked ?? '';
+  document.getElementById('dPrevPending').value = sm.prev_pending ?? 0;
+  document.getElementById('dNotes').value = sm.notes || '';
+
+  const prior = await fetchLatestPriorSalaryMonth(detailEmployeeId, month);
+  document.getElementById('dPrevPendingHint').textContent = prior
+    ? `Carried from ${formatMonthLabel(prior.month)} — edit if needed.`
+    : 'No earlier month on record.';
+
+  await loadPayments();
+}
+
+async function selectLedgerMonth(month) {
+  if (month === detailMonth) return;
+  setStatus('Loading...');
+  try {
+    await loadMonthPanel(month);
+    await refreshLedger();
+    setStatus('');
+  } catch (e) {
+    console.error(e);
+    setStatus('Failed to load month', true);
+  }
+}
+function jumpToCurrentMonth() { selectLedgerMonth(currentCalendarMonth()); }
 
 function recalcDetailPreview() {
   const base = document.getElementById('dBaseSalary').value;
@@ -940,9 +961,8 @@ async function addPayment() {
     await sbPost(PAY_URL, { salary_month_id: detailSalaryMonthId, amount, pay_date, note: noteEl.value.trim() || null });
     dateEl.value = ''; amountEl.value = ''; noteEl.value = '';
     await loadPayments();
-    await recalcForward(detailEmployeeId, currentMonth);
+    await recalcForward(detailEmployeeId, detailMonth);
     await refreshLedger();
-    refreshCompanySnapshot();
     setStatus('Saved');
   } catch (e) {
     console.error(e);
@@ -956,9 +976,8 @@ async function removePayment(id) {
   try {
     await sbPatch(`${PAY_URL}?id=eq.${id}`, { deleted: true });
     await loadPayments();
-    await recalcForward(detailEmployeeId, currentMonth);
+    await recalcForward(detailEmployeeId, detailMonth);
     await refreshLedger();
-    refreshCompanySnapshot();
     setStatus('Removed');
   } catch (e) {
     console.error(e);
@@ -975,9 +994,8 @@ async function saveThisMonth() {
   setStatus('Saving...');
   try {
     await sbPatch(`${SM_URL}?id=eq.${detailSalaryMonthId}`, { base_salary, days_worked, prev_pending, notes });
-    await recalcForward(detailEmployeeId, currentMonth);
+    await recalcForward(detailEmployeeId, detailMonth);
     await refreshLedger();
-    refreshCompanySnapshot();
     recalcDetailPreview();
     setStatus('Saved');
   } catch (e) {
@@ -1013,7 +1031,6 @@ async function deleteEmployee() {
     await sbPatch(`${SM_URL}?employee_id=eq.${detailEmployeeId}`, { deleted: true, deleted_at: now });
     setStatus('Removed');
     showListView();
-    await loadMonth(currentMonth);
   } catch (e) {
     console.error(e);
     setStatus('Failed to remove', true);
@@ -1039,6 +1056,7 @@ async function refreshLedger() {
   try {
     const months = await sbGet(`${SM_URL}?select=*&employee_id=eq.${detailEmployeeId}&deleted=eq.false&order=month.asc`);
     if (months.length === 0) { tbody.innerHTML = '<tr><td colspan="9" class="empty-note">No months on record.</td></tr>'; return; }
+    const nowMonth = currentCalendarMonth();
     const rowsHtml = [];
     for (const m of months) {
       const paid = await fetchPaymentsSum(m.id);
@@ -1046,11 +1064,12 @@ async function refreshLedger() {
       const prevPending = parseFloat(m.prev_pending) || 0;
       const thisMonthOwed = prorated - paid;
       const remaining = thisMonthOwed + prevPending;
-      const isThisMonth = m.month === currentMonth;
-      const tm = isThisMonth ? 'this-month' : '';
+      const isCurrentCalendarMonth = m.month === nowMonth;
+      const isEditing = m.month === detailMonth;
+      const tm = isCurrentCalendarMonth ? 'this-month' : '';
       rowsHtml.push(`
-        <tr${isThisMonth ? ' class="this-month-row"' : ''}>
-          <td class="${tm}">${formatMonthLabel(m.month)}${isThisMonth ? ' (current)' : ''}</td>
+        <tr${isEditing ? ' class="editing-row"' : ''} onclick="selectLedgerMonth('${m.month}')">
+          <td class="${tm}">${formatMonthLabel(m.month)}${isCurrentCalendarMonth ? ' (current)' : ''}</td>
           <td class="num ${tm}">${money(m.base_salary)}</td>
           <td class="num ${tm}">${m.days_worked ? m.days_worked + '/' + STANDARD_DAYS : 'Full'}</td>
           <td class="num ${tm}">${money(prorated)}</td>
@@ -1069,16 +1088,10 @@ async function refreshLedger() {
 }
 
 // ---------------------------------------------------------------------
-// Init
+// Init — straight to the full list, nothing to pick.
 // ---------------------------------------------------------------------
 async function init() {
-  let months = await loadMonthList();
-  if (months.length === 0) {
-    const now = new Date();
-    months = [`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`];
-  }
-  monthsCache = months;
-  await switchMonth(months[months.length - 1]);
+  await loadList();
 }
 
 init();
