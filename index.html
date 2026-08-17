@@ -10,9 +10,6 @@
     padding: 20px;
     background: #f4f6f8;
     min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     box-sizing: border-box;
   }
   .container {
@@ -26,27 +23,6 @@
   }
   h1 {
     margin-bottom: 10px;
-  }
-  table {
-    border-collapse: separate;
-    border-spacing: 0;
-    width: 100%;
-    border: 1px solid #999;
-    border-radius: 10px;
-    overflow: hidden;
-  }
-  th, td {
-    border: 1px solid #999;
-    padding: 6px;
-    text-align: left;
-  }
-  th {
-    background: #000;
-    color: #fff;
-  }
-  tfoot td {
-    background: #f0f0f0;
-    border-top: 2px solid #000;
   }
   input {
     width: 100%;
@@ -107,8 +83,107 @@
     padding: 3px 10px;
     border-radius: 8px;
   }
-  tr.pending-sync td {
+
+  /* ---- Summary stat cards (pattern borrowed from the Munshi dashboard's
+     dash-tile stat cards: icon badge + label + big value) ---- */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin: 16px 0 22px;
+  }
+  .stat-card {
+    background: #fff;
+    border: 1px solid #999;
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .stat-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .stat-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .stat-label {
+    font-size: 12px;
+    font-weight: bold;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+  }
+  .stat-value {
+    font-size: 24px;
+    font-weight: bold;
+  }
+
+  /* ---- Employee cards (pattern borrowed from the Munshi mn-card layout:
+     bordered box, title row, grid of labeled fields) ---- */
+  .employee-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+  }
+  .employee-card {
+    position: relative;
+    background: #fff;
+    border: 1px solid #999;
+    border-radius: 10px;
+    padding: 14px 14px 12px;
+  }
+  .employee-card.pending-sync {
     background: #fff8e1;
+  }
+  .card-remove {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 2px 6px;
+  }
+  .card-name-role {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding-right: 26px;
+    margin-bottom: 10px;
+  }
+  .card-name-role input.name {
+    font-weight: bold;
+    font-size: 15px;
+  }
+  .card-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 10px;
+  }
+  .field-full {
+    grid-column: 1 / -1;
+  }
+  .employee-card .field-label {
+    display: block;
+    font-size: 11px;
+    font-weight: bold;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: .02em;
+    margin-bottom: 2px;
+  }
+  #tableBody .empty-note {
+    color: #666;
+    padding: 10px 2px;
   }
 
   .modal-overlay {
@@ -153,7 +228,7 @@
       border: none;
       padding: 0;
     }
-    .toolbar, .remove-col {
+    .toolbar, .card-remove {
       display: none !important;
     }
     input {
@@ -164,8 +239,8 @@
     button {
       display: none;
     }
-    table {
-      width: 100%;
+    .employee-card {
+      break-inside: avoid;
     }
   }
 </style>
@@ -187,36 +262,28 @@
 
 <h2 id="monthTitle"></h2>
 
-<table border="1" cellpadding="5" cellspacing="0">
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Role</th>
-      <th>Advance (Given)</th>
-      <th>Total Salary</th>
-      <th>Prev Month Pending</th>
-      <th>Remaining to Give</th>
-      <th>Notes</th>
-      <th>Date Left</th>
-      <th class="remove-col">🗑️</th>
-    </tr>
-  </thead>
-  <tbody id="tableBody">
-    <tr><td colspan="9">Loading...</td></tr>
-  </tbody>
-  <tfoot>
-    <tr id="totalsRow">
-      <td colspan="2" style="text-align:right; font-weight:bold;">TOTAL</td>
-      <td id="totalAdvance" style="font-weight:bold;">0</td>
-      <td id="totalTotal" style="font-weight:bold;">0</td>
-      <td id="totalPrevPending" style="font-weight:bold;">0</td>
-      <td id="totalRemaining" style="font-weight:bold;">0</td>
-      <td></td>
-      <td></td>
-      <td class="remove-col"></td>
-    </tr>
-  </tfoot>
-</table>
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-head"><span class="stat-icon" style="background:#eaf2fe;">💰</span><span class="stat-label">Total Salary</span></div>
+    <div class="stat-value" id="totalTotal">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-head"><span class="stat-icon" style="background:#fff4d6;">💵</span><span class="stat-label">Total Advance</span></div>
+    <div class="stat-value" id="totalAdvance">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-head"><span class="stat-icon" style="background:#fce8ef;">⏳</span><span class="stat-label">Prev Pending</span></div>
+    <div class="stat-value" id="totalPrevPending">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-head"><span class="stat-icon" style="background:#e6f4ea;">📋</span><span class="stat-label">Remaining to Give</span></div>
+    <div class="stat-value" id="totalRemaining">0</div>
+  </div>
+</div>
+
+<div class="employee-grid" id="tableBody">
+  <div class="empty-note">Loading...</div>
+</div>
 
 <br>
 <button type="button" onclick="addRow()">Add Employee</button>
@@ -451,7 +518,7 @@ function calcRemaining(row) {
 }
 
 function updateTotals() {
-  const rows = document.querySelectorAll('#tableBody tr');
+  const rows = document.querySelectorAll('#tableBody .employee-card');
   let totalSum = 0, advanceSum = 0, remainingSum = 0, prevPendingSum = 0;
   rows.forEach(row => {
     const totalEl = row.querySelector('.total');
@@ -493,7 +560,7 @@ async function saveRow(row) {
 }
 
 async function removeRow(btn) {
-  const row = btn.closest('tr');
+  const row = btn.closest('.employee-card');
   const id = row.dataset.id;
   const uid = row.dataset.uid;
 
@@ -521,14 +588,19 @@ async function removeRow(btn) {
 
 function addRow(data) {
   data = data || {};
-  const tbody = document.getElementById('tableBody');
-  const row = document.createElement('tr');
+  const container = document.getElementById('tableBody');
+  const row = document.createElement('div');
+  row.className = 'employee-card';
   if (data.id) row.dataset.id = data.id;
   row.dataset.uid = 'r' + Date.now() + Math.random().toString(36).slice(2);
 
-  function makeInput(type, className, value, opts) {
+  function makeField(labelText, type, className, value, opts) {
     opts = opts || {};
-    const td = document.createElement('td');
+    const wrap = document.createElement('div');
+    if (opts.full) wrap.className = 'field-full';
+    const label = document.createElement('label');
+    label.className = 'field-label';
+    label.textContent = labelText;
     const input = document.createElement('input');
     input.type = type;
     input.className = className;
@@ -540,34 +612,44 @@ function addRow(data) {
     if (opts.skipTab) {
       input.tabIndex = -1; // skip in tab order per request (e.g. Date Left)
     }
-    td.appendChild(input);
-    return td;
+    wrap.appendChild(label);
+    wrap.appendChild(input);
+    return { wrap, input };
   }
 
-  row.appendChild(makeInput('text', 'name', data.name || ''));
-  row.appendChild(makeInput('text', 'role', data.role || ''));
-  row.appendChild(makeInput('number', 'advance', data.advance ?? ''));
-  row.appendChild(makeInput('number', 'total', data.total ?? ''));
-  row.appendChild(makeInput('number', 'prevPending', data.prev_month_pending ?? ''));
-  row.appendChild(makeInput('number', 'remaining', data.remaining ?? 0, { readonly: true }));
-  row.appendChild(makeInput('text', 'notes', data.notes || ''));
-  row.appendChild(makeInput('date', 'dateLeft', data.date_left || '', { skipTab: true }));
-
-  const removeTd = document.createElement('td');
-  removeTd.className = 'remove-col';
   const removeBtn = document.createElement('button');
   removeBtn.type = 'button';
+  removeBtn.className = 'card-remove';
   removeBtn.textContent = '🗑️';
-  removeBtn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:16px;padding:2px 6px;';
   removeBtn.addEventListener('click', () => removeRow(removeBtn));
-  removeTd.appendChild(removeBtn);
-  row.appendChild(removeTd);
+  row.appendChild(removeBtn);
 
-  tbody.appendChild(row);
+  const nameRoleWrap = document.createElement('div');
+  nameRoleWrap.className = 'card-name-role';
+  const nameField = makeField('Name', 'text', 'name', data.name || '');
+  const roleField = makeField('Role', 'text', 'role', data.role || '');
+  nameRoleWrap.appendChild(nameField.wrap);
+  nameRoleWrap.appendChild(roleField.wrap);
+  row.appendChild(nameRoleWrap);
 
-  row.querySelector('.total').addEventListener('input', () => calcRemaining(row));
-  row.querySelector('.advance').addEventListener('input', () => calcRemaining(row));
-  row.querySelector('.prevPending').addEventListener('input', () => calcRemaining(row));
+  const fieldsWrap = document.createElement('div');
+  fieldsWrap.className = 'card-fields';
+  const advanceField = makeField('Advance (Given)', 'number', 'advance', data.advance ?? '');
+  const totalField = makeField('Total Salary', 'number', 'total', data.total ?? '');
+  const prevPendingField = makeField('Prev Month Pending', 'number', 'prevPending', data.prev_month_pending ?? '');
+  const remainingField = makeField('Remaining to Give', 'number', 'remaining', data.remaining ?? 0, { readonly: true });
+  const notesField = makeField('Notes', 'text', 'notes', data.notes || '', { full: true });
+  const dateLeftField = makeField('Date Left', 'date', 'dateLeft', data.date_left || '', { skipTab: true });
+
+  [advanceField, totalField, prevPendingField, remainingField, notesField, dateLeftField]
+    .forEach(f => fieldsWrap.appendChild(f.wrap));
+  row.appendChild(fieldsWrap);
+
+  container.appendChild(row);
+
+  totalField.input.addEventListener('input', () => calcRemaining(row));
+  advanceField.input.addEventListener('input', () => calcRemaining(row));
+  prevPendingField.input.addEventListener('input', () => calcRemaining(row));
   row.querySelectorAll('input').forEach(el => el.addEventListener('change', () => {
     saveRow(row);
     maybeAutoAddRow(row);
@@ -577,7 +659,7 @@ function addRow(data) {
 }
 
 function isLastRow(row) {
-  return row === document.querySelector('#tableBody tr:last-child');
+  return row === document.querySelector('#tableBody .employee-card:last-child');
 }
 
 function maybeAutoAddRow(row) {
@@ -591,21 +673,21 @@ function maybeAutoAddRow(row) {
   if (name && role && total !== '' && advance !== '') {
     addRow();
     // Move focus forward to the new row's Name field, continuing the flow
-    const newRow = document.querySelector('#tableBody tr:last-child');
+    const newRow = document.querySelector('#tableBody .employee-card:last-child');
     if (newRow) newRow.querySelector('.name')?.focus();
   }
 }
 
 async function loadTableForMonth(month) {
-  const tbody = document.getElementById('tableBody');
-  tbody.innerHTML = '<tr><td colspan="7">Loading...</td></tr>';
+  const container = document.getElementById('tableBody');
+  container.innerHTML = '<div class="empty-note">Loading...</div>';
   try {
     const res = await fetch(`${REST_URL}?select=*&month=eq.${month}&deleted=eq.false&order=created_at.asc`, {
       headers: sbHeaders()
     });
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
-    tbody.innerHTML = '';
+    container.innerHTML = '';
     if (data.length > 0) {
       data.forEach(d => addRow(d));
     } else {
@@ -614,7 +696,7 @@ async function loadTableForMonth(month) {
     updateTotals();
   } catch (e) {
     console.error('Load failed', e);
-    tbody.innerHTML = '<tr><td colspan="9">Failed to load data. Check your Supabase table/policy setup.</td></tr>';
+    container.innerHTML = '<div class="empty-note">Failed to load data. Check your Supabase table/policy setup.</div>';
     setStatus('Load failed', true);
   }
 }
