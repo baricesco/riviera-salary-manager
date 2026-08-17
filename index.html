@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <title>Riviera Salary Manager</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
 <style>
   * { box-sizing: border-box; }
   body {
@@ -122,13 +126,11 @@
     color: #666; margin: 24px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #000;
   }
   .section-title:first-of-type { margin-top: 4px; }
-  .detail-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
-  .detail-name-input { font-size: 24px; font-weight: bold; border: none; padding: 2px 0; margin-bottom: 4px; }
-  .detail-name-input:focus { outline: 1px solid #ccc; }
-  .detail-role-input { border: none; padding: 2px 0; color: #666; max-width: 240px; }
-  .detail-role-input:focus { outline: 1px solid #ccc; }
-  .detail-side { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
-  .detail-side > div { min-width: 150px; }
+  .detail-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .detail-name-display { font-size: 24px; font-weight: bold; }
+  .detail-role-display { font-size: 14px; color: #666; margin-top: 2px; }
+  .detail-side { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .detail-side button svg { display: inline-block; }
 
   .panel { background: #fff; border: 1px solid #999; border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; }
   .panel-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
@@ -170,10 +172,42 @@
   .modal-actions { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; }
   .modal-actions button.confirm-danger { background: #c0392b; color: #fff; border-color: #c0392b; }
 
+  /* flatpickr — themed to match the app's plain black/white look instead
+     of its default blue, and kept looking like a normal editable field
+     (not our usual grayed-out [readonly] style) since it opens the
+     calendar on click. */
+  input.flatpickr-input[readonly] { background: #fff; color: inherit; cursor: pointer; }
+  .flatpickr-day.selected, .flatpickr-day.selected:hover,
+  .flatpickr-day.selected:focus { background: #000; border-color: #000; }
+  .flatpickr-day.today { border-color: #000; }
+  .flatpickr-day.today:hover { background: #000; border-color: #000; color: #fff; }
+  .flatpickr-months .flatpickr-month,
+  .flatpickr-current-month .flatpickr-monthDropdown-months,
+  .flatpickr-weekdays { background: #000; }
+  span.flatpickr-weekday { background: #000; color: #fff; }
+  .flatpickr-current-month input.cur-year { color: #fff; }
+  .flatpickr-current-month .flatpickr-monthDropdown-months { color: #fff; }
+  .numInputWrapper span.arrowUp:after { border-bottom-color: #fff; }
+  .numInputWrapper span.arrowDown:after { border-top-color: #fff; }
+  .flatpickr-monthSelect-month.selected, .flatpickr-monthSelect-month.selected:hover { background: #000; border-color: #000; }
+  .flatpickr-monthSelect-month.flatpickr-monthSelect-currentMonth { border-color: #000; }
+
+  .print-only { display: none; }
+
   @media print {
+    body { background: #fff; }
     .container { max-width: 100%; box-shadow: none; border: none; padding: 0; }
-    .toolbar, .backlink, .icon-btn, #addPaymentBtn, .payment-add-row, #addMonthsPanel, button { display: none !important; }
+    .toolbar, .backlink, .icon-btn, #addPaymentBtn, .payment-add-row, #addMonthsPanel,
+    .modal-overlay, .flatpickr-calendar, button { display: none !important; }
     input { border: none; background: transparent; padding: 2px; }
+    .print-only { display: block; margin: -6px 0 16px; font-size: 12px; color: #666; }
+    /* Chrome/Safari drop background colors by default when printing —
+       status pills, stat tiles and the black company-snapshot bar would
+       otherwise print as plain white boxes with no way to tell them apart. */
+    .status-pill, .cs-item, .stat-icon, .pc-pending-box, th, .ledger-table td.this-month {
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .panel, .person-card, .stat-card, table, .summary-bar { break-inside: avoid; }
   }
 </style>
 </head>
@@ -182,10 +216,11 @@
 <div class="container">
 
 <h1>Riviera Salary Manager</h1>
+<div class="print-only" id="printMeta"></div>
 
 <div class="toolbar">
   <button type="button" class="primary" onclick="openAddEmployeeModal()">+ Add Employee</button>
-  <button type="button" onclick="window.print()">Print</button>
+  <button type="button" onclick="preparePrint()">Print</button>
   <div class="rd-switch" id="viewSwitch">
     <button type="button" class="rd-switch-btn active" id="switchCards" onclick="setViewMode('cards')">CARDS</button>
     <button type="button" class="rd-switch-btn" id="switchTable" onclick="setViewMode('table')">TABLE</button>
@@ -208,15 +243,15 @@
 
   <div class="stats-grid">
     <div class="stat-card">
-      <div class="stat-head"><span class="stat-icon" style="background:#eaf2fe;">💰</span><span class="stat-label">Total Salary (Lifetime)</span></div>
+      <div class="stat-head"><span class="stat-icon" style="background:#eaf2fe; color:#1a54c4;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></span><span class="stat-label">Total Salary (Lifetime)</span></div>
       <div class="stat-value" id="statSalary">0</div>
     </div>
     <div class="stat-card">
-      <div class="stat-head"><span class="stat-icon" style="background:#e6f4ea;">💵</span><span class="stat-label">Total Given (Lifetime)</span></div>
+      <div class="stat-head"><span class="stat-icon" style="background:#e6f4ea; color:#1e8e3e;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg></span><span class="stat-label">Total Given (Lifetime)</span></div>
       <div class="stat-value" id="statGiven">0</div>
     </div>
     <div class="stat-card">
-      <div class="stat-head"><span class="stat-icon" style="background:#fce8ef;">📋</span><span class="stat-label">Total Pending — Right Now</span></div>
+      <div class="stat-head"><span class="stat-icon" style="background:#fce8ef; color:#c0392b;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/><path d="M9 12h6M9 16h6"/></svg></span><span class="stat-label">Total Pending — Right Now</span></div>
       <div class="stat-value" id="statPending">0</div>
     </div>
   </div>
@@ -233,15 +268,13 @@
   <div class="panel">
     <div class="detail-header">
       <div>
-        <input type="text" id="dName" class="detail-name-input" placeholder="Name" onchange="saveEmployeeCore()">
-        <input type="text" id="dRole" class="detail-role-input" placeholder="Role" onchange="saveEmployeeCore()">
+        <div class="detail-name-display" id="dNameDisplay">—</div>
+        <div class="detail-role-display" id="dRoleDisplay">—</div>
+        <div class="hint" id="dDateLeftDisplay"></div>
       </div>
       <div class="detail-side">
-        <div>
-          <label>Date Left</label>
-          <input type="date" id="dDateLeft" onchange="saveEmployeeCore()">
-        </div>
-        <button type="button" class="danger" onclick="deleteEmployee()">🗑 Remove Employee</button>
+        <button type="button" onclick="openEditEmployeeModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Edit</button>
+        <button type="button" class="danger" onclick="deleteEmployee()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Remove Employee</button>
       </div>
     </div>
   </div>
@@ -305,7 +338,7 @@
     <h2><span id="dPaymentsMonthLabel"></span></h2>
     <div class="payments-list" id="paymentsList"></div>
     <div class="payment-add-row">
-      <div><label>Date</label><input type="date" id="newPayDate"></div>
+      <div><label>Date</label><input type="text" id="newPayDate" placeholder="Today"></div>
       <div><label>Amount</label><input type="number" id="newPayAmount" placeholder="0"></div>
       <div><label>Note</label><input type="text" id="newPayNote" placeholder="Optional"></div>
       <div><button type="button" class="primary" onclick="addPayment()">+ Add Payment</button></div>
@@ -361,6 +394,27 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="editEmployeeModal">
+  <div class="modal-box">
+    <p>Edit employee</p>
+    <div class="field"><label>Name</label><input type="text" id="eName"></div>
+    <div class="field"><label>Role</label><input type="text" id="eRole"></div>
+    <div class="field">
+      <label>Date Left</label>
+      <div style="display:flex; gap:6px;">
+        <input type="text" id="eDateLeft" placeholder="Still employed" style="flex:1;">
+        <button type="button" class="icon-btn" onclick="clearEDateLeft()" title="Clear — still employed" aria-label="Clear date left">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" onclick="editEmployeeCancel()">Cancel</button>
+      <button type="button" class="primary" onclick="editEmployeeSave()">Save</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL = "https://hlucnaqttbweikceutlt.supabase.co";
 const SUPABASE_KEY = "sb_publishable_fenOA9Bs7g1T6ADn_FujMw_rZESIU_6";
@@ -405,6 +459,11 @@ function money(n) {
   return n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
 
+// Shared inline SVG for every small "remove this row" icon button — a
+// real vector icon instead of the 🗑️ emoji (font-dependent, inconsistent
+// across platforms, can't be color-matched to the button it's in).
+const ICON_TRASH = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
+
 function proratedSalary(base, daysWorked) {
   base = parseFloat(base) || 0;
   if (daysWorked === null || daysWorked === undefined || daysWorked === '') return base;
@@ -423,6 +482,47 @@ function formatMonthLabel(month) {
   const [year, m] = month.split('-');
   const date = new Date(parseInt(year), parseInt(m) - 1, 1);
   return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+}
+// Attaches a flatpickr month-picker to every ".month-input" inside a
+// re-rendered row list. Existing pickers are destroyed first — the rows
+// themselves are regenerated (innerHTML) on every add/remove, which would
+// otherwise leave orphaned flatpickr calendar popups behind each time.
+// The plugin displays the month its own way ("August 2026"); the state
+// update always converts back to our own "YYYY-MM" via the picked Date,
+// so the display format is free to look nice without touching storage.
+// Falls back to a plain typable text input (wired via a real change
+// listener, not an inline attribute, to avoid double-handling once
+// flatpickr is back) if the CDN script didn't load.
+function initMonthPickers(containerEl, pickerArray, setter) {
+  pickerArray.forEach(fp => fp.destroy());
+  pickerArray.length = 0;
+  const inputs = containerEl.querySelectorAll('.month-input');
+  if (typeof flatpickr === 'undefined' || typeof monthSelectPlugin === 'undefined') {
+    inputs.forEach(inputEl => {
+      const idx = Number(inputEl.dataset.idx);
+      inputEl.addEventListener('change', () => setter(idx, inputEl.value));
+    });
+    return;
+  }
+  inputs.forEach(inputEl => {
+    const idx = Number(inputEl.dataset.idx);
+    const [y, m] = (inputEl.value || '').split('-').map(Number);
+    pickerArray.push(flatpickr(inputEl, {
+      plugins: [new monthSelectPlugin({ shorthand: true })],
+      defaultDate: (y && m) ? new Date(y, m - 1, 1) : undefined,
+      onChange: (selectedDates) => {
+        if (!selectedDates[0]) return;
+        const d = selectedDates[0];
+        setter(idx, `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+      }
+    }));
+  });
+}
+
+function formatDateDisplay(d) {
+  if (!d) return '';
+  const [y, m, day] = d.split('-').map(Number);
+  return new Date(y, m - 1, day).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 function ymAdd(month, delta) {
   const [y, m] = month.split('-').map(Number);
@@ -719,14 +819,16 @@ function openAddEmployeeModal() {
 }
 function addEmployeeCancel() { document.getElementById('addEmployeeModal').classList.remove('active'); }
 
+let addEmpPickers = [];
 function renderAddEmpRows() {
   const el = document.getElementById('addEmpRowsList');
   el.innerHTML = addEmpRows.map((row, idx) => `
     <div class="ms-row">
-      <div><input type="month" value="${row.month}" onchange="addEmpSetMonth(${idx}, this.value)"></div>
+      <div><input type="text" class="month-input" data-idx="${idx}" value="${row.month}" placeholder="YYYY-MM"></div>
       <div><input type="number" placeholder="0" value="${row.salary}" oninput="addEmpSetSalary(${idx}, this.value)"></div>
-      <button type="button" class="icon-btn" onclick="addEmpRemoveRow(${idx})" ${addEmpRows.length <= 1 ? 'disabled' : ''}>🗑️</button>
+      <button type="button" class="icon-btn" onclick="addEmpRemoveRow(${idx})" ${addEmpRows.length <= 1 ? 'disabled' : ''} aria-label="Remove row">${ICON_TRASH}</button>
     </div>`).join('');
+  initMonthPickers(el, addEmpPickers, addEmpSetMonth);
 }
 function addEmpSetMonth(idx, val) { addEmpRows[idx].month = val; }
 function addEmpSetSalary(idx, val) { addEmpRows[idx].salary = val; }
@@ -777,13 +879,23 @@ async function addEmployeeConfirm() {
 // click any row in the ledger table to edit a different one instead.
 // ---------------------------------------------------------------------
 let detailEmployeeId = null;
+let detailEmployee = null; // { id, name, role, date_left } — Personal Detail's read-only display
 let detailSalaryMonthId = null;
 let detailMonth = null;
+
+function renderPersonalDetail() {
+  document.getElementById('dNameDisplay').textContent = detailEmployee.name || '(unnamed)';
+  document.getElementById('dRoleDisplay').textContent = detailEmployee.role || '—';
+  document.getElementById('dDateLeftDisplay').textContent = detailEmployee.date_left
+    ? 'Left ' + formatDateDisplay(detailEmployee.date_left)
+    : 'Currently employed';
+}
 
 function showListView() {
   document.getElementById('view-list').classList.add('active');
   document.getElementById('view-detail').classList.remove('active');
   detailEmployeeId = null;
+  detailEmployee = null;
   detailSalaryMonthId = null;
   detailMonth = null;
   loadList();
@@ -796,9 +908,8 @@ async function openDetail(employeeId) {
   setStatus('Loading...');
   try {
     const emp = (await sbGet(`${EMP_URL}?select=*&id=eq.${employeeId}`))[0];
-    document.getElementById('dName').value = emp.name || '';
-    document.getElementById('dRole').value = emp.role || '';
-    document.getElementById('dDateLeft').value = emp.date_left || '';
+    detailEmployee = emp;
+    renderPersonalDetail();
 
     await ensureEmployeeMonth(employeeId, currentCalendarMonth(), emp.date_left);
     const latest = await sbGet(`${SM_URL}?select=month&employee_id=eq.${employeeId}&deleted=eq.false&order=month.desc&limit=1`);
@@ -823,16 +934,18 @@ async function openDetail(employeeId) {
 // than overwritten — edit an existing month from the ledger table instead.
 // ---------------------------------------------------------------------
 let bulkRows = [];
+let bulkPickers = [];
 
 function renderBulkRows() {
   const el = document.getElementById('bulkRowsList');
   if (!el) return;
   el.innerHTML = bulkRows.map((row, idx) => `
     <div class="ms-row">
-      <div><input type="month" value="${row.month}" onchange="bulkSetMonth(${idx}, this.value)"></div>
+      <div><input type="text" class="month-input" data-idx="${idx}" value="${row.month}" placeholder="YYYY-MM"></div>
       <div><input type="number" placeholder="0" value="${row.salary}" oninput="bulkSetSalary(${idx}, this.value)"></div>
-      <button type="button" class="icon-btn" onclick="bulkRemoveRow(${idx})" ${bulkRows.length <= 1 ? 'disabled' : ''}>🗑️</button>
+      <button type="button" class="icon-btn" onclick="bulkRemoveRow(${idx})" ${bulkRows.length <= 1 ? 'disabled' : ''} aria-label="Remove row">${ICON_TRASH}</button>
     </div>`).join('');
+  initMonthPickers(el, bulkPickers, bulkSetMonth);
 }
 function bulkSetMonth(idx, val) { bulkRows[idx].month = val; }
 function bulkSetSalary(idx, val) { bulkRows[idx].salary = val; }
@@ -966,7 +1079,7 @@ function renderPayments() {
       <div class="amt">Rs. ${money(p.amount)}</div>
       <div>${escapeHtml(p.note || '')}</div>
       <div></div>
-      <button type="button" class="icon-btn" onclick="removePayment('${p.id}')">🗑️</button>
+      <button type="button" class="icon-btn" onclick="removePayment('${p.id}')" aria-label="Remove payment">${ICON_TRASH}</button>
     </div>`).join('');
 }
 function totalPaid() { return currentPayments.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0); }
@@ -981,7 +1094,8 @@ async function addPayment() {
   setStatus('Saving...');
   try {
     await sbPost(PAY_URL, { salary_month_id: detailSalaryMonthId, amount, pay_date, note: noteEl.value.trim() || null });
-    dateEl.value = ''; amountEl.value = ''; noteEl.value = '';
+    if (newPayDatePicker) newPayDatePicker.clear(); else dateEl.value = '';
+    amountEl.value = ''; noteEl.value = '';
     await loadPayments();
     await recalcForward(detailEmployeeId, detailMonth);
     await refreshLedger();
@@ -1026,23 +1140,50 @@ async function saveThisMonth() {
   }
 }
 
-async function saveEmployeeCore() {
-  const name = document.getElementById('dName').value.trim();
-  const role = document.getElementById('dRole').value.trim() || null;
-  const date_left = document.getElementById('dDateLeft').value || null;
+// ---------------------------------------------------------------------
+// Edit Employee modal — Personal Detail is read-only until you open this;
+// Save writes it back and returns to the read-only display.
+// ---------------------------------------------------------------------
+let eDateLeftPicker = null;
+let newPayDatePicker = null; // flatpickr instance for the Given section's payment-date field
+
+function openEditEmployeeModal() {
+  document.getElementById('eName').value = detailEmployee.name || '';
+  document.getElementById('eRole').value = detailEmployee.role || '';
+  if (eDateLeftPicker) eDateLeftPicker.setDate(detailEmployee.date_left || null, false);
+  else document.getElementById('eDateLeft').value = detailEmployee.date_left || '';
+  document.getElementById('editEmployeeModal').classList.add('active');
+}
+function editEmployeeCancel() { document.getElementById('editEmployeeModal').classList.remove('active'); }
+function clearEDateLeft() {
+  if (eDateLeftPicker) eDateLeftPicker.clear();
+  else document.getElementById('eDateLeft').value = '';
+}
+
+async function editEmployeeSave() {
+  const name = document.getElementById('eName').value.trim();
+  const role = document.getElementById('eRole').value.trim() || null;
+  const date_left = document.getElementById('eDateLeft').value || null;
   if (!name) { showInfo('Name cannot be empty.'); return; }
+  const btn = document.querySelector('#editEmployeeModal .primary');
+  if (btn) btn.disabled = true;
   setStatus('Saving...');
   try {
     await sbPatch(`${EMP_URL}?id=eq.${detailEmployeeId}`, { name, role, date_left });
+    detailEmployee = Object.assign({}, detailEmployee, { name, role, date_left });
+    renderPersonalDetail();
+    document.getElementById('editEmployeeModal').classList.remove('active');
     setStatus('Saved');
   } catch (e) {
     console.error(e);
     setStatus('Failed to save', true);
+  } finally {
+    if (btn) btn.disabled = false;
   }
 }
 
 async function deleteEmployee() {
-  const name = document.getElementById('dName').value || 'this employee';
+  const name = (detailEmployee && detailEmployee.name) || 'this employee';
   const confirmed = await askDeleteConfirmation(`This will remove ${name} from every month going forward. Type DELETE to confirm.`);
   if (!confirmed) return;
   setStatus('Removing...');
@@ -1116,9 +1257,22 @@ async function refreshLedger() {
 }
 
 // ---------------------------------------------------------------------
+// Print — stamps a printed-on line (hidden on screen, shown by the
+// @media print rules) before handing off to the browser's print dialog.
+// ---------------------------------------------------------------------
+function preparePrint() {
+  document.getElementById('printMeta').textContent = 'Printed ' + new Date().toLocaleString();
+  window.print();
+}
+
+// ---------------------------------------------------------------------
 // Init — straight to the full list, nothing to pick.
 // ---------------------------------------------------------------------
 async function init() {
+  if (typeof flatpickr !== 'undefined') {
+    eDateLeftPicker = flatpickr('#eDateLeft', { dateFormat: 'Y-m-d', altInput: true, altFormat: 'j M Y' });
+    newPayDatePicker = flatpickr('#newPayDate', { dateFormat: 'Y-m-d', altInput: true, altFormat: 'j M Y' });
+  }
   await loadList();
 }
 
