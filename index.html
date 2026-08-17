@@ -48,6 +48,12 @@
   button.danger { background: #c0392b; color: #fff; border-color: #c0392b; }
   button:disabled { opacity: .5; cursor: not-allowed; }
 
+  .company-snapshot { display: flex; gap: 12px; margin: 4px 0 16px; flex-wrap: wrap; }
+  .cs-item { background: #000; color: #fff; border-radius: 10px; padding: 10px 18px; display: flex; flex-direction: column; gap: 3px; }
+  .cs-item .cs-label { font-size: 11px; text-transform: uppercase; opacity: .7; letter-spacing: .03em; }
+  .cs-item .cs-value { font-size: 20px; font-weight: bold; }
+  .cs-item.highlight { background: #c0392b; }
+
   .toolbar { margin: 12px 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .toolbar label { margin: 0; }
   #statusMsg { font-size: 13px; color: #666; margin-left: auto; white-space: nowrap; }
@@ -81,16 +87,29 @@
   .pc-rows { font-size: 13px; display: flex; flex-direction: column; gap: 4px; }
   .pc-row { display: flex; justify-content: space-between; }
   .pc-row .lbl { color: #666; }
-  .status-pill { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+  .status-pill { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; white-space: nowrap; }
   .status-pill.paid { background: #e6f4ea; color: #1e8e3e; }
   .status-pill.pending { background: #fce8ef; color: #c0392b; }
 
+  .pc-divider { border-top: 1px dashed #ccc; margin: 12px 0 10px; }
+  .pc-pending-split { display: flex; gap: 8px; }
+  .pc-pending-box { flex: 1; background: #f4f6f8; border-radius: 8px; padding: 8px 10px; text-align: center; }
+  .pc-pending-lbl { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #666; letter-spacing: .02em; margin-bottom: 3px; }
+  .pc-pending-val { font-size: 16px; font-weight: bold; }
+  .pc-pending-val.neg { color: #c0392b; }
+  .pc-pending-val.pos { color: #1e8e3e; }
+
   /* People table */
   table { border-collapse: separate; border-spacing: 0; width: 100%; border: 1px solid #999; border-radius: 10px; overflow: hidden; }
-  th, td { border: 1px solid #999; padding: 7px 8px; text-align: left; font-size: 13px; }
-  th { background: #000; color: #fff; font-size: 12px; text-transform: uppercase; }
+  th, td { border: 1px solid #999; padding: 8px 10px; text-align: left; font-size: 13px; }
+  th { background: #000; color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: .02em; white-space: nowrap; }
+  td.num, th:nth-child(n+3) { text-align: right; }
+  td.num { font-variant-numeric: tabular-nums; }
+  td.num.neg { color: #c0392b; }
+  td.num.pos { color: #1e8e3e; }
+  tbody tr:nth-child(even) { background: #fafafa; }
   tr.person-row { cursor: pointer; }
-  tr.person-row:hover { background: #f4f6f8; }
+  tr.person-row:hover { background: #f4f6f8 !important; }
 
   /* Detail view */
   .backlink { display: inline-block; cursor: pointer; color: #000; font-weight: bold; margin-bottom: 12px; }
@@ -143,6 +162,17 @@
 
 <h1>Riviera Salary Manager</h1>
 
+<div class="company-snapshot" id="companySnapshot">
+  <div class="cs-item">
+    <span class="cs-label">Active Employees</span>
+    <span class="cs-value" id="csCount">—</span>
+  </div>
+  <div class="cs-item highlight">
+    <span class="cs-label">Company-Wide Pending — Right Now</span>
+    <span class="cs-value" id="csPending">—</span>
+  </div>
+</div>
+
 <div class="toolbar">
   <label for="monthSelect" style="text-transform:none; font-weight:bold;">Month:</label>
   <select id="monthSelect" onchange="switchMonth(this.value)" style="width:auto;"></select>
@@ -170,11 +200,15 @@
       <div class="stat-value" id="statPaid">0</div>
     </div>
     <div class="stat-card">
+      <div class="stat-head"><span class="stat-icon" style="background:#eef0fd;">📅</span><span class="stat-label">This Month Pending</span></div>
+      <div class="stat-value" id="statThisMonth">0</div>
+    </div>
+    <div class="stat-card">
       <div class="stat-head"><span class="stat-icon" style="background:#fff4d6;">⏳</span><span class="stat-label">Prev Pending In</span></div>
       <div class="stat-value" id="statPrevPending">0</div>
     </div>
     <div class="stat-card">
-      <div class="stat-head"><span class="stat-icon" style="background:#fce8ef;">📋</span><span class="stat-label">Remaining to Give</span></div>
+      <div class="stat-head"><span class="stat-icon" style="background:#fce8ef;">📋</span><span class="stat-label">Total Pending (All Time)</span></div>
       <div class="stat-value" id="statRemaining">0</div>
     </div>
   </div>
@@ -251,10 +285,10 @@
         <thead>
           <tr>
             <th>Month</th><th>Base Salary</th><th>Days</th><th>Prorated</th>
-            <th>Paid</th><th>Prev Pending In</th><th>Remaining</th><th>Status</th>
+            <th>Paid</th><th>This Month Pending</th><th>Prev Pending In</th><th>Total Pending</th><th>Status</th>
           </tr>
         </thead>
-        <tbody id="ledgerBody"><tr><td colspan="8" class="empty-note">Loading...</td></tr></tbody>
+        <tbody id="ledgerBody"><tr><td colspan="9" class="empty-note">Loading...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -489,21 +523,25 @@ async function recalcForward(employeeId, fromMonth) {
 }
 
 async function fetchMonthCombined(month) {
-  const rows = await sbGet(`${SM_URL}?select=*,employee:riviera_employees(id,name,role,date_left)&month=eq.${month}&deleted=eq.false&order=created_at.asc`);
+  const rows = await sbGet(`${SM_URL}?select=*,employee:riviera_employees(id,name,role,date_left,deleted)&month=eq.${month}&deleted=eq.false&order=created_at.asc`);
   const ids = rows.map(r => r.id);
   let paidMap = {};
   if (ids.length) {
     const pays = await sbGet(`${PAY_URL}?select=salary_month_id,amount&salary_month_id=in.(${ids.join(',')})&deleted=eq.false`);
     pays.forEach(p => { paidMap[p.salary_month_id] = (paidMap[p.salary_month_id] || 0) + (parseFloat(p.amount) || 0); });
   }
-  return rows.filter(r => r.employee).map(r => {
+  // Soft-deleting an employee only marks riviera_employees.deleted — their
+  // salary_months row for this month still exists, so it must be filtered
+  // out here too or the removed person keeps showing up on the list.
+  return rows.filter(r => r.employee && !r.employee.deleted).map(r => {
     const paid = paidMap[r.id] || 0;
     const prorated = proratedSalary(r.base_salary, r.days_worked);
     const prevPending = parseFloat(r.prev_pending) || 0;
+    const thisMonthOwed = prorated - paid;
     return {
       salaryMonthId: r.id, employeeId: r.employee.id, name: r.employee.name, role: r.employee.role,
       baseSalary: parseFloat(r.base_salary) || 0, daysWorked: r.days_worked,
-      prorated, paid, prevPending, remaining: prorated - paid + prevPending
+      prorated, paid, prevPending, thisMonthOwed, remaining: thisMonthOwed + prevPending
     };
   });
 }
@@ -521,6 +559,7 @@ async function loadMonth(month) {
     const combined = await fetchMonthCombined(month);
     peopleCache = combined;
     renderPeople();
+    refreshCompanySnapshot();
   } catch (e) {
     console.error('Load failed', e);
     document.getElementById('peopleContainer').innerHTML =
@@ -529,13 +568,50 @@ async function loadMonth(month) {
   }
 }
 
+// Company-wide snapshot: each active employee's LATEST recorded month,
+// regardless of which month is currently selected in the dropdown — this
+// is the one number that always reflects "what do we currently owe".
+async function fetchCompanySnapshot() {
+  const employees = await fetchActiveEmployees();
+  if (!employees.length) return { count: 0, totalPending: 0 };
+  const ids = employees.map(e => e.id);
+  const rows = await sbGet(`${SM_URL}?select=*&employee_id=in.(${ids.join(',')})&deleted=eq.false&order=month.desc`);
+  const latestByEmp = {};
+  rows.forEach(r => { if (!latestByEmp[r.employee_id]) latestByEmp[r.employee_id] = r; });
+  const latestRows = Object.values(latestByEmp);
+  const smIds = latestRows.map(r => r.id);
+  let paidMap = {};
+  if (smIds.length) {
+    const pays = await sbGet(`${PAY_URL}?select=salary_month_id,amount&salary_month_id=in.(${smIds.join(',')})&deleted=eq.false`);
+    pays.forEach(p => { paidMap[p.salary_month_id] = (paidMap[p.salary_month_id] || 0) + (parseFloat(p.amount) || 0); });
+  }
+  let totalPending = 0;
+  latestRows.forEach(r => {
+    const paid = paidMap[r.id] || 0;
+    const prorated = proratedSalary(r.base_salary, r.days_worked);
+    const prevPending = parseFloat(r.prev_pending) || 0;
+    totalPending += prorated - paid + prevPending;
+  });
+  return { count: employees.length, totalPending };
+}
+async function refreshCompanySnapshot() {
+  try {
+    const snap = await fetchCompanySnapshot();
+    document.getElementById('csCount').textContent = snap.count;
+    document.getElementById('csPending').textContent = 'Rs. ' + money(snap.totalPending);
+  } catch (e) {
+    console.error('Snapshot failed', e);
+  }
+}
+
 let peopleCache = [];
 
 function renderStats(list) {
-  let salary = 0, paid = 0, prevPending = 0, remaining = 0;
-  list.forEach(p => { salary += p.prorated; paid += p.paid; prevPending += p.prevPending; remaining += p.remaining; });
+  let salary = 0, paid = 0, thisMonth = 0, prevPending = 0, remaining = 0;
+  list.forEach(p => { salary += p.prorated; paid += p.paid; thisMonth += p.thisMonthOwed; prevPending += p.prevPending; remaining += p.remaining; });
   document.getElementById('statSalary').textContent = money(salary);
   document.getElementById('statPaid').textContent = money(paid);
+  document.getElementById('statThisMonth').textContent = money(thisMonth);
   document.getElementById('statPrevPending').textContent = money(prevPending);
   document.getElementById('statRemaining').textContent = money(remaining);
 }
@@ -553,18 +629,24 @@ function renderPeople() {
       <tr class="person-row" onclick="openDetail('${p.employeeId}')">
         <td>${escapeHtml(p.name)}</td>
         <td>${escapeHtml(p.role || '')}</td>
-        <td>${p.daysWorked ? p.daysWorked + ' / ' + STANDARD_DAYS : 'Full'}</td>
-        <td>${money(p.prorated)}</td>
-        <td>${money(p.paid)}</td>
-        <td>${money(p.prevPending)}</td>
-        <td>${money(p.remaining)}</td>
+        <td class="num">${p.daysWorked ? p.daysWorked + ' / ' + STANDARD_DAYS : 'Full'}</td>
+        <td class="num">${money(p.prorated)}</td>
+        <td class="num">${money(p.paid)}</td>
+        <td class="num ${p.thisMonthOwed > 0 ? 'neg' : 'pos'}">${money(p.thisMonthOwed)}</td>
+        <td class="num">${money(p.prevPending)}</td>
+        <td class="num ${p.remaining > 0 ? 'neg' : 'pos'}"><b>${money(p.remaining)}</b></td>
         <td>${statusPillHtml(p.remaining)}</td>
       </tr>`).join('');
     container.innerHTML = `
-      <table>
-        <thead><tr><th>Name</th><th>Role</th><th>Days</th><th>Prorated</th><th>Paid</th><th>Prev Pending</th><th>Remaining</th><th>Status</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>`;
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>Name</th><th>Role</th><th>Days</th><th>Prorated</th><th>Paid</th>
+            <th>This Month Pending</th><th>Prev Pending</th><th>Total Pending</th><th>Status</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
   } else {
     container.innerHTML = `<div class="people-grid">${list.map(p => `
       <div class="person-card" onclick="openDetail('${p.employeeId}')">
@@ -575,8 +657,17 @@ function renderPeople() {
         <div class="pc-rows">
           <div class="pc-row"><span class="lbl">Salary${p.daysWorked ? ' (' + p.daysWorked + '/' + STANDARD_DAYS + ' days)' : ''}</span><span>Rs. ${money(p.prorated)}</span></div>
           <div class="pc-row"><span class="lbl">Paid</span><span>Rs. ${money(p.paid)}</span></div>
-          <div class="pc-row"><span class="lbl">Prev Pending</span><span>Rs. ${money(p.prevPending)}</span></div>
-          <div class="pc-row"><span class="lbl">Remaining</span><span><b>Rs. ${money(p.remaining)}</b></span></div>
+        </div>
+        <div class="pc-divider"></div>
+        <div class="pc-pending-split">
+          <div class="pc-pending-box">
+            <div class="pc-pending-lbl">This Month</div>
+            <div class="pc-pending-val ${p.thisMonthOwed > 0 ? 'neg' : 'pos'}">Rs. ${money(p.thisMonthOwed)}</div>
+          </div>
+          <div class="pc-pending-box">
+            <div class="pc-pending-lbl">Total — All Months</div>
+            <div class="pc-pending-val ${p.remaining > 0 ? 'neg' : 'pos'}">Rs. ${money(p.remaining)}</div>
+          </div>
         </div>
       </div>`).join('')}</div>`;
   }
@@ -727,6 +818,7 @@ async function loadDetail() {
 
     await loadPayments();
     await refreshLedger();
+    refreshCompanySnapshot();
     setStatus('');
   } catch (e) {
     console.error(e);
@@ -779,6 +871,7 @@ async function addPayment() {
     await loadPayments();
     await recalcForward(detailEmployeeId, currentMonth);
     await refreshLedger();
+    refreshCompanySnapshot();
     setStatus('Saved');
   } catch (e) {
     console.error(e);
@@ -794,6 +887,7 @@ async function removePayment(id) {
     await loadPayments();
     await recalcForward(detailEmployeeId, currentMonth);
     await refreshLedger();
+    refreshCompanySnapshot();
     setStatus('Removed');
   } catch (e) {
     console.error(e);
@@ -812,6 +906,7 @@ async function saveThisMonth() {
     await sbPatch(`${SM_URL}?id=eq.${detailSalaryMonthId}`, { base_salary, days_worked, prev_pending, notes });
     await recalcForward(detailEmployeeId, currentMonth);
     await refreshLedger();
+    refreshCompanySnapshot();
     recalcDetailPreview();
     setStatus('Saved');
   } catch (e) {
@@ -869,30 +964,33 @@ async function refreshLedger() {
   const tbody = document.getElementById('ledgerBody');
   try {
     const months = await sbGet(`${SM_URL}?select=*&employee_id=eq.${detailEmployeeId}&deleted=eq.false&order=month.asc`);
-    if (months.length === 0) { tbody.innerHTML = '<tr><td colspan="8" class="empty-note">No months on record.</td></tr>'; return; }
+    if (months.length === 0) { tbody.innerHTML = '<tr><td colspan="9" class="empty-note">No months on record.</td></tr>'; return; }
     const rowsHtml = [];
     for (const m of months) {
       const paid = await fetchPaymentsSum(m.id);
       const prorated = proratedSalary(m.base_salary, m.days_worked);
       const prevPending = parseFloat(m.prev_pending) || 0;
-      const remaining = prorated - paid + prevPending;
+      const thisMonthOwed = prorated - paid;
+      const remaining = thisMonthOwed + prevPending;
       const isThisMonth = m.month === currentMonth;
+      const tm = isThisMonth ? 'this-month' : '';
       rowsHtml.push(`
         <tr${isThisMonth ? ' class="this-month-row"' : ''}>
-          <td class="${isThisMonth ? 'this-month' : ''}">${formatMonthLabel(m.month)}${isThisMonth ? ' (current)' : ''}</td>
-          <td class="${isThisMonth ? 'this-month' : ''}">${money(m.base_salary)}</td>
-          <td class="${isThisMonth ? 'this-month' : ''}">${m.days_worked ? m.days_worked + '/' + STANDARD_DAYS : 'Full'}</td>
-          <td class="${isThisMonth ? 'this-month' : ''}">${money(prorated)}</td>
-          <td class="${isThisMonth ? 'this-month' : ''}">${money(paid)}</td>
-          <td class="${isThisMonth ? 'this-month' : ''}">${money(prevPending)}</td>
-          <td class="${isThisMonth ? 'this-month' : ''}"><b>${money(remaining)}</b></td>
-          <td class="${isThisMonth ? 'this-month' : ''}">${statusPillHtml(remaining)}</td>
+          <td class="${tm}">${formatMonthLabel(m.month)}${isThisMonth ? ' (current)' : ''}</td>
+          <td class="num ${tm}">${money(m.base_salary)}</td>
+          <td class="num ${tm}">${m.days_worked ? m.days_worked + '/' + STANDARD_DAYS : 'Full'}</td>
+          <td class="num ${tm}">${money(prorated)}</td>
+          <td class="num ${tm}">${money(paid)}</td>
+          <td class="num ${tm} ${thisMonthOwed > 0 ? 'neg' : 'pos'}">${money(thisMonthOwed)}</td>
+          <td class="num ${tm}">${money(prevPending)}</td>
+          <td class="num ${tm} ${remaining > 0 ? 'neg' : 'pos'}"><b>${money(remaining)}</b></td>
+          <td class="${tm}">${statusPillHtml(remaining)}</td>
         </tr>`);
     }
     tbody.innerHTML = rowsHtml.join('');
   } catch (e) {
     console.error(e);
-    tbody.innerHTML = '<tr><td colspan="8" class="empty-note">Failed to load ledger.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="empty-note">Failed to load ledger.</td></tr>';
   }
 }
 
