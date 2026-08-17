@@ -117,6 +117,11 @@
   /* Detail view */
   .backlink { display: inline-block; cursor: pointer; color: #000; font-weight: bold; margin-bottom: 12px; }
   .backlink:hover { text-decoration: underline; }
+  .section-title {
+    font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em;
+    color: #666; margin: 24px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #000;
+  }
+  .section-title:first-of-type { margin-top: 4px; }
   .detail-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
   .detail-name-input { font-size: 24px; font-weight: bold; border: none; padding: 2px 0; margin-bottom: 4px; }
   .detail-name-input:focus { outline: 1px solid #ccc; }
@@ -224,17 +229,38 @@
 
   <span class="backlink" onclick="showListView()">&larr; Back to List</span>
 
-  <div class="detail-header">
-    <div>
-      <input type="text" id="dName" class="detail-name-input" placeholder="Name" onchange="saveEmployeeCore()">
-      <input type="text" id="dRole" class="detail-role-input" placeholder="Role" onchange="saveEmployeeCore()">
-    </div>
-    <div class="detail-side">
+  <h2 class="section-title">Personal Detail</h2>
+  <div class="panel">
+    <div class="detail-header">
       <div>
-        <label>Date Left</label>
-        <input type="date" id="dDateLeft" onchange="saveEmployeeCore()">
+        <input type="text" id="dName" class="detail-name-input" placeholder="Name" onchange="saveEmployeeCore()">
+        <input type="text" id="dRole" class="detail-role-input" placeholder="Role" onchange="saveEmployeeCore()">
       </div>
-      <button type="button" class="danger" onclick="deleteEmployee()">🗑 Remove Employee</button>
+      <div class="detail-side">
+        <div>
+          <label>Date Left</label>
+          <input type="date" id="dDateLeft" onchange="saveEmployeeCore()">
+        </div>
+        <button type="button" class="danger" onclick="deleteEmployee()">🗑 Remove Employee</button>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">Salary by Month</h2>
+
+  <div class="panel">
+    <h2>All Months</h2>
+    <div class="hint" style="margin-bottom:10px;">Click any month below to edit it — no date picker needed.</div>
+    <div style="overflow-x:auto;">
+      <table class="ledger-table">
+        <thead>
+          <tr>
+            <th>Month</th><th>Base Salary</th><th>Days</th><th>Prorated</th>
+            <th>Given</th><th>This Month Pending</th><th>Prev Pending In</th><th>Total Pending</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="ledgerBody"><tr><td colspan="9" class="empty-note">Loading...</td></tr></tbody>
+      </table>
     </div>
   </div>
 
@@ -265,8 +291,18 @@
     <div class="readout">Proration is based on a standard 30-day month, so 15 days = half salary. Prorated salary this month: <b>Rs. <span id="dProrated">0</span></b></div>
   </div>
 
+  <div class="panel" id="addMonthsPanel">
+    <h2>+ Add Months</h2>
+    <div class="hint" style="margin-bottom:10px;">Queue up several months at once, same as adding room rows to a booking — pick a month, type its salary, add another row. Any month already on the ledger above is skipped automatically.</div>
+    <div class="ms-row-head"><label>Month</label><label>Salary</label><span></span></div>
+    <div class="ms-rows" id="bulkRowsList"></div>
+    <button type="button" onclick="bulkAddRow()">+ Add Row</button>
+    <button type="button" class="primary" style="margin-left:8px;" onclick="saveBulkMonths()">Save Months</button>
+  </div>
+
+  <h2 class="section-title">Given</h2>
   <div class="panel">
-    <h2>Payments — <span id="dPaymentsMonthLabel"></span></h2>
+    <h2><span id="dPaymentsMonthLabel"></span></h2>
     <div class="payments-list" id="paymentsList"></div>
     <div class="payment-add-row">
       <div><label>Date</label><input type="date" id="newPayDate"></div>
@@ -282,31 +318,6 @@
     <div class="summary-box"><div class="lbl">Prev Pending</div><div class="val" id="sumPrevPending">0</div></div>
     <div class="summary-box"><div class="lbl">Pending</div><div class="val" id="sumRemaining">0</div></div>
     <div class="summary-box"><div class="lbl">Status</div><div class="val"><span class="status-pill" id="sumStatus">—</span></div></div>
-  </div>
-
-  <div class="panel">
-    <h2>Ledger — All Months</h2>
-    <div class="hint" style="margin-bottom:10px;">Click any month below to edit it above — no date picker needed.</div>
-    <div style="overflow-x:auto;">
-      <table class="ledger-table">
-        <thead>
-          <tr>
-            <th>Month</th><th>Base Salary</th><th>Days</th><th>Prorated</th>
-            <th>Given</th><th>This Month Pending</th><th>Prev Pending In</th><th>Total Pending</th><th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="ledgerBody"><tr><td colspan="9" class="empty-note">Loading...</td></tr></tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="panel" id="addMonthsPanel">
-    <h2>+ Add Months</h2>
-    <div class="hint" style="margin-bottom:10px;">Queue up several months at once, same as adding room rows to a booking — pick a month, type its salary, add another row. Any month already on the ledger below is skipped automatically.</div>
-    <div class="ms-row-head"><label>Month</label><label>Salary</label><span></span></div>
-    <div class="ms-rows" id="bulkRowsList"></div>
-    <button type="button" onclick="bulkAddRow()">+ Add Row</button>
-    <button type="button" class="primary" style="margin-left:8px;" onclick="saveBulkMonths()">Save Months</button>
   </div>
 
 </div>
