@@ -977,7 +977,7 @@ async function loginSubmit() {
     return;
   }
   try {
-    const users = await sbGet(`${SUPABASE_URL}/rest/v1/users?select=email&email=eq.${encodeURIComponent(email)}&password=eq.${encodeURIComponent(password)}`);
+    const users = await sbGet(`${SUPABASE_URL}/rest/v1/users?select=*&email=eq.${encodeURIComponent(email)}&password=eq.${encodeURIComponent(password)}`);
     if (users.length === 0) {
       errEl.textContent = 'Invalid email or password';
       return;
