@@ -74,30 +74,33 @@
 
   input, select {
     width: 100%;
+    min-height: 44px;
     border: 1px solid var(--c-border-strong);
-    border-radius: var(--r-sm);
-    padding: 7px 9px;
-    font-size: 14px;
+    border-radius: var(--r-md);
+    padding: 10px 12px;
+    /* 16px keeps iOS from zooming the page when a field is focused. */
+    font-size: 16px;
     font-family: inherit;
     color: var(--c-fg);
     background: var(--c-surface);
     transition: border-color var(--t-fast), box-shadow var(--t-fast);
   }
+  input::placeholder { color: #94A3B8; }
   input:hover, select:hover { border-color: var(--c-fg-muted); }
-  input[type="number"] { font-family: 'Fira Code', ui-monospace, monospace; }
+  input[type="number"] { font-family: 'Fira Code', ui-monospace, monospace; font-weight: 500; letter-spacing: -.01em; }
   input[readonly] { background: var(--c-muted); color: var(--c-fg-muted); }
   input[type="number"] { -moz-appearance: textfield; }
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-  label { font-size: 11px; font-weight: 600; color: var(--c-fg-muted); text-transform: uppercase; letter-spacing: .04em; display: block; margin-bottom: var(--sp-1); }
+  label { font-size: 12px; font-weight: 600; color: var(--c-fg); text-transform: none; letter-spacing: 0; display: block; margin-bottom: 5px; }
 
   /* One visible focus treatment for everything keyboard-reachable. */
   :focus-visible { outline: 2px solid var(--c-ring); outline-offset: 2px; border-radius: var(--r-sm); }
   input:focus-visible, select:focus-visible { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px var(--c-primary-soft); }
 
   button {
-    min-height: 38px;
-    padding: 8px 14px;
+    min-height: 44px;
+    padding: 10px 16px;
     cursor: pointer;
     border-radius: var(--r-md);
     border: 1px solid var(--c-border-strong);
@@ -310,17 +313,17 @@
   .panel { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg); padding: var(--sp-4); margin-bottom: var(--sp-4); box-shadow: var(--shadow-sm); }
   .panel-head { display: flex; align-items: baseline; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-3); }
   .panel-head h2 { margin: 0; }
-  .grid-2col { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--sp-3); }
+  .grid-2col { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: var(--sp-4); }
   .readout { margin-top: var(--sp-3); font-size: 13px; color: var(--c-fg-muted); background: var(--c-muted); border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); }
   .readout b { color: var(--c-fg); }
   .hint { font-size: 11px; color: var(--c-fg-muted); font-weight: 400; text-transform: none; letter-spacing: 0; display: block; margin-top: 3px; }
 
   .payments-list { display: flex; flex-direction: column; gap: var(--sp-2); margin-bottom: var(--sp-3); }
-  .payment-row { display: grid; grid-template-columns: 130px 1fr 1fr 90px 40px; gap: var(--sp-2); align-items: center; padding: var(--sp-2); border: 1px solid var(--c-border); border-radius: var(--r-md); background: var(--c-muted); }
+  .payment-row { display: grid; grid-template-columns: 140px auto 1fr 44px; gap: var(--sp-3); align-items: center; padding: var(--sp-2) var(--sp-3); border: 1px solid var(--c-border); border-radius: var(--r-md); background: var(--c-muted); min-height: 48px; }
   .payment-row .amt { font-weight: 700; font-variant-numeric: tabular-nums; }
-  .payment-add-row { display: grid; grid-template-columns: 130px 130px 1fr auto; gap: var(--sp-2); align-items: end; }
+  .payment-add-row { display: grid; grid-template-columns: 160px 160px 1fr auto; gap: var(--sp-3); align-items: end; }
   .icon-btn {
-    min-height: 36px; min-width: 36px; background: none; border: none; cursor: pointer;
+    min-height: 44px; min-width: 44px; background: none; border: none; cursor: pointer;
     padding: 4px 6px; color: var(--c-fg-muted); border-radius: var(--r-sm); display: inline-flex;
     align-items: center; justify-content: center;
   }
@@ -328,9 +331,9 @@
 
   /* Month+Salary row pickers — queue up several Month+Salary rows and
      save them all at once (Add Employee, and "+ Add Months" on a person). */
-  .ms-row-head { display: grid; grid-template-columns: 170px 1fr 40px; gap: var(--sp-2); margin-bottom: var(--sp-1); }
+  .ms-row-head { display: grid; grid-template-columns: 1fr 1fr 44px; gap: var(--sp-2); margin-bottom: var(--sp-1); }
   .ms-rows { display: flex; flex-direction: column; gap: var(--sp-2); margin-bottom: var(--sp-3); }
-  .ms-row { display: grid; grid-template-columns: 170px 1fr 40px; gap: var(--sp-2); align-items: center; }
+  .ms-row { display: grid; grid-template-columns: 1fr 1fr 44px; gap: var(--sp-2); align-items: center; }
 
   .summary-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); border: 1px solid var(--c-border); border-radius: var(--r-lg); overflow: hidden; margin-bottom: var(--sp-4); background: var(--c-surface); box-shadow: var(--shadow-sm); }
   .summary-box { padding: var(--sp-3) var(--sp-4); border-right: 1px solid var(--c-border); }
@@ -349,7 +352,7 @@
   .modal-overlay.active { display: flex; }
   .modal-box { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg); padding: var(--sp-5); max-width: 380px; width: 100%; max-height: 90dvh; overflow-y: auto; box-shadow: var(--shadow-lg); }
   .modal-box p { margin-top: 0; }
-  .modal-box .field { margin-bottom: var(--sp-3); }
+  .modal-box .field { margin-bottom: var(--sp-4); }
   .modal-actions { display: flex; gap: var(--sp-2); margin-top: var(--sp-4); justify-content: flex-end; }
   .modal-actions button.confirm-danger { background: var(--c-danger); color: #fff; border-color: var(--c-danger); }
   .check-row { display: flex; align-items: center; gap: var(--sp-2); min-height: 44px; cursor: pointer; }
@@ -362,8 +365,9 @@
      stacked form rows, and tables that turn into labelled cards instead
      of forcing a sideways scroll on a 375px screen. */
   @media (max-width: 1024px) {
-    .payment-row { grid-template-columns: 120px 1fr 90px 40px; }
-    .payment-row .note-cell { grid-column: 1 / -1; }
+    .payment-add-row { grid-template-columns: 1fr 1fr; }
+    .payment-add-row > div:nth-child(3) { grid-column: 1 / -1; }
+    .payment-add-row button { grid-column: 1 / -1; }
   }
 
   @media (max-width: 768px) {
@@ -392,12 +396,12 @@
     .summary-bar { grid-template-columns: 1fr 1fr; }
     .summary-box { border-bottom: 1px solid var(--c-border); }
     .ms-row-head { display: none; }
-    .ms-row { grid-template-columns: 1fr 1fr 40px; }
+    .ms-row { grid-template-columns: 1fr 1fr 44px; }
     .payment-add-row { grid-template-columns: 1fr 1fr; }
     .payment-add-row > div:nth-child(3) { grid-column: 1 / -1; }
     .payment-add-row button { grid-column: 1 / -1; min-height: 44px; }
-    .payment-row { grid-template-columns: 1fr auto 40px; }
-    .payment-row .note-cell { grid-column: 1 / -1; }
+    .payment-row { grid-template-columns: 1fr auto 44px; }
+    .payment-row .note-cell { grid-column: 1 / -1; font-size: 13px; color: var(--c-fg-muted); }
     .modal-overlay { align-items: flex-end; padding: 0; }
     .modal-box { max-width: 100%; border-radius: var(--r-lg) var(--r-lg) 0 0; padding: var(--sp-4); max-height: 88dvh; }
     .modal-actions button { flex: 1; min-height: 44px; }
@@ -422,6 +426,12 @@
     .stack-table td:first-child { font-size: 15px; font-weight: 600; border-bottom: 1px solid var(--c-border); padding-bottom: var(--sp-2); margin-bottom: var(--sp-1); }
     .stack-table td:first-child::before { content: none; }
     .stack-table tr.grp-row, .stack-table tr.grp-total-row { display: none; }
+  }
+
+  @media (max-width: 768px) {
+    .grp-chips { margin-left: calc(var(--sp-4) * -1); margin-right: calc(var(--sp-4) * -1); padding-left: var(--sp-4); padding-right: var(--sp-4); }
+    .section-title { margin-top: var(--sp-5); }
+    .panel { padding: var(--sp-3); }
   }
 
   @media (max-width: 480px) {
@@ -481,7 +491,6 @@
       <span class="app-mark" aria-hidden="true">RS</span>
       <div>
         <h1>Riviera Salary Manager</h1>
-        <div class="app-sub">Salaries, payments and pending balances by group</div>
       </div>
     </div>
     <div class="toolbar">
@@ -516,17 +525,14 @@
     <div class="stat-card">
       <div class="stat-head"><span class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></span><span class="stat-label">Total Salary (Lifetime)</span></div>
       <div class="stat-value" id="statSalary">0</div>
-      <div class="hint stat-scope">All groups</div>
     </div>
     <div class="stat-card is-success">
       <div class="stat-head"><span class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg></span><span class="stat-label">Total Given (Lifetime)</span></div>
       <div class="stat-value" id="statGiven">0</div>
-      <div class="hint stat-scope">All groups</div>
     </div>
     <div class="stat-card is-danger">
       <div class="stat-head"><span class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/><path d="M9 12h6M9 16h6"/></svg></span><span class="stat-label">Total Pending — Right Now</span></div>
       <div class="stat-value" id="statPending">0</div>
-      <div class="hint stat-scope">All groups</div>
     </div>
   </div>
 
@@ -536,9 +542,8 @@
 
 <div class="view" id="view-detail">
 
-  <span class="backlink" onclick="showListView()">&larr; Back to List</span>
+  <span class="backlink" onclick="showListView()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'){showListView();}">&larr; Back</span>
 
-  <h2 class="section-title">Personal Detail</h2>
   <div class="panel">
     <div class="detail-header">
       <div>
@@ -549,16 +554,14 @@
       </div>
       <div class="detail-side">
         <button type="button" onclick="openEditEmployeeModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Edit</button>
-        <button type="button" class="danger" onclick="deleteEmployee()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Remove Employee</button>
+        <button type="button" class="danger" onclick="deleteEmployee()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Remove</button>
       </div>
     </div>
   </div>
 
-  <h2 class="section-title">Salary by Month</h2>
+  <h2 class="section-title">Months</h2>
 
   <div class="panel">
-    <h2>All Months</h2>
-    <div class="hint" style="margin-bottom:10px;">Click any month below to edit it — no date picker needed.</div>
     <div class="table-wrap">
       <table class="ledger-table stack-table">
         <thead>
@@ -574,20 +577,20 @@
 
   <div class="panel">
     <div class="panel-head">
-      <h2>Editing — <span id="dMonthLabel"></span></h2>
-      <button type="button" class="link-btn" id="jumpCurrentBtn" onclick="jumpToCurrentMonth()" style="display:none;">Back to current month</button>
+      <h2><span id="dMonthLabel"></span></h2>
+      <button type="button" class="link-btn" id="jumpCurrentBtn" onclick="jumpToCurrentMonth()" style="display:none;">This month</button>
     </div>
     <div class="grid-2col">
       <div>
-        <label>Base Salary (full month)</label>
+        <label>Base Salary</label>
         <input type="number" id="dBaseSalary" oninput="recalcDetailPreview()" onchange="saveThisMonth()">
       </div>
       <div>
         <label>Days Worked</label>
-        <input type="number" id="dDaysWorked" placeholder="blank = full month" oninput="recalcDetailPreview()" onchange="saveThisMonth()">
+        <input type="number" id="dDaysWorked" placeholder="Full" oninput="recalcDetailPreview()" onchange="saveThisMonth()">
       </div>
       <div>
-        <label>Prev Month Pending</label>
+        <label>Carried Over</label>
         <input type="number" id="dPrevPending" oninput="recalcDetailPreview()" onchange="saveThisMonth()">
         <span class="hint" id="dPrevPendingHint"></span>
       </div>
@@ -596,16 +599,15 @@
         <input type="text" id="dNotes" onchange="saveThisMonth()">
       </div>
     </div>
-    <div class="readout">Proration is based on a standard 30-day month, so 15 days = half salary. Prorated salary this month: <b>Rs. <span id="dProrated">0</span></b></div>
+    <div class="readout">Prorated this month: <b>Rs. <span id="dProrated">0</span></b><span class="hint">30-day month — 15 days = half.</span></div>
   </div>
 
   <div class="panel" id="addMonthsPanel">
-    <h2>+ Add Months</h2>
-    <div class="hint" style="margin-bottom:10px;">Queue up several months at once, same as adding room rows to a booking — pick a month, type its salary, add another row. Any month already on the ledger above is skipped automatically.</div>
+    <h2>Add Months</h2>
     <div class="ms-row-head"><label>Month</label><label>Salary</label><span></span></div>
     <div class="ms-rows" id="bulkRowsList"></div>
     <button type="button" onclick="bulkAddRow()">+ Add Row</button>
-    <button type="button" class="primary" style="margin-left:8px;" onclick="saveBulkMonths()">Save Months</button>
+    <button type="button" class="primary" style="margin-left:8px;" onclick="saveBulkMonths()">Save</button>
   </div>
 
   <h2 class="section-title">Given</h2>
@@ -616,7 +618,7 @@
       <div><label>Date</label><input type="text" id="newPayDate" placeholder="Today"></div>
       <div><label>Amount</label><input type="number" id="newPayAmount" placeholder="0"></div>
       <div><label>Note</label><input type="text" id="newPayNote" placeholder="Optional"></div>
-      <div><button type="button" class="primary" onclick="addPayment()">+ Add Payment</button></div>
+      <div><button type="button" class="primary" onclick="addPayment()">Add</button></div>
     </div>
   </div>
 
@@ -656,20 +658,17 @@
 
 <div class="modal-overlay" id="addEmployeeModal">
   <div class="modal-box" style="max-width:440px;">
-    <p>Add a new employee — one row per month, same as adding rooms to a booking:</p>
     <div class="field"><label>Name</label><input type="text" id="newEmpName"></div>
-    <div class="field"><label>Role</label><input type="text" id="newEmpRole" placeholder="e.g. Washer, Cook"></div>
+    <div class="field"><label>Role</label><input type="text" id="newEmpRole" placeholder="Washer"></div>
     <div class="field">
       <label for="newEmpDept">Group</label>
-      <input type="text" id="newEmpDept" list="deptOptions" placeholder="e.g. Laundry, Kitchen">
-      <span class="hint">Pick an existing group or type a new one. Leave blank for Unassigned.</span>
+      <input type="text" id="newEmpDept" list="deptOptions" placeholder="Laundry">
     </div>
     <div class="field">
       <label class="check-row" for="newEmpManager">
         <input type="checkbox" id="newEmpManager">
-        <span>Manager of this group</span>
+        <span>Manager</span>
       </label>
-      <span class="hint">Optional — a group can run with or without a manager.</span>
     </div>
     <div class="field">
       <div class="ms-row-head"><label>Month</label><label>Salary</label><span></span></div>
@@ -685,7 +684,6 @@
 
 <div class="modal-overlay" id="editEmployeeModal">
   <div class="modal-box">
-    <p>Edit employee</p>
     <div class="field"><label>Name</label><input type="text" id="eName"></div>
     <div class="field"><label>Role</label><input type="text" id="eRole"></div>
     <div class="field">
@@ -695,7 +693,7 @@
     <div class="field">
       <label class="check-row" for="eManager">
         <input type="checkbox" id="eManager">
-        <span>Manager of this group</span>
+        <span>Manager</span>
       </label>
     </div>
     <div class="field">
@@ -1040,7 +1038,7 @@ async function loadList() {
   } catch (e) {
     console.error('Load failed', e);
     document.getElementById('peopleContainer').innerHTML =
-      '<div class="empty-note">Failed to load data. Have you run supabase_schema.sql yet? Check console for details.</div>';
+      '<div class="empty-note"><b>Couldn’t load</b>Run supabase_schema.sql in Supabase, then reload.</div>';
     setStatus('Load failed', true);
   }
 }
@@ -1102,7 +1100,7 @@ function renderGroupChips(groups) {
     <button type="button" role="tab" aria-selected="${activeGroup === key}"
             class="grp-chip${activeGroup === key ? ' active' : ''}" onclick="selectGroup('${escapeAttr(key)}')">
       <span class="gc-name">${escapeHtml(label)}</span>
-      <span class="gc-meta">${count} ${count === 1 ? 'person' : 'people'} &middot; Rs. ${money(pending)}</span>
+      <span class="gc-meta">${count} &middot; Rs. ${money(pending)}</span>
     </button>`;
   el.innerHTML =
     chip('ALL', 'All Groups', peopleCache.length, allPending) +
@@ -1137,11 +1135,11 @@ function renderPeople() {
 
   const container = document.getElementById('peopleContainer');
   if (peopleCache.length === 0) {
-    container.innerHTML = '<div class="empty-note"><b>No employees yet</b>Click "+ Add Employee" to add your first person and their monthly salary.</div>';
+    container.innerHTML = '<div class="empty-note"><b>No employees yet</b>Add your first person above.</div>';
     return;
   }
   if (shown.length === 0) {
-    container.innerHTML = '<div class="empty-note"><b>Nobody in this group</b>Add someone to it, or pick a different group above.</div>';
+    container.innerHTML = '<div class="empty-note"><b>Empty group</b>Pick another group above.</div>';
     return;
   }
 
@@ -1166,9 +1164,7 @@ function renderGroupSection(g) {
       <header class="grp-head">
         <div>
           <div class="grp-title">${escapeHtml(g.name)}</div>
-          <div class="grp-manager">${g.manager
-            ? 'Manager: <b>' + escapeHtml(g.manager.name) + '</b>'
-            : 'No manager assigned'} &middot; ${g.members.length} ${g.members.length === 1 ? 'person' : 'people'}</div>
+          <div class="grp-manager">${g.manager ? '<b>' + escapeHtml(g.manager.name) + '</b> &middot; ' : ''}${g.members.length} ${g.members.length === 1 ? 'person' : 'people'}</div>
         </div>
         ${groupTotalsHtml(g)}
       </header>
@@ -1213,7 +1209,7 @@ function personCardHtml(p) {
 // person becomes a labelled card (see .stack-table in the stylesheet).
 function renderGroupedTable(groups) {
   const body = groups.map(g => {
-    const head = `<tr class="grp-row"><td colspan="6">${escapeHtml(g.name)} — ${g.members.length} ${g.members.length === 1 ? 'person' : 'people'}${g.manager ? ' &middot; Manager: ' + escapeHtml(g.manager.name) : ' &middot; No manager'}</td></tr>`;
+    const head = `<tr class="grp-row"><td colspan="6">${escapeHtml(g.name)} &middot; ${g.members.length}${g.manager ? ' &middot; ' + escapeHtml(g.manager.name) : ''}</td></tr>`;
     const rows = g.members.map(p => `
       <tr class="person-row" onclick="openDetail('${p.employeeId}')">
         <td data-label="Name">${escapeHtml(p.name)}${p.isManager ? ' <span class="badge manager">Manager</span>' : ''}</td>
@@ -1507,8 +1503,8 @@ async function loadMonthPanel(month) {
   document.getElementById('dNotes').value = sm.notes || '';
 
   document.getElementById('dPrevPendingHint').textContent = prior
-    ? `Carried from ${formatMonthLabel(prior.month)} — edit if needed.`
-    : 'No earlier month on record.';
+    ? `From ${formatMonthLabel(prior.month)}`
+    : '';
 
   await loadPayments();
 }
@@ -1544,7 +1540,7 @@ async function loadPayments() {
 function renderPayments() {
   const el = document.getElementById('paymentsList');
   if (currentPayments.length === 0) {
-    el.innerHTML = '<div class="empty-note"><b>Nothing given yet</b>Log a payment below once money changes hands.</div>';
+    el.innerHTML = '<div class="empty-note"><b>Nothing given yet</b></div>';
     return;
   }
   el.innerHTML = currentPayments.map(p => `
@@ -1552,7 +1548,6 @@ function renderPayments() {
       <div>${p.pay_date || ''}</div>
       <div class="amt">Rs. ${money(p.amount)}</div>
       <div class="note-cell">${escapeHtml(p.note || '')}</div>
-      <div></div>
       <button type="button" class="icon-btn" onclick="removePayment('${p.id}')" aria-label="Remove payment">${ICON_TRASH}</button>
     </div>`).join('');
 }
@@ -1697,7 +1692,7 @@ async function refreshLedger() {
   const tbody = document.getElementById('ledgerBody');
   try {
     const months = await sbGet(`${SM_URL}?select=*&employee_id=eq.${detailEmployeeId}&deleted=eq.false&order=month.asc`);
-    if (months.length === 0) { tbody.innerHTML = '<tr><td colspan="9" class="empty-note"><b>No months on record</b>Use "+ Add Months" below to start this ledger.</td></tr>'; return; }
+    if (months.length === 0) { tbody.innerHTML = '<tr><td colspan="9" class="empty-note"><b>No months yet</b>Add one below.</td></tr>'; return; }
     // One batched query for every month's payments instead of one round
     // trip per row — this is what made opening a long-tenured employee
     // feel slow.
