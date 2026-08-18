@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&family=Fira+Code:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -16,23 +16,23 @@
      Blue-data + amber-accent palette, dense dashboard spacing scale.
      Everything below references these, so re-theming is a one-spot edit. */
   :root {
-    --c-primary:      #1E40AF;
-    --c-primary-soft: #EFF4FF;
+    --c-primary:      #1A73E8;
+    --c-primary-soft: #E8F0FE;
     --c-on-primary:   #FFFFFF;
-    --c-accent:       #B45309;
-    --c-accent-soft:  #FEF3C7;
+    --c-accent:       #B8860B;
+    --c-accent-soft:  #FDF3D9;
     --c-bg:           #F1F5F9;
     --c-surface:      #FFFFFF;
-    --c-fg:           #0F172A;
-    --c-fg-muted:     #64748B;
+    --c-fg:           #111827;
+    --c-fg-muted:     #5B6B84;
     --c-muted:        #F8FAFC;
     --c-border:       #E2E8F0;
     --c-border-strong:#CBD5E1;
-    --c-danger:       #C0392B;
+    --c-danger:       #B91C1C;
     --c-danger-soft:  #FDECEA;
-    --c-success:      #15803D;
+    --c-success:      #166534;
     --c-success-soft: #E7F6EC;
-    --c-ring:         #1E40AF;
+    --c-ring:         #1A73E8;
 
     --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
     --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
@@ -46,7 +46,7 @@
 
   * { box-sizing: border-box; }
   body {
-    font-family: 'Fira Sans', -apple-system, Segoe UI, Arial, sans-serif;
+    font-family: 'Inter', -apple-system, Segoe UI, Arial, sans-serif;
     font-size: 15px;
     line-height: 1.5;
     color: var(--c-fg);
@@ -131,21 +131,24 @@
      status stay reachable while a long list scrolls underneath. */
   .app-head {
     position: sticky; top: 0; z-index: 40;
-    background: var(--c-surface);
+    background: var(--c-primary);
     margin: calc(var(--sp-6) * -1) calc(var(--sp-6) * -1) var(--sp-4);
     padding: var(--sp-4) var(--sp-6) var(--sp-3);
-    border-bottom: 1px solid var(--c-border);
+    border-bottom: 2px solid #000;
     border-radius: var(--r-lg) var(--r-lg) 0 0;
   }
+  .app-head h1 { color: #fff; }
   .app-head-row { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
   .app-title { display: flex; align-items: center; gap: var(--sp-3); min-width: 0; }
   .app-mark {
     width: 38px; height: 38px; flex: none; border-radius: 10px;
-    background: var(--c-primary); color: #fff;
+    background: var(--c-accent); color: #fff;
     display: flex; align-items: center; justify-content: center;
     font-weight: 700; font-size: 15px; letter-spacing: -.02em;
   }
-  .app-sub { font-size: 12px; color: var(--c-fg-muted); margin-top: -2px; }
+  .app-sub { font-size: 12px; color: rgba(255,255,255,.8); margin-top: -2px; }
+  .app-head .toolbar button { background: #fff; }
+  .app-head #statusMsg { color: rgba(255,255,255,.85); }
 
   /* ---- headline numbers ---------------------------------------------- */
   .company-snapshot { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--sp-3); margin: 0 0 var(--sp-4); }
@@ -256,13 +259,13 @@
   /* ---- person cards --------------------------------------------------- */
   .people-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: var(--sp-3); }
   .person-card {
-    background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg);
+    background: var(--c-surface); border: 2px solid #000; border-left: 4px solid var(--c-primary); border-radius: var(--r-lg);
     padding: var(--sp-3) var(--sp-4); cursor: pointer; box-shadow: var(--shadow-sm);
     transition: box-shadow var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
   }
-  .person-card:hover { box-shadow: var(--shadow-lg); border-color: var(--c-primary); }
+  .person-card:hover { box-shadow: var(--shadow-lg); }
   .person-card:active { transform: scale(.99); }
-  .person-card.is-manager { border-color: var(--c-accent); box-shadow: 0 0 0 1px var(--c-accent-soft), var(--shadow-sm); }
+  .person-card.is-manager { border-left-color: var(--c-accent); }
   .pc-top { display: flex; align-items: flex-start; gap: var(--sp-2); margin-bottom: var(--sp-3); }
   .pc-avatar {
     width: 36px; height: 36px; flex: none; border-radius: 50%; background: var(--c-primary-soft);
@@ -345,9 +348,9 @@
   .trash-row button { flex: none; }
 
   /* ---- tables --------------------------------------------------------- */
-  .table-wrap { overflow-x: auto; border: 1px solid var(--c-border); border-radius: var(--r-lg); -webkit-overflow-scrolling: touch; }
+  .table-wrap { overflow-x: auto; border: 2px solid #000; border-radius: var(--r-lg); -webkit-overflow-scrolling: touch; }
   table { border-collapse: separate; border-spacing: 0; width: 100%; background: var(--c-surface); }
-  th, td { padding: 13px 14px; text-align: left; font-size: 15px; border-bottom: 1px solid var(--c-border); }
+  th, td { padding: 13px 14px; text-align: left; font-size: 15px; border-bottom: 1px solid #000; }
   th {
     position: sticky; top: 0; z-index: 2;
     background: var(--c-muted); color: var(--c-fg); font-size: 12px; font-weight: 700;
@@ -415,6 +418,7 @@
   .detail-side button svg { display: inline-block; vertical-align: -2px; }
 
   .panel { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg); padding: var(--sp-4); margin-bottom: var(--sp-4); box-shadow: var(--shadow-sm); }
+  .panel.accent-employee, .panel.accent-salary, .panel.accent-payments { border: 2px solid #000; }
   .panel.accent-employee { border-left: 4px solid var(--c-primary); }
   .panel.accent-salary { border-left: 4px solid var(--c-accent); }
   .panel.accent-payments { border-left: 4px solid var(--c-success); }
@@ -629,14 +633,15 @@
     </div>
     <div class="toolbar">
       <button type="button" class="primary" onclick="openEntryForAdd()">+ Add Employee</button>
-      <button type="button" id="selectToggle" onclick="toggleSelectMode()">Select</button>
-      <button type="button" onclick="showTrashView()">Deleted <span id="trashCount" class="badge group" style="display:none;">0</span></button>
       <button type="button" onclick="preparePrint()">Print</button>
       <div class="rd-switch" id="viewSwitch" role="group" aria-label="View mode">
         <button type="button" class="rd-switch-btn" id="switchCards" onclick="setViewMode('cards')" aria-pressed="false">Cards</button>
         <button type="button" class="rd-switch-btn active" id="switchTable" onclick="setViewMode('table')" aria-pressed="true">Table</button>
       </div>
       <span id="statusMsg" role="status" aria-live="polite"></span>
+      <button type="button" onclick="showSettingsView()" aria-label="Settings" title="Settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+      </button>
     </div>
   </div>
 </div>
@@ -681,10 +686,38 @@
 
 </div>
 
+<div class="view" id="view-settings">
+
+  <span class="backlink" onclick="showListView()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'){showListView();}">&larr; Back</span>
+
+  <h1>Settings</h1>
+
+  <div class="panel">
+    <div class="detail-header">
+      <div>
+        <div class="detail-name-display">Select employees</div>
+        <div class="detail-role-display">Pick several people from the list to remove at once</div>
+      </div>
+      <button type="button" onclick="toggleSelectMode()">Select</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="detail-header">
+      <div>
+        <div class="detail-name-display">Deleted</div>
+        <div class="detail-role-display">Removed people and payments — restore anything from here</div>
+      </div>
+      <button type="button" onclick="showTrashView()">Open <span id="trashCount" class="badge group" style="display:none;">0</span></button>
+    </div>
+  </div>
+
+</div>
+
 <!-- Nothing is ever erased, so everything removed can be put back. -->
 <div class="view" id="view-trash">
 
-  <span class="backlink" onclick="showListView()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'){showListView();}">&larr; Back</span>
+  <span class="backlink" onclick="showSettingsView()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'){showSettingsView();}">&larr; Back</span>
 
   <section class="step">
     <div class="step-head">
@@ -710,6 +743,7 @@
 
   <div class="editing-bar" id="entryEditBar" style="display:none;">
     <span>&#9998; EDITING: <b id="entryEditName"></b> — changes save to this existing employee.</span>
+    <button type="button" onclick="cancelEntry()">Cancel</button>
   </div>
 
   <h1 id="entryTitle">Add Employee</h1>
@@ -749,7 +783,7 @@
       <table class="entry-table stack-table">
         <thead><tr>
           <th>Month</th><th class="num">Base Salary</th><th class="num">Days Worked</th><th class="num">Carried Over</th>
-          <th class="num">Earned</th><th class="num">Given</th><th class="num">Pending</th><th>Status</th><th></th>
+          <th class="num">Earned</th><th class="num">Given</th><th></th>
         </tr></thead>
         <tbody id="entrySalaryBody"></tbody>
       </table>
@@ -759,10 +793,7 @@
 
   <div class="panel accent-payments" id="entryPaymentsPanel" style="display:none;">
     <h2>Payments</h2>
-    <div class="stats-head" style="margin-bottom:12px;">
-      <label for="entryPayMonth">For month</label>
-      <select id="entryPayMonth" onchange="entryLoadPayments()"></select>
-    </div>
+    <div class="hint" id="entryPayMonthLabel" style="margin:-4px 0 12px;"></div>
     <div class="payments-list" id="entryPaymentsList"></div>
     <div class="payment-add-row">
       <div><label>Date</label><input type="text" id="enPayDate" placeholder="Today"></div>
@@ -773,6 +804,12 @@
       <div><label>Note</label><input type="text" id="enPayNote" placeholder="Optional"></div>
       <div><button type="button" class="primary" onclick="entryAddPayment()">Add</button></div>
     </div>
+  </div>
+
+  <div class="summary-bar" id="entrySummaryBar">
+    <div class="summary-box"><div class="lbl">Total Salary</div><div class="val" id="entrySumSalary">0</div></div>
+    <div class="summary-box"><div class="lbl">Paid</div><div class="val" id="entrySumPaid">0</div></div>
+    <div class="summary-box"><div class="lbl">Pending</div><div class="val" id="entrySumPending">0</div></div>
   </div>
 
   <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;">
@@ -799,18 +836,17 @@
         </div>
         <div class="detail-side">
           <button type="button" onclick="openEntryForEdit()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Edit</button>
-          <button type="button" onclick="openDuplicateModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Duplicate</button>
-          <button type="button" class="danger" onclick="deleteEmployee()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Remove</button>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- 2 of 3 — the month being worked on, and its salary -->
+  <!-- 2 of 2 — full read-only ledger. Edit (Step 1) is the only place
+       months/salary/payments are actually changed now, on the entry page. -->
   <section class="step">
     <div class="step-head">
       <span class="step-no">2</span><h2>Months</h2>
-      <span class="step-hint">Tap a month to edit it</span>
+      <span class="step-hint">Click Edit above to change months or payments</span>
     </div>
     <div class="panel">
       <div class="table-wrap">
@@ -823,73 +859,6 @@
           </thead>
           <tbody id="ledgerBody"><tr><td colspan="9" class="empty-note">Loading...</td></tr></tbody>
         </table>
-      </div>
-
-      <div class="sub-block">
-        <div class="panel-head">
-          <h3>Editing <span id="dMonthLabel"></span></h3>
-          <button type="button" class="link-btn" id="jumpCurrentBtn" onclick="jumpToCurrentMonth()" style="display:none;">This month</button>
-        </div>
-        <div class="grid-2col">
-          <div>
-            <label>Base Salary</label>
-            <input type="number" id="dBaseSalary" oninput="recalcDetailPreview()" onchange="saveThisMonth()">
-          </div>
-          <div>
-            <label>Days Worked</label>
-            <input type="number" id="dDaysWorked" placeholder="Full" oninput="recalcDetailPreview()" onchange="saveThisMonth()">
-          </div>
-          <div>
-            <label>Carried Over</label>
-            <input type="number" id="dPrevPending" oninput="recalcDetailPreview()" onchange="saveThisMonth()">
-            <span class="hint" id="dPrevPendingHint"></span>
-          </div>
-          <div>
-            <label>Notes</label>
-            <input type="text" id="dNotes" onchange="saveThisMonth()">
-          </div>
-        </div>
-
-        <div class="summary-bar">
-          <div class="summary-box"><div class="lbl">Earned</div><div class="val" id="sumProrated">0</div></div>
-          <div class="summary-box"><div class="lbl">Given</div><div class="val" id="sumPaid">0</div></div>
-          <div class="summary-box"><div class="lbl">Pending</div><div class="val" id="sumRemaining">0</div></div>
-          <div class="summary-box"><div class="lbl">Status</div><div class="val"><span class="status-pill" id="sumStatus">—</span></div></div>
-        </div>
-        <div class="readout" id="dProratedReadout">Earned this month: <b>Rs. <span id="dProrated">0</span></b></div>
-      </div>
-
-      <div class="sub-block">
-        <button type="button" id="addMonthsToggle" onclick="toggleAddMonths()">+ Add months</button>
-        <div id="addMonthsPanel" style="display:none; margin-top:12px;">
-          <div class="ms-row-head"><label>Month</label><label>Salary</label><span></span></div>
-          <div class="ms-rows" id="bulkRowsList"></div>
-          <button type="button" onclick="bulkAddRow()">+ Row</button>
-          <button type="button" class="primary" style="margin-left:8px;" onclick="saveBulkMonths()">Save</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 3 of 3 — money actually handed over for that month -->
-  <section class="step">
-    <div class="step-head">
-      <span class="step-no">3</span><h2>Given</h2>
-      <span class="step-hint" id="dPaymentsMonthLabel"></span>
-    </div>
-    <div class="panel">
-      <div class="payments-list" id="paymentsList"></div>
-      <div class="payment-add-row">
-        <div><label>Date</label><input type="text" id="newPayDate" placeholder="Today"></div>
-        <div><label>Amount</label><input type="number" id="newPayAmount" placeholder="0"></div>
-        <div><label>How</label>
-          <select id="newPayMethod">
-            <option value="Cash">Cash</option>
-            <option value="Online">Online</option>
-          </select>
-        </div>
-        <div><label>Note</label><input type="text" id="newPayNote" placeholder="Optional"></div>
-        <div><button type="button" class="primary" onclick="addPayment()">Add</button></div>
       </div>
     </div>
   </section>
@@ -1053,7 +1022,7 @@ function money(n) {
 // Shared inline SVG for every small "remove this row" icon button — a
 // real vector icon instead of the 🗑️ emoji (font-dependent, inconsistent
 // across platforms, can't be color-matched to the button it's in).
-const ICON_TRASH = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
+const ICON_TRASH = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" stroke="#B91C1C" stroke-width="1.5" fill="#FDECEA"/><line x1="8" y1="8" x2="16" y2="16"/><line x1="16" y1="8" x2="8" y2="16"/></svg>';
 
 // Every month is treated as 30 days, whatever the calendar says. A day of
 // work is worth base/30 in January, February and September alike, so the
@@ -1237,9 +1206,14 @@ async function createSalaryMonthRow(employeeId, month, salary) {
 // employee's own check is independent, so they all run at once instead of
 // one-by-one — the whole thing takes as long as the SLOWEST employee, not
 // the sum of all of them.
+// Skips anyone peopleCache already shows as having the current month —
+// on every load after the 1st of the month that's everybody, so this
+// normally fires zero requests instead of 3-per-employee.
 async function ensureAllCurrentMonth() {
-  const employees = await fetchActiveEmployees();
   const month = currentCalendarMonth();
+  const employees = peopleCache.filter(p => !(p.byMonth || {})[month])
+    .map(p => ({ id: p.employeeId, date_left: p.dateLeft }));
+  if (!employees.length) return;
   await Promise.all(employees.map(emp => ensureEmployeeMonth(emp.id, month, emp.date_left)));
 }
 
@@ -1359,6 +1333,15 @@ function byText(a, b) {
   return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
 }
 
+// Salary and Given are flows, so a chosen month narrows them to just that
+// month's row. Pending is a balance — always the current outstanding
+// amount, whichever period is picked — so it's left alone here.
+function periodValues(p) {
+  if (statPeriod === 'ALL') return { total: p.total, given: p.given };
+  const m = (p.byMonth || {})[statPeriod];
+  return { total: m ? m.earned : 0, given: m ? m.given : 0 };
+}
+
 function groupPeople(list) {
   const map = new Map();
   list.forEach(p => {
@@ -1371,7 +1354,8 @@ function groupPeople(list) {
     members.sort((a, b) =>
       (b.isManager - a.isManager) || byText(a.name, b.name));
     const totals = members.reduce((acc, m) => {
-      acc.total += m.total; acc.given += m.given; acc.pending += m.pending;
+      const pv = periodValues(m);
+      acc.total += pv.total; acc.given += pv.given; acc.pending += m.pending;
       return acc;
     }, { total: 0, given: 0, pending: 0 });
     return { name, members, manager: members.find(m => m.isManager) || null, ...totals };
@@ -1468,20 +1452,24 @@ const selectedIds = new Set();
 const TICK_SVG = '<svg class="tick" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
 const checkboxHtml = () => `<span class="chk" aria-hidden="true">${TICK_SVG}</span>`;
 
+// Called from the Settings page — jumps to the list view (if not already
+// there) and turns selection on in one step.
 function toggleSelectMode() {
-  selectMode ? exitSelectMode() : enterSelectMode();
+  if (selectMode) { exitSelectMode(); return; }
+  document.getElementById('view-settings').classList.remove('active');
+  document.getElementById('view-list').classList.add('active');
+  document.getElementById('viewSwitch').style.display = '';
+  enterSelectMode();
 }
 function enterSelectMode() {
   selectMode = true;
   selectedIds.clear();
-  document.getElementById('selectToggle').textContent = 'Done';
   document.body.classList.add('selecting');
   renderPeople();
 }
 function exitSelectMode() {
   selectMode = false;
   selectedIds.clear();
-  document.getElementById('selectToggle').textContent = 'Select';
   document.body.classList.remove('selecting');
   renderPeople();
 }
@@ -1642,6 +1630,7 @@ function personCardHtml(p) {
   const role = selectMode
     ? `role="checkbox" aria-checked="${picked}"`
     : 'role="button"';
+  const pv = periodValues(p);
   return `
     <div class="person-card${p.isManager ? ' is-manager' : ''}${picked ? ' is-selected' : ''}" ${role} tabindex="0"
          onclick="${act}"
@@ -1655,8 +1644,8 @@ function personCardHtml(p) {
         ${p.isManager ? '<span class="badge manager">Head</span>' : statusPillHtml(p.pending)}
       </div>
       <div class="pc-rows">
-        <div class="pc-row"><span class="lbl">Total Salary</span><span>Rs. ${money(p.total)}</span></div>
-        <div class="pc-row"><span class="lbl">Given</span><span>Rs. ${money(p.given)}</span></div>
+        <div class="pc-row"><span class="lbl">Total Salary</span><span>Rs. ${money(pv.total)}</span></div>
+        <div class="pc-row"><span class="lbl">Given</span><span>Rs. ${money(pv.given)}</span></div>
       </div>
       <div class="pc-divider"></div>
       <div class="pc-pending-box pc-pending-full ${p.pending > 0 ? '' : 'pc-paid-out'}">
@@ -1674,14 +1663,15 @@ function renderGroupedTable(groups) {
     const rows = g.members.map(p => {
       const picked = selectedIds.has(p.employeeId);
       const act = selectMode ? `toggleSelect('${p.employeeId}')` : `openDetail('${p.employeeId}')`;
+      const pv = periodValues(p);
       // The box rides inside the Name cell rather than in a column of its
       // own, so the stacked phone layout needs no special case.
       return `
       <tr class="person-row${picked ? ' is-selected' : ''}" onclick="${act}">
         <td class="name-cell" data-label="Name">${selectMode ? checkboxHtml() : ''}<span>${escapeHtml(p.name)}${p.isManager ? ' <span class="badge manager">Head</span>' : ''}</span></td>
         <td data-label="Role">${escapeHtml(p.role || '—')}</td>
-        <td class="num" data-label="Total Salary">${money(p.total)}</td>
-        <td class="num" data-label="Given">${money(p.given)}</td>
+        <td class="num" data-label="Total Salary">${money(pv.total)}</td>
+        <td class="num" data-label="Given">${money(pv.given)}</td>
         <td class="num ${p.pending > 0 ? 'neg' : 'pos'}" data-label="Pending">${money(p.pending)}</td>
       </tr>`;
     }).join('');
@@ -1854,9 +1844,22 @@ function showEntryView() {
   document.getElementById('view-list').classList.remove('active');
   document.getElementById('view-detail').classList.remove('active');
   document.getElementById('view-trash').classList.remove('active');
+  document.getElementById('view-settings').classList.remove('active');
   document.getElementById('view-entry').classList.add('active');
   document.getElementById('viewSwitch').style.display = 'none';
   window.scrollTo({ top: 0, behavior: 'auto' });
+}
+
+function showSettingsView() {
+  if (selectMode) exitSelectMode();
+  document.getElementById('view-list').classList.remove('active');
+  document.getElementById('view-detail').classList.remove('active');
+  document.getElementById('view-trash').classList.remove('active');
+  document.getElementById('view-entry').classList.remove('active');
+  document.getElementById('view-settings').classList.add('active');
+  document.getElementById('viewSwitch').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'auto' });
+  refreshTrashCount();
 }
 
 function cancelEntry() {
@@ -1934,15 +1937,7 @@ async function openEntryForEdit() {
       prev_pending: m.prev_pending, paid: paidMap[m.id] || 0, isNew: false
     }));
     renderEntrySalaryTable();
-    renderEntryPayMonthOptions();
-    if (entryMonths.length) {
-      entrySelectedMonthId = entryMonths[entryMonths.length - 1].id;
-      document.getElementById('entryPayMonth').value = entrySelectedMonthId;
-      await entryLoadPayments();
-    } else {
-      entrySelectedMonthId = null;
-      document.getElementById('entryPaymentsList').innerHTML = '<div class="empty-note">Add a month first.</div>';
-    }
+    await updateEntryPayTarget();
     setStatus('');
   } catch (e) {
     console.error(e);
@@ -1959,7 +1954,6 @@ function renderEntrySalaryTable() {
   tbody.innerHTML = entryMonths.map((r, idx) => {
     const earned = entryRowEarned(r);
     const given = r.paid || 0;
-    const pending = earned - given + (parseFloat(r.prev_pending) || 0);
     return `
     <tr>
       <td data-label="Month"><input type="text" class="month-input" data-idx="${idx}" value="${r.month || ''}" placeholder="YYYY-MM" onchange="entrySetMonth(${idx}, this.value)"></td>
@@ -1968,12 +1962,43 @@ function renderEntrySalaryTable() {
       <td class="num" data-label="Carried Over"><input type="number" value="${r.prev_pending ?? 0}" onchange="entrySetPrev(${idx}, this.value)"></td>
       <td class="num" data-label="Earned">${money(earned)}</td>
       <td class="num" data-label="Given">${money(given)}</td>
-      <td class="num ${pending > 0 ? 'neg' : 'pos'}" data-label="Pending">${money(pending)}</td>
-      <td data-label="Status">${statusPillHtml(pending)}</td>
       <td><button type="button" class="icon-btn" onclick="entryRemoveMonthRow(${idx})" aria-label="Remove row">${ICON_TRASH}</button></td>
     </tr>`;
-  }).join('') || '<tr><td colspan="9" class="empty-note">No months yet — click + Month.</td></tr>';
+  }).join('') || '<tr><td colspan="7" class="empty-note">No months yet — click + Month.</td></tr>';
   initMonthPickers(tbody, entryMonthPickers, entrySetMonth);
+  renderEntrySummary();
+}
+
+// One final total across every month — Total Salary/Paid summed, Pending
+// taken from the most recent month only (it already carries every earlier
+// month's shortfall forward), matching how the main list computes it.
+function renderEntrySummary() {
+  const sorted = entryMonths.slice().sort((a, b) => a.month.localeCompare(b.month));
+  let totalSalary = 0, totalPaid = 0, pending = 0;
+  sorted.forEach((r, i) => {
+    const earned = entryRowEarned(r);
+    totalSalary += earned;
+    totalPaid += (r.paid || 0);
+    if (i === sorted.length - 1) pending = earned - (r.paid || 0) + (parseFloat(r.prev_pending) || 0);
+  });
+  document.getElementById('entrySumSalary').textContent = money(totalSalary);
+  document.getElementById('entrySumPaid').textContent = money(totalPaid);
+  document.getElementById('entrySumPending').textContent = money(pending);
+}
+
+// Re-pulls every month row from the DB after a save that can shift the
+// carry-in chain (recalcForward only writes the DB — without this, rows
+// after the one just edited keep showing their pre-edit Carried Over/
+// Pending until the page is reopened).
+async function refreshEntryMonthsFromDb() {
+  const months = await sbGet(`${SM_URL}?select=*&employee_id=eq.${detailEmployeeId}&deleted=eq.false&order=month.asc`);
+  entryMonths = months.map(m => {
+    const existing = entryMonths.find(x => x.id === m.id);
+    return {
+      id: m.id, month: m.month, base_salary: m.base_salary, days_worked: m.days_worked,
+      prev_pending: m.prev_pending, paid: existing ? existing.paid : 0, isNew: false
+    };
+  });
 }
 
 async function entryCommitRow(idx) {
@@ -1987,8 +2012,9 @@ async function entryCommitRow(idx) {
       const prev_pending = parseFloat(r.prev_pending) || 0;
       await sbPatch(`${SM_URL}?id=eq.${r.id}`, { base_salary, days_worked, prev_pending });
       await recalcForward(detailEmployeeId, r.month);
+      await refreshEntryMonthsFromDb();
       renderEntrySalaryTable();
-      renderEntryPayMonthOptions();
+      await updateEntryPayTarget();
       setStatus('Saved');
     } catch (e) {
       console.error(e);
@@ -2015,11 +2041,11 @@ async function entryAddMonth() {
   if (entryMonths.some(m => m.month === month)) { showInfo('That month already exists — edit it in the table.'); return; }
   setStatus('Adding...');
   try {
-    const created = await createSalaryMonthRow(detailEmployeeId, month, 0);
+    await createSalaryMonthRow(detailEmployeeId, month, 0);
     await recalcForward(detailEmployeeId, month);
-    entryMonths.push({ id: created.id, month, base_salary: 0, days_worked: null, prev_pending: created.prev_pending, paid: 0, isNew: false });
+    await refreshEntryMonthsFromDb();
     renderEntrySalaryTable();
-    renderEntryPayMonthOptions();
+    await updateEntryPayTarget();
     setStatus('Added');
   } catch (e) {
     console.error(e);
@@ -2033,15 +2059,29 @@ function entryRemoveMonthRow(idx) {
   renderEntrySalaryTable();
 }
 
-function renderEntryPayMonthOptions() {
-  const sel = document.getElementById('entryPayMonth');
-  sel.innerHTML = entryMonths.filter(m => m.id).map(m => `<option value="${m.id}">${formatMonthLabel(m.month)}</option>`).join('');
-  if (entrySelectedMonthId && entryMonths.some(m => m.id === entrySelectedMonthId)) sel.value = entrySelectedMonthId;
-  else if (entryMonths.length) { entrySelectedMonthId = entryMonths[entryMonths.length - 1].id; sel.value = entrySelectedMonthId; }
+// A payment always goes against whichever month is still owed the
+// longest — the oldest month with a pending balance — rather than letting
+// it be picked freely. Falls back to the newest month once everything's
+// settled, so there's always somewhere to log a fresh payment.
+function entryOldestPendingMonth() {
+  const withId = entryMonths.filter(m => m.id).slice().sort((a, b) => a.month.localeCompare(b.month));
+  for (const m of withId) {
+    const earned = entryRowEarned(m);
+    const pending = earned - (m.paid || 0) + (parseFloat(m.prev_pending) || 0);
+    if (pending > 0) return m;
+  }
+  return withId.length ? withId[withId.length - 1] : null;
+}
+
+async function updateEntryPayTarget() {
+  const target = entryOldestPendingMonth();
+  entrySelectedMonthId = target ? target.id : null;
+  document.getElementById('entryPayMonthLabel').textContent = target ? 'Paying: ' + formatMonthLabel(target.month) : '';
+  if (!entrySelectedMonthId) { document.getElementById('entryPaymentsList').innerHTML = '<div class="empty-note">Add a month first.</div>'; return; }
+  await entryLoadPayments();
 }
 
 async function entryLoadPayments() {
-  entrySelectedMonthId = document.getElementById('entryPayMonth').value;
   if (!entrySelectedMonthId) { document.getElementById('entryPaymentsList').innerHTML = '<div class="empty-note">Add a month first.</div>'; return; }
   entryPaymentsCache = await sbGet(`${PAY_URL}?select=*&salary_month_id=eq.${entrySelectedMonthId}&deleted=eq.false&order=pay_date.asc`);
   renderEntryPayments();
@@ -2073,11 +2113,13 @@ async function entryAddPayment() {
     await sbPost(PAY_URL, { salary_month_id: entrySelectedMonthId, amount, pay_date, method, note });
     if (entryPayDatePicker) entryPayDatePicker.clear(); else document.getElementById('enPayDate').value = '';
     document.getElementById('enPayAmount').value = ''; document.getElementById('enPayNote').value = '';
-    await entryLoadPayments();
     const m = entryMonths.find(m => m.id === entrySelectedMonthId);
     await recalcForward(detailEmployeeId, m.month);
-    m.paid = await fetchPaymentsSum(entrySelectedMonthId);
+    await refreshEntryMonthsFromDb();
+    const updated = entryMonths.find(x => x.id === entrySelectedMonthId);
+    if (updated) updated.paid = await fetchPaymentsSum(entrySelectedMonthId);
     renderEntrySalaryTable();
+    await updateEntryPayTarget();
     setStatus('Saved');
   } catch (e) {
     console.error(e);
@@ -2091,11 +2133,13 @@ async function entryRemovePayment(id) {
   setStatus('Saving...');
   try {
     await sbPatch(`${PAY_URL}?id=eq.${id}`, { deleted: true, deleted_at: new Date().toISOString() });
-    await entryLoadPayments();
     const m = entryMonths.find(m => m.id === entrySelectedMonthId);
     await recalcForward(detailEmployeeId, m.month);
-    m.paid = await fetchPaymentsSum(entrySelectedMonthId);
+    await refreshEntryMonthsFromDb();
+    const updated = entryMonths.find(x => x.id === entrySelectedMonthId);
+    if (updated) updated.paid = await fetchPaymentsSum(entrySelectedMonthId);
     renderEntrySalaryTable();
+    await updateEntryPayTarget();
     setStatus('Removed');
   } catch (e) {
     console.error(e);
@@ -2192,13 +2236,11 @@ async function entryDeleteEmployee() {
 }
 
 // ---------------------------------------------------------------------
-// Detail view — full per-employee ledger. Defaults to the current month;
-// click any row in the ledger table to edit a different one instead.
+// Detail view — read-only summary of an employee's full ledger. Editing
+// (employee fields, months, payments) all happens on the Entry page now.
 // ---------------------------------------------------------------------
 let detailEmployeeId = null;
 let detailEmployee = null; // { id, name, role, date_left } — Personal Detail's read-only display
-let detailSalaryMonthId = null;
-let detailMonth = null;
 
 function renderPersonalDetail() {
   document.getElementById('dNameDisplay').textContent = detailEmployee.name || '(unnamed)';
@@ -2215,13 +2257,13 @@ function showListView() {
   document.getElementById('view-list').classList.add('active');
   document.getElementById('view-detail').classList.remove('active');
   document.getElementById('view-trash').classList.remove('active');
+  document.getElementById('view-entry').classList.remove('active');
+  document.getElementById('view-settings').classList.remove('active');
   // Cards/Table only means something on the list.
   document.getElementById('viewSwitch').style.display = '';
   window.scrollTo({ top: 0, behavior: 'auto' });
   detailEmployeeId = null;
   detailEmployee = null;
-  detailSalaryMonthId = null;
-  detailMonth = null;
   loadList();
 }
 
@@ -2233,6 +2275,8 @@ function showTrashView() {
   if (selectMode) exitSelectMode();
   document.getElementById('view-list').classList.remove('active');
   document.getElementById('view-detail').classList.remove('active');
+  document.getElementById('view-entry').classList.remove('active');
+  document.getElementById('view-settings').classList.remove('active');
   document.getElementById('view-trash').classList.add('active');
   document.getElementById('viewSwitch').style.display = 'none';
   window.scrollTo({ top: 0, behavior: 'auto' });
@@ -2357,6 +2401,8 @@ async function openDetail(employeeId) {
   document.getElementById('view-list').classList.remove('active');
   document.getElementById('view-detail').classList.add('active');
   document.getElementById('view-trash').classList.remove('active');
+  document.getElementById('view-entry').classList.remove('active');
+  document.getElementById('view-settings').classList.remove('active');
   document.getElementById('viewSwitch').style.display = 'none';
   window.scrollTo({ top: 0, behavior: 'auto' });
   setStatus('Loading...');
@@ -2364,17 +2410,7 @@ async function openDetail(employeeId) {
     const emp = (await sbGet(`${EMP_URL}?select=*&id=eq.${employeeId}`))[0];
     detailEmployee = emp;
     renderPersonalDetail();
-
     await ensureEmployeeMonth(employeeId, currentCalendarMonth(), emp.date_left);
-    const latest = await sbGet(`${SM_URL}?select=month&employee_id=eq.${employeeId}&deleted=eq.false&order=month.desc&limit=1`);
-    const targetMonth = latest.length ? latest[0].month : currentCalendarMonth();
-
-    bulkRows = [{ month: ymAdd(targetMonth, 1), salary: '' }];
-    renderBulkRows();
-    document.getElementById('addMonthsPanel').style.display = 'none';
-    document.getElementById('addMonthsToggle').textContent = '+ Add months';
-
-    await loadMonthPanel(targetMonth);
     await refreshLedger();
     setStatus('');
   } catch (e) {
@@ -2383,237 +2419,6 @@ async function openDetail(employeeId) {
   }
 }
 
-// ---------------------------------------------------------------------
-// "+ Add Months" — bulk row picker on the detail page, same idiom as Add
-// Employee's rows: queue up several Month+Salary rows, save them all at
-// once. Any month already on this employee's ledger is skipped rather
-// than overwritten — edit an existing month from the ledger table instead.
-// ---------------------------------------------------------------------
-let bulkRows = [];
-let bulkPickers = [];
-
-function renderBulkRows() {
-  const el = document.getElementById('bulkRowsList');
-  if (!el) return;
-  el.innerHTML = bulkRows.map((row, idx) => `
-    <div class="ms-row">
-      <div><input type="text" class="month-input" data-idx="${idx}" value="${row.month}" placeholder="YYYY-MM"></div>
-      <div><input type="number" placeholder="0" value="${row.salary}" oninput="bulkSetSalary(${idx}, this.value)"></div>
-      <button type="button" class="icon-btn" onclick="bulkRemoveRow(${idx})" ${bulkRows.length <= 1 ? 'disabled' : ''} aria-label="Remove row">${ICON_TRASH}</button>
-    </div>`).join('');
-  initMonthPickers(el, bulkPickers, bulkSetMonth);
-}
-function bulkSetMonth(idx, val) { bulkRows[idx].month = val; }
-function bulkSetSalary(idx, val) { bulkRows[idx].salary = val; }
-function bulkAddRow() {
-  const last = bulkRows[bulkRows.length - 1];
-  bulkRows.push({ month: last && last.month ? ymAdd(last.month, 1) : currentCalendarMonth(), salary: '' });
-  renderBulkRows();
-}
-function bulkRemoveRow(idx) {
-  if (bulkRows.length <= 1) return;
-  bulkRows.splice(idx, 1);
-  renderBulkRows();
-}
-
-async function saveBulkMonths() {
-  const rows = bulkRows
-    .filter(r => r.month)
-    .map(r => ({ month: r.month, salary: parseFloat(r.salary) || 0 }));
-  if (!rows.length) { showInfo('Add at least one month.'); return; }
-  const months = rows.map(r => r.month);
-  if (new Set(months).size !== months.length) { showInfo('Each month can only be added once — remove the duplicate row.'); return; }
-  rows.sort((a, b) => a.month.localeCompare(b.month));
-
-  const btn = document.querySelector('#addMonthsPanel .primary');
-  if (btn) btn.disabled = true;
-  setStatus('Saving...');
-  try {
-    const existing = await sbGet(`${SM_URL}?select=month&employee_id=eq.${detailEmployeeId}&deleted=eq.false&month=in.(${months.join(',')})`);
-    const already = new Set(existing.map(e => e.month));
-    const toCreate = rows.filter(r => !already.has(r.month));
-
-    if (!toCreate.length) {
-      showInfo('Every one of those months is already on this employee’s ledger — click it in the table below to edit it instead.');
-      setStatus('');
-      return;
-    }
-
-    for (const r of toCreate) {
-      await createSalaryMonthRow(detailEmployeeId, r.month, r.salary);
-    }
-    await recalcForward(detailEmployeeId, toCreate[0].month);
-
-    bulkRows = [];
-    renderBulkRows();
-    // A backfilled month earlier than the one on screen can change its
-    // prev_pending via recalcForward above — reload the open panel so it
-    // never shows a stale number after a bulk save.
-    if (toCreate.some(r => r.month <= detailMonth)) await loadMonthPanel(detailMonth);
-    await refreshLedger();
-    setStatus(already.size ? `Added ${toCreate.length}, skipped ${already.size} already on record` : 'Saved');
-  } catch (e) {
-    console.error(e);
-    setStatus('Failed to save months', true);
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-}
-
-// Loads (creating if needed) the salary_months row for `month` into the
-// editing panel + payments list. This is the one thing that changes when
-// you click a different row in the ledger table — nothing else reloads.
-async function loadMonthPanel(month) {
-  detailMonth = month;
-  const isCurrent = month === currentCalendarMonth();
-  const label = formatMonthLabel(month) + (isCurrent ? ' (current month)' : '');
-  document.getElementById('dMonthLabel').textContent = label;
-  document.getElementById('dPaymentsMonthLabel').textContent = formatMonthLabel(month);
-  document.getElementById('jumpCurrentBtn').style.display = isCurrent ? 'none' : '';
-
-  // Independent of each other — fire both at once instead of one after
-  // the other.
-  const [smRows, prior] = await Promise.all([
-    sbGet(`${SM_URL}?select=*&employee_id=eq.${detailEmployeeId}&month=eq.${month}&deleted=eq.false`),
-    fetchLatestPriorSalaryMonth(detailEmployeeId, month)
-  ]);
-  let sm = smRows[0];
-  if (!sm) {
-    sm = await sbPost(SM_URL, { employee_id: detailEmployeeId, month, base_salary: 0, days_worked: null, prev_pending: 0 });
-  }
-  detailSalaryMonthId = sm.id;
-  document.getElementById('dBaseSalary').value = sm.base_salary ?? 0;
-  document.getElementById('dDaysWorked').value = sm.days_worked ?? '';
-  document.getElementById('dPrevPending').value = sm.prev_pending ?? 0;
-  document.getElementById('dNotes').value = sm.notes || '';
-
-  document.getElementById('dPrevPendingHint').textContent = prior
-    ? `From ${formatMonthLabel(prior.month)}`
-    : '';
-
-  await loadPayments();
-}
-
-async function selectLedgerMonth(month) {
-  if (month === detailMonth) return;
-  setStatus('Loading...');
-  try {
-    await loadMonthPanel(month);
-    await refreshLedger();
-    setStatus('');
-  } catch (e) {
-    console.error(e);
-    setStatus('Failed to load month', true);
-  }
-}
-// "Add months" is a rare action, so it stays folded away until asked for.
-function toggleAddMonths() {
-  const panel = document.getElementById('addMonthsPanel');
-  const btn = document.getElementById('addMonthsToggle');
-  const open = panel.style.display !== 'none';
-  panel.style.display = open ? 'none' : '';
-  btn.textContent = open ? '+ Add months' : 'Done adding';
-}
-
-function jumpToCurrentMonth() { selectLedgerMonth(currentCalendarMonth()); }
-
-function recalcDetailPreview() {
-  const base = document.getElementById('dBaseSalary').value;
-  const days = document.getElementById('dDaysWorked').value;
-  const prorated = proratedSalary(base, days === '' ? null : days);
-  document.getElementById('dProrated').textContent = money(prorated);
-  updateSummaryBar(prorated);
-}
-
-let currentPayments = [];
-async function loadPayments() {
-  currentPayments = await sbGet(`${PAY_URL}?select=*&salary_month_id=eq.${detailSalaryMonthId}&deleted=eq.false&order=pay_date.asc`);
-  renderPayments();
-  recalcDetailPreview();
-}
-function renderPayments() {
-  const el = document.getElementById('paymentsList');
-  if (currentPayments.length === 0) {
-    el.innerHTML = '<div class="empty-note"><b>Nothing given yet</b></div>';
-    return;
-  }
-  el.innerHTML = currentPayments.map(p => {
-    // Rows saved before the method column existed are cash by default.
-    const method = p.method || 'Cash';
-    return `
-    <div class="payment-row">
-      <div>${p.pay_date || ''}</div>
-      <div class="amt">Rs. ${money(p.amount)}</div>
-      <div><span class="badge method ${method.toLowerCase() === 'online' ? 'online' : 'cash'}">${escapeHtml(method)}</span></div>
-      <div class="note-cell">${escapeHtml(p.note || '')}</div>
-      <button type="button" class="icon-btn" onclick="removePayment('${p.id}')" aria-label="Remove payment">${ICON_TRASH}</button>
-    </div>`;
-  }).join('');
-}
-function totalPaid() { return currentPayments.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0); }
-
-async function addPayment() {
-  const dateEl = document.getElementById('newPayDate');
-  const amountEl = document.getElementById('newPayAmount');
-  const noteEl = document.getElementById('newPayNote');
-  const methodEl = document.getElementById('newPayMethod');
-  const amount = parseFloat(amountEl.value);
-  if (!amount || amount <= 0) { showInfo('Enter a valid payment amount.'); return; }
-  const pay_date = dateEl.value || new Date().toISOString().slice(0, 10);
-  setStatus('Saving...');
-  try {
-    await sbPost(PAY_URL, {
-      salary_month_id: detailSalaryMonthId, amount, pay_date,
-      method: methodEl.value, note: noteEl.value.trim() || null
-    });
-    if (newPayDatePicker) newPayDatePicker.clear(); else dateEl.value = '';
-    amountEl.value = ''; noteEl.value = '';
-    await loadPayments();
-    await recalcForward(detailEmployeeId, detailMonth);
-    await refreshLedger();
-    setStatus('Saved');
-  } catch (e) {
-    console.error(e);
-    setStatus('Failed to save payment', true);
-  }
-}
-async function removePayment(id) {
-  const confirmed = await askDeleteConfirmation('Remove this payment? Type DELETE to confirm.');
-  if (!confirmed) return;
-  setStatus('Saving...');
-  try {
-    await sbPatch(`${PAY_URL}?id=eq.${id}`, { deleted: true, deleted_at: new Date().toISOString() });
-    await loadPayments();
-    await recalcForward(detailEmployeeId, detailMonth);
-    await refreshLedger();
-    setStatus('Removed');
-  } catch (e) {
-    console.error(e);
-    setStatus(missingColumnHint(e) || 'Failed to remove payment', true);
-    if (missingColumnHint(e)) showInfo(SCHEMA_HINT);
-  }
-}
-
-async function saveThisMonth() {
-  const base_salary = parseFloat(document.getElementById('dBaseSalary').value) || 0;
-  const daysRaw = document.getElementById('dDaysWorked').value;
-  const days_worked = daysRaw === '' ? null : parseFloat(daysRaw);
-  const prev_pending = parseFloat(document.getElementById('dPrevPending').value) || 0;
-  const notes = document.getElementById('dNotes').value.trim() || null;
-  setStatus('Saving...');
-  try {
-    await sbPatch(`${SM_URL}?id=eq.${detailSalaryMonthId}`, { base_salary, days_worked, prev_pending, notes });
-    await recalcForward(detailEmployeeId, detailMonth);
-    await refreshLedger();
-    recalcDetailPreview();
-    setStatus('Saved');
-  } catch (e) {
-    console.error(e);
-    setStatus('Failed to save', true);
-  }
-}
-
-let newPayDatePicker = null; // flatpickr instance for the Given section's payment-date field
 let entryEmployeeDateLeftPicker = null; // flatpickr for the entry page's Date Left field
 
 // ---------------------------------------------------------------------
@@ -2694,18 +2499,6 @@ async function deleteEmployee() {
   }
 }
 
-function updateSummaryBar(proratedOverride) {
-  const base = document.getElementById('dBaseSalary').value;
-  const days = document.getElementById('dDaysWorked').value;
-  const prorated = proratedOverride !== undefined ? proratedOverride : proratedSalary(base, days === '' ? null : days);
-  const paid = totalPaid();
-  const remaining = prorated - paid;
-  document.getElementById('sumProrated').textContent = money(prorated);
-  document.getElementById('sumPaid').textContent = money(paid);
-  document.getElementById('sumRemaining').textContent = money(remaining);
-  document.getElementById('sumStatus').outerHTML = `<span class="status-pill ${remaining > 0 ? 'pending' : 'paid'}" id="sumStatus">${remaining > 0 ? 'Pending' : 'Paid'}</span>`;
-}
-
 async function refreshLedger() {
   const tbody = document.getElementById('ledgerBody');
   try {
@@ -2726,10 +2519,9 @@ async function refreshLedger() {
       const thisMonthOwed = prorated - paid;
       const remaining = thisMonthOwed + prevPending;
       const isCurrentCalendarMonth = m.month === nowMonth;
-      const isEditing = m.month === detailMonth;
       const tm = isCurrentCalendarMonth ? 'this-month' : '';
       return `
-        <tr${isEditing ? ' class="editing-row"' : ''} onclick="selectLedgerMonth('${m.month}')">
+        <tr>
           <td class="${tm}" data-label="Month">${formatMonthLabel(m.month)}${isCurrentCalendarMonth ? ' (current)' : ''}</td>
           <td class="num ${tm}" data-label="Base Salary">${money(m.base_salary)}</td>
           <td class="num ${tm}" data-label="Days">${m.days_worked ? m.days_worked + '/' + MONTH_DAYS : 'Full'}</td>
