@@ -607,15 +607,6 @@
 </head>
 <body>
 
-<div id="loginModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; display:flex; align-items:center; justify-content:center;">
-  <div style="background:white; padding:40px; border-radius:12px; box-shadow:0 8px 24px rgba(15,23,42,.12); width:100%; max-width:320px;">
-    <h2 style="margin-top:0; margin-bottom:24px; text-align:center;">Login</h2>
-    <input type="email" id="loginEmail" placeholder="Email" style="width:100%; padding:12px; margin-bottom:24px; border:1px solid #E2E8F0; border-radius:6px; font-size:15px;" onkeypress="if(event.key==='Enter') loginSubmit()">
-    <button onclick="loginSubmit()" style="width:100%; padding:12px; background:#1E40AF; color:white; border:none; border-radius:6px; font-size:15px; cursor:pointer; font-weight:600;">Sign In</button>
-    <div id="loginError" style="color:#C0392B; margin-top:12px; font-size:14px; text-align:center;"></div>
-  </div>
-</div>
-
 <div class="container">
 
 <div class="app-head">
@@ -631,7 +622,6 @@
       <button type="button" id="selectToggle" onclick="toggleSelectMode()">Select</button>
       <button type="button" onclick="showTrashView()">Deleted <span id="trashCount" class="badge group" style="display:none;">0</span></button>
       <button type="button" onclick="preparePrint()">Print</button>
-      <button type="button" onclick="logout()">Logout</button>
       <div class="rd-switch" id="viewSwitch" role="group" aria-label="View mode">
         <button type="button" class="rd-switch-btn" id="switchCards" onclick="setViewMode('cards')" aria-pressed="false">Cards</button>
         <button type="button" class="rd-switch-btn active" id="switchTable" onclick="setViewMode('table')" aria-pressed="true">Table</button>
@@ -966,44 +956,6 @@ async function sbPatch(url, body) {
   if (!res.ok) throw new Error(await res.text());
 }
 
-async function loginSubmit() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const errEl = document.getElementById('loginError');
-  errEl.textContent = '';
-  if (!email) {
-    errEl.textContent = 'Email required';
-    return;
-  }
-  try {
-    const users = await sbGet(`${SUPABASE_URL}/rest/v1/users?select=*&email=eq.${encodeURIComponent(email)}`);
-    if (users.length === 0) {
-      errEl.textContent = 'Email not found';
-      return;
-    }
-    localStorage.setItem('loggedIn', 'true');
-    localStorage.setItem('userEmail', email);
-    document.getElementById('loginModal').style.display = 'none';
-    document.getElementById('loginEmail').value = '';
-    loadList();
-  } catch (e) {
-    errEl.textContent = 'Login failed: ' + (e.message || 'Unknown error');
-  }
-}
-
-function logout() {
-  localStorage.removeItem('loggedIn');
-  localStorage.removeItem('userEmail');
-  location.reload();
-}
-
-function checkLogin() {
-  if (localStorage.getItem('loggedIn') !== 'true') {
-    document.getElementById('loginModal').style.display = 'flex';
-  } else {
-    document.getElementById('loginModal').style.display = 'none';
-    loadList();
-  }
-}
 
 function setStatus(msg, isError) {
   const el = document.getElementById('statusMsg');
@@ -2526,14 +2478,14 @@ function preparePrint() {
 }
 
 // ---------------------------------------------------------------------
-// Init — check login, then load list.
+// Init — load list.
 // ---------------------------------------------------------------------
 async function init() {
   if (typeof flatpickr !== 'undefined') {
     eDateLeftPicker = flatpickr('#eDateLeft', { dateFormat: 'Y-m-d', altInput: true, altFormat: 'j M Y' });
     newPayDatePicker = flatpickr('#newPayDate', { dateFormat: 'Y-m-d', altInput: true, altFormat: 'j M Y' });
   }
-  checkLogin();
+  loadList();
 }
 
 init();
