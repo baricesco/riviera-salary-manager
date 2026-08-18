@@ -554,6 +554,7 @@
       </div>
       <div class="detail-side">
         <button type="button" onclick="openEditEmployeeModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Edit</button>
+        <button type="button" onclick="openDuplicateModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Duplicate</button>
         <button type="button" class="danger" onclick="deleteEmployee()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Remove</button>
       </div>
     </div>
@@ -658,11 +659,15 @@
 
 <div class="modal-overlay" id="addEmployeeModal">
   <div class="modal-box" style="max-width:440px;">
-    <div class="field"><label>Name</label><input type="text" id="newEmpName"></div>
+    <div class="grid-2col">
+      <div class="field"><label>Name</label><input type="text" id="newEmpName" placeholder="Leave blank if unknown" oninput="previewEmpNames()"></div>
+      <div class="field"><label>How many</label><input type="number" id="newEmpCount" value="1" min="1" max="50" oninput="previewEmpNames()"></div>
+    </div>
+    <div class="hint" id="newEmpNamePreview" style="margin:-8px 0 12px;"></div>
     <div class="field"><label>Role</label><input type="text" id="newEmpRole" placeholder="Washer"></div>
     <div class="field">
       <label for="newEmpDept">Group</label>
-      <input type="text" id="newEmpDept" list="deptOptions" placeholder="Laundry">
+      <input type="text" id="newEmpDept" list="deptOptions" placeholder="Laundry" oninput="previewEmpNames()">
     </div>
     <div class="field">
       <label class="check-row" for="newEmpManager">
@@ -678,6 +683,21 @@
     <div class="modal-actions">
       <button type="button" onclick="addEmployeeCancel()">Cancel</button>
       <button type="button" class="primary" onclick="addEmployeeConfirm()">Create</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="duplicateModal">
+  <div class="modal-box">
+    <p>Copy <b id="dupSourceName">this person</b> — same role, group, months and salaries. Payments are not copied.</p>
+    <div class="grid-2col">
+      <div class="field"><label>Base name</label><input type="text" id="dupBaseName" oninput="previewDupNames()"></div>
+      <div class="field"><label>How many</label><input type="number" id="dupCount" value="1" min="1" max="50" oninput="previewDupNames()"></div>
+    </div>
+    <div class="hint" id="dupNamePreview" style="margin-top:-8px;"></div>
+    <div class="modal-actions">
+      <button type="button" onclick="duplicateCancel()">Cancel</button>
+      <button type="button" class="primary" onclick="duplicateConfirm()">Create</button>
     </div>
   </div>
 </div>
@@ -738,6 +758,14 @@ async function sbPost(url, body) {
   if (!res.ok) throw new Error(await res.text());
   const data = await res.json();
   return data[0];
+}
+// Same as sbPost but keeps the whole returned array — used when a single
+// insert creates several rows at once (adding N staff, duplicating a person).
+async function sbPostMany(url, rows) {
+  if (!rows.length) return [];
+  const res = await fetch(url, { method: 'POST', headers: sbHeaders({ 'Prefer': 'return=representation' }), body: JSON.stringify(rows) });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
 }
 async function sbPatch(url, body) {
   const res = await fetch(url, { method: 'PATCH', headers: sbHeaders(), body: JSON.stringify(body) });
@@ -1267,11 +1295,72 @@ let addEmpRows = [];
 // matches the one rendered into the chip's onclick handler.
 function cleanDept(v) { return String(v || '').split('\\').join('').trim(); }
 
+// ---------------------------------------------------------------------
+// Adding several people at once. When names aren't known yet you give a
+// stem ("Kitchen Staff") and a count, and they come out numbered. The
+// numbering continues past anyone already named that way, so adding 3
+// more to an existing 4 gives you 5, 6, 7 rather than a pile of clashes.
+// ---------------------------------------------------------------------
+function nameStem(name, dept) {
+  const n = String(name || '').trim();
+  if (n) return n;
+  const d = String(dept || '').trim();
+  return d ? d + ' Staff' : 'Staff';
+}
+
+function nextNameIndex(stem) {
+  const escaped = stem.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp('^' + escaped + '\\s+(\\d+)$', 'i');
+  let max = 0;
+  peopleCache.forEach(p => {
+    const m = re.exec(String(p.name || '').trim());
+    if (m) max = Math.max(max, parseInt(m[1], 10));
+  });
+  return max + 1;
+}
+
+// alwaysNumber is set when copying someone: even a single copy has to be
+// numbered, or it would land on the exact name it was copied from.
+function generateNames(name, dept, count, alwaysNumber) {
+  const stem = nameStem(name, dept);
+  const typed = String(name || '').trim();
+  if (count === 1 && typed && !alwaysNumber) return [typed];
+  const start = nextNameIndex(stem);
+  return Array.from({ length: count }, (_, i) => `${stem} ${start + i}`);
+}
+
+function readCount(id) {
+  const n = parseInt(document.getElementById(id).value, 10);
+  if (isNaN(n)) return 1;
+  return Math.min(50, Math.max(1, n));
+}
+
+function previewNamesInto(previewId, names) {
+  const el = document.getElementById(previewId);
+  if (!names.length) { el.textContent = ''; return; }
+  const shown = names.length > 4 ? names.slice(0, 3).concat('… ' + names[names.length - 1]) : names;
+  el.textContent = 'Creates: ' + shown.join(', ');
+}
+
+function previewEmpNames() {
+  // Nothing useful to preview when it's one person with the name typed in.
+  if (readCount('newEmpCount') === 1 && document.getElementById('newEmpName').value.trim()) {
+    document.getElementById('newEmpNamePreview').textContent = '';
+    return;
+  }
+  previewNamesInto('newEmpNamePreview', generateNames(
+    document.getElementById('newEmpName').value,
+    document.getElementById('newEmpDept').value,
+    readCount('newEmpCount')));
+}
+
 function openAddEmployeeModal() {
   document.getElementById('newEmpName').value = '';
   document.getElementById('newEmpRole').value = '';
   document.getElementById('newEmpDept').value = activeGroup === 'ALL' || activeGroup === UNASSIGNED ? '' : activeGroup;
   document.getElementById('newEmpManager').checked = false;
+  document.getElementById('newEmpCount').value = 1;
+  document.getElementById('newEmpNamePreview').textContent = '';
   addEmpRows = [{ month: currentCalendarMonth(), salary: '' }];
   renderAddEmpRows();
   document.getElementById('addEmployeeModal').classList.add('active');
@@ -1307,7 +1396,11 @@ async function addEmployeeConfirm() {
   const role = document.getElementById('newEmpRole').value.trim();
   const dept = cleanDept(document.getElementById('newEmpDept').value);
   const is_manager = document.getElementById('newEmpManager').checked;
-  if (!name) { showInfo('Please enter a name.'); return; }
+  const count = readCount('newEmpCount');
+  // A name is only required for a single person — a batch can be numbered
+  // off the group instead ("Kitchen Staff 1", "Kitchen Staff 2", ...).
+  if (!name && count === 1 && !dept) { showInfo('Enter a name, or a group to number them under.'); return; }
+  const names = generateNames(name, dept, count);
   const rows = addEmpRows
     .filter(r => r.month)
     .map(r => ({ month: r.month, salary: parseFloat(r.salary) || 0 }));
@@ -1321,11 +1414,24 @@ async function addEmployeeConfirm() {
   if (btn) btn.disabled = true;
   setStatus('Creating...');
   try {
-    const emp = await sbPost(EMP_URL, { name, role: role || null, dept: dept || null, is_manager });
-    for (const r of rows) {
-      await createSalaryMonthRow(emp.id, r.month, r.salary);
-    }
-    setStatus('Added');
+    // Only the first of a batch can inherit the manager flag — a group
+    // shouldn't end up with five managers because someone typed "5".
+    const created = await sbPostMany(EMP_URL, names.map((n, i) => ({
+      name: n, role: role || null, dept: dept || null, is_manager: is_manager && i === 0
+    })));
+    // Everyone in the batch shares the same months and salaries. No prior
+    // months exist yet, so each month's carry-in chains from the one before.
+    let carry = 0;
+    const monthRows = [];
+    rows.forEach(r => {
+      created.forEach(emp => monthRows.push({
+        employee_id: emp.id, month: r.month, base_salary: r.salary,
+        days_worked: null, prev_pending: carry
+      }));
+      carry += (parseFloat(r.salary) || 0);
+    });
+    await sbPostMany(SM_URL, monthRows);
+    setStatus(created.length > 1 ? `Added ${created.length}` : 'Added');
     await loadList();
   } catch (e) {
     console.error(e);
@@ -1615,6 +1721,66 @@ async function saveThisMonth() {
 // ---------------------------------------------------------------------
 let eDateLeftPicker = null;
 let newPayDatePicker = null; // flatpickr instance for the Given section's payment-date field
+
+// ---------------------------------------------------------------------
+// Duplicate — copy this person's role, group and their whole month/salary
+// sheet onto N new people. Payments are deliberately not copied: those are
+// money that actually changed hands for one specific person.
+// ---------------------------------------------------------------------
+function openDuplicateModal() {
+  document.getElementById('dupSourceName').textContent = detailEmployee.name || 'this person';
+  document.getElementById('dupBaseName').value = detailEmployee.name || nameStem('', detailEmployee.dept);
+  document.getElementById('dupCount').value = 1;
+  previewDupNames();
+  document.getElementById('duplicateModal').classList.add('active');
+}
+function duplicateCancel() { document.getElementById('duplicateModal').classList.remove('active'); }
+
+function previewDupNames() {
+  previewNamesInto('dupNamePreview', generateNames(
+    document.getElementById('dupBaseName').value,
+    detailEmployee ? detailEmployee.dept : '',
+    readCount('dupCount'), true));
+}
+
+async function duplicateConfirm() {
+  const base = document.getElementById('dupBaseName').value.trim();
+  const count = readCount('dupCount');
+  const names = generateNames(base, detailEmployee.dept, count, true);
+  const btn = document.querySelector('#duplicateModal .primary');
+  if (btn) btn.disabled = true;
+  setStatus('Copying...');
+  try {
+    const source = await sbGet(`${SM_URL}?select=month,base_salary,days_worked&employee_id=eq.${detailEmployeeId}&deleted=eq.false&order=month.asc`);
+    const created = await sbPostMany(EMP_URL, names.map(n => ({
+      name: n,
+      role: detailEmployee.role || null,
+      dept: detailEmployee.dept || null,
+      is_manager: false // a copy is never automatically another manager
+    })));
+    // Rebuild the carry-in chain from scratch — the copies start with no
+    // payments, so each month carries the full unpaid total before it.
+    let carry = 0;
+    const monthRows = [];
+    source.forEach(m => {
+      created.forEach(emp => monthRows.push({
+        employee_id: emp.id, month: m.month,
+        base_salary: m.base_salary, days_worked: m.days_worked, prev_pending: carry
+      }));
+      carry += proratedSalary(m.base_salary, m.days_worked);
+    });
+    await sbPostMany(SM_URL, monthRows);
+    document.getElementById('duplicateModal').classList.remove('active');
+    setStatus(created.length > 1 ? `Created ${created.length}` : 'Created');
+    showListView();
+  } catch (e) {
+    console.error(e);
+    setStatus(missingColumnHint(e) || 'Failed to duplicate', true);
+    if (missingColumnHint(e)) showInfo(SCHEMA_HINT);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
 
 function openEditEmployeeModal() {
   document.getElementById('eName').value = detailEmployee.name || '';
