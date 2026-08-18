@@ -634,8 +634,8 @@
       <button type="button" onclick="preparePrint()">Print</button>
       <button type="button" onclick="logout()">Logout</button>
       <div class="rd-switch" id="viewSwitch" role="group" aria-label="View mode">
-        <button type="button" class="rd-switch-btn active" id="switchCards" onclick="setViewMode('cards')" aria-pressed="true">Cards</button>
-        <button type="button" class="rd-switch-btn" id="switchTable" onclick="setViewMode('table')" aria-pressed="false">Table</button>
+        <button type="button" class="rd-switch-btn" id="switchCards" onclick="setViewMode('cards')" aria-pressed="false">Cards</button>
+        <button type="button" class="rd-switch-btn active" id="switchTable" onclick="setViewMode('table')" aria-pressed="true">Table</button>
       </div>
       <span id="statusMsg" role="status" aria-live="polite"></span>
     </div>
@@ -1154,7 +1154,7 @@ function setViewMode(mode) {
   table.setAttribute('aria-pressed', String(mode === 'table'));
   renderPeople();
 }
-let viewMode = 'cards';
+let viewMode = 'table';
 
 // ---------------------------------------------------------------------
 // Data access
