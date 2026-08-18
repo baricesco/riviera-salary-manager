@@ -933,27 +933,71 @@ function sbHeaders(extra) {
 }
 
 async function sbGet(url) {
-  const res = await fetch(url, { headers: sbHeaders() });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  console.log('GET', url);
+  try {
+    const res = await fetch(url, { headers: sbHeaders() });
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error('GET failed', url, res.status, errText);
+      throw new Error(errText);
+    }
+    const data = await res.json();
+    console.log('GET success', url, 'rows:', Array.isArray(data) ? data.length : 1);
+    return data;
+  } catch (e) {
+    console.error('GET error', url, e);
+    throw e;
+  }
 }
 async function sbPost(url, body) {
-  const res = await fetch(url, { method: 'POST', headers: sbHeaders({ 'Prefer': 'return=representation' }), body: JSON.stringify(body) });
-  if (!res.ok) throw new Error(await res.text());
-  const data = await res.json();
-  return data[0];
+  console.log('POST', url, body);
+  try {
+    const res = await fetch(url, { method: 'POST', headers: sbHeaders({ 'Prefer': 'return=representation' }), body: JSON.stringify(body) });
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error('POST failed', url, res.status, errText);
+      throw new Error(errText);
+    }
+    const data = await res.json();
+    console.log('POST success', url, data);
+    return data[0];
+  } catch (e) {
+    console.error('POST error', url, e);
+    throw e;
+  }
 }
-// Same as sbPost but keeps the whole returned array — used when a single
-// insert creates several rows at once (adding N staff, duplicating a person).
 async function sbPostMany(url, rows) {
   if (!rows.length) return [];
-  const res = await fetch(url, { method: 'POST', headers: sbHeaders({ 'Prefer': 'return=representation' }), body: JSON.stringify(rows) });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  console.log('POST (many)', url, 'rows:', rows.length);
+  try {
+    const res = await fetch(url, { method: 'POST', headers: sbHeaders({ 'Prefer': 'return=representation' }), body: JSON.stringify(rows) });
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error('POST (many) failed', url, res.status, errText);
+      throw new Error(errText);
+    }
+    const data = await res.json();
+    console.log('POST (many) success', url, 'created:', data.length);
+    return data;
+  } catch (e) {
+    console.error('POST (many) error', url, e);
+    throw e;
+  }
 }
 async function sbPatch(url, body) {
-  const res = await fetch(url, { method: 'PATCH', headers: sbHeaders(), body: JSON.stringify(body) });
-  if (!res.ok) throw new Error(await res.text());
+  console.log('PATCH', url, body);
+  try {
+    const res = await fetch(url, { method: 'PATCH', headers: sbHeaders(), body: JSON.stringify(body) });
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error('PATCH failed', url, res.status, errText);
+      throw new Error(errText);
+    }
+    console.log('PATCH success', url);
+  } catch (e) {
+    console.error('PATCH error', url, e);
+    throw e;
+  }
 }
 
 
@@ -1248,15 +1292,17 @@ async function fetchAllEmployeesFullLedger() {
 let peopleCache = [];
 
 async function loadList() {
+  console.log(‘=== loadList starting ===’);
   document.getElementById(‘peopleContainer’).innerHTML = ‘<div class="empty-note">Loading...</div>’;
   try {
     peopleCache = await fetchAllEmployeesFullLedger();
+    console.log(‘Fetched’, peopleCache.length, ‘employees’);
     renderPeople();
     renderCompanySnapshot();
     refreshTrashCount();
     ensureAllCurrentMonth();
   } catch (e) {
-    console.error(‘Load failed’, e);
+    console.error(‘=== Load failed ===’, e);
     document.getElementById(‘peopleContainer’).innerHTML =
       ‘<div class="empty-note"><b>Couldn’t load</b>Run supabase_schema.sql in Supabase, then reload.</div>’;
     setStatus(‘Load failed’, true);
@@ -2480,7 +2526,15 @@ function preparePrint() {
 // ---------------------------------------------------------------------
 // Init — load list.
 // ---------------------------------------------------------------------
+window.onerror = (msg, url, line, col, error) => {
+  console.error('=== UNCAUGHT ERROR ===', msg, 'at', url + ':' + line + ':' + col, error);
+};
+window.onunhandledrejection = (event) => {
+  console.error('=== UNHANDLED PROMISE REJECTION ===', event.reason);
+};
+
 async function init() {
+  console.log('App starting...');
   if (typeof flatpickr !== 'undefined') {
     eDateLeftPicker = flatpickr('#eDateLeft', { dateFormat: 'Y-m-d', altInput: true, altFormat: 'j M Y' });
     newPayDatePicker = flatpickr('#newPayDate', { dateFormat: 'Y-m-d', altInput: true, altFormat: 'j M Y' });
