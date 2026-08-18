@@ -415,6 +415,16 @@
   .detail-side button svg { display: inline-block; vertical-align: -2px; }
 
   .panel { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg); padding: var(--sp-4); margin-bottom: var(--sp-4); box-shadow: var(--shadow-sm); }
+  .panel.accent-employee { border-left: 4px solid var(--c-primary); }
+  .panel.accent-salary { border-left: 4px solid var(--c-accent); }
+  .panel.accent-payments { border-left: 4px solid var(--c-success); }
+  .entry-table td input, .entry-table td select { min-height: 36px; padding: 6px 8px; font-size: 14px; }
+  .editing-bar {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); flex-wrap: wrap;
+    background: var(--c-accent-soft); border: 1px solid var(--c-accent); color: #7C2D12;
+    padding: var(--sp-3) var(--sp-4); border-radius: var(--r-md); margin-bottom: var(--sp-4); font-size: 13px; font-weight: 600;
+  }
+  .editing-bar button { min-height: 32px; padding: 4px 12px; }
   .panel-head { display: flex; align-items: baseline; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-3); }
   .panel-head h2 { margin: 0; }
   .grid-2col { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: var(--sp-4); }
@@ -618,7 +628,7 @@
       </div>
     </div>
     <div class="toolbar">
-      <button type="button" class="primary" onclick="openAddEmployeeModal()">+ Add Employee</button>
+      <button type="button" class="primary" onclick="openEntryForAdd()">+ Add Employee</button>
       <button type="button" id="selectToggle" onclick="toggleSelectMode()">Select</button>
       <button type="button" onclick="showTrashView()">Deleted <span id="trashCount" class="badge group" style="display:none;">0</span></button>
       <button type="button" onclick="preparePrint()">Print</button>
@@ -694,6 +704,84 @@
 
 </div>
 
+<div class="view" id="view-entry">
+
+  <span class="backlink" onclick="cancelEntry()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'){cancelEntry();}">&larr; Back</span>
+
+  <div class="editing-bar" id="entryEditBar" style="display:none;">
+    <span>&#9998; EDITING: <b id="entryEditName"></b> — changes save to this existing employee.</span>
+  </div>
+
+  <h1 id="entryTitle">Add Employee</h1>
+
+  <div class="panel accent-employee">
+    <h2>Employee Detail</h2>
+    <div class="grid-2col">
+      <div><label>Name</label><input type="text" id="enName" placeholder="Full name" oninput="entryPreviewNames()"></div>
+      <div><label>Role</label><input type="text" id="enRole" list="roleOptions" placeholder="Chef, Cook, Washer..."></div>
+      <div>
+        <label for="enDept">Group</label>
+        <input type="text" id="enDept" list="deptOptions" placeholder="Laundry" oninput="entryPreviewNames(); refreshRoleOptions(this.value);">
+      </div>
+      <div id="enCountField"><label>How many</label><input type="number" id="enCount" value="1" min="1" max="50" oninput="entryPreviewNames()"></div>
+      <div id="enDateLeftField" style="display:none;">
+        <label>Date Left</label>
+        <div style="display:flex; gap:6px;">
+          <input type="text" id="enDateLeft" placeholder="Still employed" style="flex:1;">
+          <button type="button" class="icon-btn" onclick="clearEnDateLeft()" title="Clear — still employed" aria-label="Clear date left">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div>
+        <label class="check-row" for="enManager">
+          <input type="checkbox" id="enManager">
+          <span>Head of this group</span>
+        </label>
+      </div>
+    </div>
+    <div class="hint" id="enNamePreview"></div>
+  </div>
+
+  <div class="panel accent-salary">
+    <h2>Salary Months</h2>
+    <div class="table-wrap">
+      <table class="entry-table stack-table">
+        <thead><tr>
+          <th>Month</th><th class="num">Base Salary</th><th class="num">Days Worked</th><th class="num">Carried Over</th>
+          <th class="num">Earned</th><th class="num">Given</th><th class="num">Pending</th><th>Status</th><th></th>
+        </tr></thead>
+        <tbody id="entrySalaryBody"></tbody>
+      </table>
+    </div>
+    <div class="actions" style="margin-top:10px;"><button type="button" onclick="entryAddMonth()">+ Month</button></div>
+  </div>
+
+  <div class="panel accent-payments" id="entryPaymentsPanel" style="display:none;">
+    <h2>Payments</h2>
+    <div class="stats-head" style="margin-bottom:12px;">
+      <label for="entryPayMonth">For month</label>
+      <select id="entryPayMonth" onchange="entryLoadPayments()"></select>
+    </div>
+    <div class="payments-list" id="entryPaymentsList"></div>
+    <div class="payment-add-row">
+      <div><label>Date</label><input type="text" id="enPayDate" placeholder="Today"></div>
+      <div><label>Amount</label><input type="number" id="enPayAmount" placeholder="0"></div>
+      <div><label>Type</label>
+        <select id="enPayMethod"><option value="Cash">Cash</option><option value="Online">Online</option></select>
+      </div>
+      <div><label>Note</label><input type="text" id="enPayNote" placeholder="Optional"></div>
+      <div><button type="button" class="primary" onclick="entryAddPayment()">Add</button></div>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;">
+    <button type="button" class="primary" id="entrySaveBtn" onclick="entryCreateSave()">Create Employee</button>
+    <button type="button" class="danger" id="entryDeleteBtn" style="display:none;" onclick="entryDeleteEmployee()">Remove Employee</button>
+  </div>
+
+</div>
+
 <div class="view" id="view-detail">
 
   <span class="backlink" onclick="showListView()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'){showListView();}">&larr; Back</span>
@@ -710,7 +798,7 @@
           <div class="hint" id="dDateLeftDisplay"></div>
         </div>
         <div class="detail-side">
-          <button type="button" onclick="openEditEmployeeModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Edit</button>
+          <button type="button" onclick="openEntryForEdit()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Edit</button>
           <button type="button" onclick="openDuplicateModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Duplicate</button>
           <button type="button" class="danger" onclick="deleteEmployee()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Remove</button>
         </div>
@@ -841,36 +929,6 @@
 <datalist id="deptOptions"></datalist>
 <datalist id="roleOptions"></datalist>
 
-<div class="modal-overlay" id="addEmployeeModal">
-  <div class="modal-box" style="max-width:440px;">
-    <div class="grid-2col">
-      <div class="field"><label>Name</label><input type="text" id="newEmpName" placeholder="Leave blank if unknown" oninput="previewEmpNames()"></div>
-      <div class="field"><label>How many</label><input type="number" id="newEmpCount" value="1" min="1" max="50" oninput="previewEmpNames()"></div>
-    </div>
-    <div class="hint" id="newEmpNamePreview" style="margin:-8px 0 12px;"></div>
-    <div class="field"><label>Role</label><input type="text" id="newEmpRole" list="roleOptions" placeholder="Chef, Cook, Washer..."></div>
-    <div class="field">
-      <label for="newEmpDept">Group</label>
-      <input type="text" id="newEmpDept" list="deptOptions" placeholder="Laundry" oninput="previewEmpNames(); refreshRoleOptions(this.value);">
-    </div>
-    <div class="field">
-      <label class="check-row" for="newEmpManager">
-        <input type="checkbox" id="newEmpManager">
-        <span>Head of this group</span>
-      </label>
-    </div>
-    <div class="field">
-      <div class="ms-row-head"><label>Month</label><label>Salary</label><span></span></div>
-      <div class="ms-rows" id="addEmpRowsList"></div>
-      <button type="button" onclick="addEmpAddRow()">+ Add Row</button>
-    </div>
-    <div class="modal-actions">
-      <button type="button" onclick="addEmployeeCancel()">Cancel</button>
-      <button type="button" class="primary" onclick="addEmployeeConfirm()">Create</button>
-    </div>
-  </div>
-</div>
-
 <div class="modal-overlay" id="duplicateModal">
   <div class="modal-box">
     <p>Copy <b id="dupSourceName">this person</b> — same role, group, months and salaries. Payments are not copied.</p>
@@ -882,36 +940,6 @@
     <div class="modal-actions">
       <button type="button" onclick="duplicateCancel()">Cancel</button>
       <button type="button" class="primary" onclick="duplicateConfirm()">Create</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="editEmployeeModal">
-  <div class="modal-box">
-    <div class="field"><label>Name</label><input type="text" id="eName"></div>
-    <div class="field"><label>Role</label><input type="text" id="eRole" list="roleOptions" placeholder="Chef, Cook, Washer..."></div>
-    <div class="field">
-      <label for="eDept">Group</label>
-      <input type="text" id="eDept" list="deptOptions" placeholder="Unassigned" oninput="refreshRoleOptions(this.value)">
-    </div>
-    <div class="field">
-      <label class="check-row" for="eManager">
-        <input type="checkbox" id="eManager">
-        <span>Head of this group</span>
-      </label>
-    </div>
-    <div class="field">
-      <label>Date Left</label>
-      <div style="display:flex; gap:6px;">
-        <input type="text" id="eDateLeft" placeholder="Still employed" style="flex:1;">
-        <button type="button" class="icon-btn" onclick="clearEDateLeft()" title="Clear — still employed" aria-label="Clear date left">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button type="button" onclick="editEmployeeCancel()">Cancel</button>
-      <button type="button" class="primary" onclick="editEmployeeSave()">Save</button>
     </div>
   </div>
 </div>
@@ -1292,23 +1320,22 @@ async function fetchAllEmployeesFullLedger() {
 let peopleCache = [];
 
 async function loadList() {
-  console.log(‘=== loadList starting ===’);
-  document.getElementById(‘peopleContainer’).innerHTML = ‘<div class="empty-note">Loading...</div>’;
+  console.log('=== loadList starting ===');
+  document.getElementById('peopleContainer').innerHTML = '<div class="empty-note">Loading...</div>';
   try {
     peopleCache = await fetchAllEmployeesFullLedger();
-    console.log(‘Fetched’, peopleCache.length, ‘employees’);
+    console.log('Fetched', peopleCache.length, 'employees');
     renderPeople();
     renderCompanySnapshot();
     refreshTrashCount();
     ensureAllCurrentMonth();
   } catch (e) {
-    console.error(‘=== Load failed ===’, e);
-    document.getElementById(‘peopleContainer’).innerHTML =
-      ‘<div class="empty-note"><b>Couldn’t load</b>Run supabase_schema.sql in Supabase, then reload.</div>’;
-    setStatus(‘Load failed’, true);
+    console.error('=== Load failed ===', e);
+    document.getElementById('peopleContainer').innerHTML =
+      '<div class="empty-note"><b>Couldn\'t load</b> Run supabase_schema.sql in Supabase, then reload.</div>';
+    setStatus('Load failed', true);
   }
 }
-
 function renderCompanySnapshot() {
   const totalPending = peopleCache.reduce((s, p) => s + p.pending, 0);
   document.getElementById('csCount').textContent = peopleCache.length;
@@ -1699,8 +1726,6 @@ function escapeAttr(s) {
 // field. At least one row is always present; "+ Add Row" defaults the
 // next one to the month right after the last row on the list.
 // ---------------------------------------------------------------------
-let addEmpRows = [];
-
 // Group names go through this on the way in so a stored name always
 // matches the one rendered into the chip's onclick handler.
 function cleanDept(v) { return String(v || '').split('\\').join('').trim(); }
@@ -1812,104 +1837,357 @@ function previewNamesInto(previewId, names) {
   el.textContent = 'Creates: ' + shown.join(', ');
 }
 
-function previewEmpNames() {
-  // Nothing useful to preview when it's one person with the name typed in.
-  if (readCount('newEmpCount') === 1 && document.getElementById('newEmpName').value.trim()) {
-    document.getElementById('newEmpNamePreview').textContent = '';
+
+// ---------------------------------------------------------------------
+// Entry page — one page for both Add Employee and Edit Employee, styled
+// as three panels (Employee Detail / Salary Months / Payments) with the
+// Salary Months table directly editable, matching the reference UI.
+// ---------------------------------------------------------------------
+let entryMode = 'add'; // 'add' | 'edit'
+let entryMonths = [];  // [{ id, month, base_salary, days_worked, prev_pending, paid, isNew }]
+let entryMonthPickers = [];
+let entryPaymentsCache = [];
+let entrySelectedMonthId = null;
+let entryPayDatePicker = null;
+
+function showEntryView() {
+  document.getElementById('view-list').classList.remove('active');
+  document.getElementById('view-detail').classList.remove('active');
+  document.getElementById('view-trash').classList.remove('active');
+  document.getElementById('view-entry').classList.add('active');
+  document.getElementById('viewSwitch').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'auto' });
+}
+
+function cancelEntry() {
+  if (entryMode === 'edit' && detailEmployeeId) openDetail(detailEmployeeId);
+  else showListView();
+}
+
+function clearEnDateLeft() {
+  if (entryEmployeeDateLeftPicker) entryEmployeeDateLeftPicker.clear();
+  else document.getElementById('enDateLeft').value = '';
+}
+
+function entryPreviewNames() {
+  if (entryMode !== 'add') return;
+  if (readCount('enCount') === 1 && document.getElementById('enName').value.trim()) {
+    document.getElementById('enNamePreview').textContent = '';
     return;
   }
-  previewNamesInto('newEmpNamePreview', generateNames(
-    document.getElementById('newEmpName').value,
-    document.getElementById('newEmpDept').value,
-    readCount('newEmpCount')));
+  previewNamesInto('enNamePreview', generateNames(
+    document.getElementById('enName').value,
+    document.getElementById('enDept').value,
+    readCount('enCount')));
 }
 
-function openAddEmployeeModal() {
-  document.getElementById('newEmpName').value = '';
-  document.getElementById('newEmpRole').value = '';
-  document.getElementById('newEmpDept').value = activeGroup === 'ALL' || activeGroup === UNASSIGNED ? '' : activeGroup;
-  document.getElementById('newEmpManager').checked = false;
-  document.getElementById('newEmpCount').value = 1;
-  refreshRoleOptions(document.getElementById('newEmpDept').value);
-  document.getElementById('newEmpNamePreview').textContent = '';
-  addEmpRows = [{ month: currentCalendarMonth(), salary: '' }];
-  renderAddEmpRows();
-  document.getElementById('addEmployeeModal').classList.add('active');
-}
-function addEmployeeCancel() { document.getElementById('addEmployeeModal').classList.remove('active'); }
-
-let addEmpPickers = [];
-function renderAddEmpRows() {
-  const el = document.getElementById('addEmpRowsList');
-  el.innerHTML = addEmpRows.map((row, idx) => `
-    <div class="ms-row">
-      <div><input type="text" class="month-input" data-idx="${idx}" value="${row.month}" placeholder="YYYY-MM"></div>
-      <div><input type="number" placeholder="0" value="${row.salary}" oninput="addEmpSetSalary(${idx}, this.value)"></div>
-      <button type="button" class="icon-btn" onclick="addEmpRemoveRow(${idx})" ${addEmpRows.length <= 1 ? 'disabled' : ''} aria-label="Remove row">${ICON_TRASH}</button>
-    </div>`).join('');
-  initMonthPickers(el, addEmpPickers, addEmpSetMonth);
-}
-function addEmpSetMonth(idx, val) { addEmpRows[idx].month = val; }
-function addEmpSetSalary(idx, val) { addEmpRows[idx].salary = val; }
-function addEmpAddRow() {
-  const last = addEmpRows[addEmpRows.length - 1];
-  addEmpRows.push({ month: last && last.month ? ymAdd(last.month, 1) : currentCalendarMonth(), salary: '' });
-  renderAddEmpRows();
-}
-function addEmpRemoveRow(idx) {
-  if (addEmpRows.length <= 1) return;
-  addEmpRows.splice(idx, 1);
-  renderAddEmpRows();
+function openEntryForAdd() {
+  entryMode = 'add';
+  document.getElementById('entryTitle').textContent = 'Add Employee';
+  document.getElementById('entryEditBar').style.display = 'none';
+  document.getElementById('entrySaveBtn').textContent = 'Create Employee';
+  document.getElementById('entryDeleteBtn').style.display = 'none';
+  document.getElementById('entryPaymentsPanel').style.display = 'none';
+  document.getElementById('enCountField').style.display = '';
+  document.getElementById('enDateLeftField').style.display = 'none';
+  document.getElementById('enName').value = '';
+  document.getElementById('enRole').value = '';
+  document.getElementById('enDept').value = activeGroup === 'ALL' || activeGroup === UNASSIGNED ? '' : activeGroup;
+  document.getElementById('enManager').checked = false;
+  document.getElementById('enCount').value = 1;
+  refreshRoleOptions(document.getElementById('enDept').value);
+  document.getElementById('enNamePreview').textContent = '';
+  entryMonths = [{ id: null, month: currentCalendarMonth(), base_salary: '', days_worked: '', prev_pending: 0, paid: 0, isNew: true }];
+  renderEntrySalaryTable();
+  showEntryView();
 }
 
-async function addEmployeeConfirm() {
-  const name = document.getElementById('newEmpName').value.trim();
-  const role = document.getElementById('newEmpRole').value.trim();
-  const dept = cleanDept(document.getElementById('newEmpDept').value);
-  const is_manager = document.getElementById('newEmpManager').checked;
-  const count = readCount('newEmpCount');
-  // A name is only required for a single person — a batch can be numbered
-  // off the group instead ("Kitchen Staff 1", "Kitchen Staff 2", ...).
+async function openEntryForEdit() {
+  entryMode = 'edit';
+  document.getElementById('entryTitle').textContent = 'Edit Employee';
+  document.getElementById('entryEditBar').style.display = 'flex';
+  document.getElementById('entryEditName').textContent = detailEmployee.name || '(unnamed)';
+  document.getElementById('entrySaveBtn').textContent = 'Save';
+  document.getElementById('entryDeleteBtn').style.display = '';
+  document.getElementById('entryPaymentsPanel').style.display = '';
+  document.getElementById('enCountField').style.display = 'none';
+  document.getElementById('enDateLeftField').style.display = '';
+  document.getElementById('enName').value = detailEmployee.name || '';
+  document.getElementById('enRole').value = detailEmployee.role || '';
+  document.getElementById('enDept').value = detailEmployee.dept || '';
+  document.getElementById('enManager').checked = !!detailEmployee.is_manager;
+  if (entryEmployeeDateLeftPicker) entryEmployeeDateLeftPicker.setDate(detailEmployee.date_left || null, false);
+  else document.getElementById('enDateLeft').value = detailEmployee.date_left || '';
+  refreshRoleOptions(detailEmployee.dept);
+  document.getElementById('enNamePreview').textContent = '';
+  showEntryView();
+  setStatus('Loading...');
+  try {
+    const months = await sbGet(`${SM_URL}?select=*&employee_id=eq.${detailEmployeeId}&deleted=eq.false&order=month.asc`);
+    let paidMap = {};
+    if (months.length) {
+      const pays = await sbGet(`${PAY_URL}?select=salary_month_id,amount&salary_month_id=in.(${months.map(m => m.id).join(',')})&deleted=eq.false`);
+      pays.forEach(p => { paidMap[p.salary_month_id] = (paidMap[p.salary_month_id] || 0) + (parseFloat(p.amount) || 0); });
+    }
+    entryMonths = months.map(m => ({
+      id: m.id, month: m.month, base_salary: m.base_salary, days_worked: m.days_worked,
+      prev_pending: m.prev_pending, paid: paidMap[m.id] || 0, isNew: false
+    }));
+    renderEntrySalaryTable();
+    renderEntryPayMonthOptions();
+    if (entryMonths.length) {
+      entrySelectedMonthId = entryMonths[entryMonths.length - 1].id;
+      document.getElementById('entryPayMonth').value = entrySelectedMonthId;
+      await entryLoadPayments();
+    } else {
+      entrySelectedMonthId = null;
+      document.getElementById('entryPaymentsList').innerHTML = '<div class="empty-note">Add a month first.</div>';
+    }
+    setStatus('');
+  } catch (e) {
+    console.error(e);
+    setStatus('Failed to load', true);
+  }
+}
+
+function entryRowEarned(r) {
+  return proratedSalary(r.base_salary, r.days_worked === '' || r.days_worked === null || r.days_worked === undefined ? null : r.days_worked);
+}
+
+function renderEntrySalaryTable() {
+  const tbody = document.getElementById('entrySalaryBody');
+  tbody.innerHTML = entryMonths.map((r, idx) => {
+    const earned = entryRowEarned(r);
+    const given = r.paid || 0;
+    const pending = earned - given + (parseFloat(r.prev_pending) || 0);
+    return `
+    <tr>
+      <td data-label="Month"><input type="text" class="month-input" data-idx="${idx}" value="${r.month || ''}" placeholder="YYYY-MM" onchange="entrySetMonth(${idx}, this.value)"></td>
+      <td class="num" data-label="Base Salary"><input type="number" value="${r.base_salary ?? ''}" placeholder="0" onchange="entrySetSalary(${idx}, this.value)"></td>
+      <td class="num" data-label="Days Worked"><input type="number" value="${r.days_worked ?? ''}" placeholder="Full" onchange="entrySetDays(${idx}, this.value)"></td>
+      <td class="num" data-label="Carried Over"><input type="number" value="${r.prev_pending ?? 0}" onchange="entrySetPrev(${idx}, this.value)"></td>
+      <td class="num" data-label="Earned">${money(earned)}</td>
+      <td class="num" data-label="Given">${money(given)}</td>
+      <td class="num ${pending > 0 ? 'neg' : 'pos'}" data-label="Pending">${money(pending)}</td>
+      <td data-label="Status">${statusPillHtml(pending)}</td>
+      <td><button type="button" class="icon-btn" onclick="entryRemoveMonthRow(${idx})" aria-label="Remove row">${ICON_TRASH}</button></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="9" class="empty-note">No months yet — click + Month.</td></tr>';
+  initMonthPickers(tbody, entryMonthPickers, entrySetMonth);
+}
+
+async function entryCommitRow(idx) {
+  const r = entryMonths[idx];
+  if (!r.month) return;
+  if (entryMode === 'edit' && r.id) {
+    setStatus('Saving...');
+    try {
+      const base_salary = parseFloat(r.base_salary) || 0;
+      const days_worked = (r.days_worked === '' || r.days_worked === null || r.days_worked === undefined) ? null : parseFloat(r.days_worked);
+      const prev_pending = parseFloat(r.prev_pending) || 0;
+      await sbPatch(`${SM_URL}?id=eq.${r.id}`, { base_salary, days_worked, prev_pending });
+      await recalcForward(detailEmployeeId, r.month);
+      renderEntrySalaryTable();
+      renderEntryPayMonthOptions();
+      setStatus('Saved');
+    } catch (e) {
+      console.error(e);
+      setStatus(missingColumnHint(e) || 'Failed to save', true);
+      if (missingColumnHint(e)) showInfo(SCHEMA_HINT);
+    }
+  } else {
+    renderEntrySalaryTable();
+  }
+}
+function entrySetMonth(idx, val) { entryMonths[idx].month = val; entryCommitRow(idx); }
+function entrySetSalary(idx, val) { entryMonths[idx].base_salary = val; entryCommitRow(idx); }
+function entrySetDays(idx, val) { entryMonths[idx].days_worked = val; entryCommitRow(idx); }
+function entrySetPrev(idx, val) { entryMonths[idx].prev_pending = val; entryCommitRow(idx); }
+
+async function entryAddMonth() {
+  const last = entryMonths[entryMonths.length - 1];
+  const month = last && last.month ? ymAdd(last.month, 1) : currentCalendarMonth();
+  if (entryMode === 'add' || !detailEmployeeId) {
+    entryMonths.push({ id: null, month, base_salary: '', days_worked: '', prev_pending: 0, paid: 0, isNew: true });
+    renderEntrySalaryTable();
+    return;
+  }
+  if (entryMonths.some(m => m.month === month)) { showInfo('That month already exists — edit it in the table.'); return; }
+  setStatus('Adding...');
+  try {
+    const created = await createSalaryMonthRow(detailEmployeeId, month, 0);
+    await recalcForward(detailEmployeeId, month);
+    entryMonths.push({ id: created.id, month, base_salary: 0, days_worked: null, prev_pending: created.prev_pending, paid: 0, isNew: false });
+    renderEntrySalaryTable();
+    renderEntryPayMonthOptions();
+    setStatus('Added');
+  } catch (e) {
+    console.error(e);
+    setStatus('Failed to add month', true);
+  }
+}
+function entryRemoveMonthRow(idx) {
+  if (entryMonths[idx].id) { showInfo('Existing months can\'t be removed from here.'); return; }
+  if (entryMode === 'add' && entryMonths.length <= 1) return;
+  entryMonths.splice(idx, 1);
+  renderEntrySalaryTable();
+}
+
+function renderEntryPayMonthOptions() {
+  const sel = document.getElementById('entryPayMonth');
+  sel.innerHTML = entryMonths.filter(m => m.id).map(m => `<option value="${m.id}">${formatMonthLabel(m.month)}</option>`).join('');
+  if (entrySelectedMonthId && entryMonths.some(m => m.id === entrySelectedMonthId)) sel.value = entrySelectedMonthId;
+  else if (entryMonths.length) { entrySelectedMonthId = entryMonths[entryMonths.length - 1].id; sel.value = entrySelectedMonthId; }
+}
+
+async function entryLoadPayments() {
+  entrySelectedMonthId = document.getElementById('entryPayMonth').value;
+  if (!entrySelectedMonthId) { document.getElementById('entryPaymentsList').innerHTML = '<div class="empty-note">Add a month first.</div>'; return; }
+  entryPaymentsCache = await sbGet(`${PAY_URL}?select=*&salary_month_id=eq.${entrySelectedMonthId}&deleted=eq.false&order=pay_date.asc`);
+  renderEntryPayments();
+}
+function renderEntryPayments() {
+  const el = document.getElementById('entryPaymentsList');
+  if (!entryPaymentsCache.length) { el.innerHTML = '<div class="empty-note"><b>Nothing given yet</b></div>'; return; }
+  el.innerHTML = entryPaymentsCache.map(p => {
+    const method = p.method || 'Cash';
+    return `
+    <div class="payment-row">
+      <div>${p.pay_date || ''}</div>
+      <div class="amt">Rs. ${money(p.amount)}</div>
+      <div><span class="badge method ${method.toLowerCase() === 'online' ? 'online' : 'cash'}">${escapeHtml(method)}</span></div>
+      <div class="note-cell">${escapeHtml(p.note || '')}</div>
+      <button type="button" class="icon-btn" onclick="entryRemovePayment('${p.id}')" aria-label="Remove payment">${ICON_TRASH}</button>
+    </div>`;
+  }).join('');
+}
+async function entryAddPayment() {
+  if (!entrySelectedMonthId) { showInfo('Add a month first.'); return; }
+  const amount = parseFloat(document.getElementById('enPayAmount').value);
+  if (!amount || amount <= 0) { showInfo('Enter a valid payment amount.'); return; }
+  const pay_date = document.getElementById('enPayDate').value || new Date().toISOString().slice(0, 10);
+  const method = document.getElementById('enPayMethod').value;
+  const note = document.getElementById('enPayNote').value.trim() || null;
+  setStatus('Saving...');
+  try {
+    await sbPost(PAY_URL, { salary_month_id: entrySelectedMonthId, amount, pay_date, method, note });
+    if (entryPayDatePicker) entryPayDatePicker.clear(); else document.getElementById('enPayDate').value = '';
+    document.getElementById('enPayAmount').value = ''; document.getElementById('enPayNote').value = '';
+    await entryLoadPayments();
+    const m = entryMonths.find(m => m.id === entrySelectedMonthId);
+    await recalcForward(detailEmployeeId, m.month);
+    m.paid = await fetchPaymentsSum(entrySelectedMonthId);
+    renderEntrySalaryTable();
+    setStatus('Saved');
+  } catch (e) {
+    console.error(e);
+    setStatus(missingColumnHint(e) || 'Failed to save payment', true);
+    if (missingColumnHint(e)) showInfo(SCHEMA_HINT);
+  }
+}
+async function entryRemovePayment(id) {
+  const confirmed = await askDeleteConfirmation('Remove this payment? Type DELETE to confirm.');
+  if (!confirmed) return;
+  setStatus('Saving...');
+  try {
+    await sbPatch(`${PAY_URL}?id=eq.${id}`, { deleted: true, deleted_at: new Date().toISOString() });
+    await entryLoadPayments();
+    const m = entryMonths.find(m => m.id === entrySelectedMonthId);
+    await recalcForward(detailEmployeeId, m.month);
+    m.paid = await fetchPaymentsSum(entrySelectedMonthId);
+    renderEntrySalaryTable();
+    setStatus('Removed');
+  } catch (e) {
+    console.error(e);
+    setStatus(missingColumnHint(e) || 'Failed to remove payment', true);
+    if (missingColumnHint(e)) showInfo(SCHEMA_HINT);
+  }
+}
+
+async function entryCreateSave() {
+  if (entryMode === 'add') return entryCreateNew();
+  return entrySaveEmployeeFields();
+}
+
+async function entryCreateNew() {
+  const name = document.getElementById('enName').value.trim();
+  const role = document.getElementById('enRole').value.trim();
+  const dept = cleanDept(document.getElementById('enDept').value);
+  const is_manager = document.getElementById('enManager').checked;
+  const count = readCount('enCount');
   if (!name && count === 1 && !dept) { showInfo('Enter a name, or a group to number them under.'); return; }
   const names = generateNames(name, dept, count);
-  const rows = addEmpRows
-    .filter(r => r.month)
-    .map(r => ({ month: r.month, salary: parseFloat(r.salary) || 0 }));
+  const rows = entryMonths.filter(r => r.month).map(r => ({ month: r.month, salary: parseFloat(r.base_salary) || 0 }));
   if (!rows.length) { showInfo('Add at least one month.'); return; }
   const months = rows.map(r => r.month);
   if (new Set(months).size !== months.length) { showInfo('Each month can only be added once — remove the duplicate row.'); return; }
   rows.sort((a, b) => a.month.localeCompare(b.month));
 
-  document.getElementById('addEmployeeModal').classList.remove('active');
-  const btn = document.querySelector('#addEmployeeModal .primary');
-  if (btn) btn.disabled = true;
+  const btn = document.getElementById('entrySaveBtn');
+  btn.disabled = true;
   setStatus('Creating...');
   try {
-    // Only the first of a batch can inherit the manager flag — a group
-    // shouldn't end up with five managers because someone typed "5".
     const created = await sbPostMany(EMP_URL, names.map((n, i) => ({
       name: n, role: role || null, dept: dept || null, is_manager: is_manager && i === 0
     })));
-    // Everyone in the batch shares the same months and salaries. No prior
-    // months exist yet, so each month's carry-in chains from the one before.
     let carry = 0;
     const monthRows = [];
     rows.forEach(r => {
       created.forEach(emp => monthRows.push({
-        employee_id: emp.id, month: r.month, base_salary: r.salary,
-        days_worked: null, prev_pending: carry
+        employee_id: emp.id, month: r.month, base_salary: r.salary, days_worked: null, prev_pending: carry
       }));
       carry += (parseFloat(r.salary) || 0);
     });
     await sbPostMany(SM_URL, monthRows);
     setStatus(created.length > 1 ? `Added ${created.length}` : 'Added');
-    await loadList();
+    showListView();
   } catch (e) {
     console.error(e);
     setStatus(missingColumnHint(e) || 'Failed to create employee', true);
     if (missingColumnHint(e)) showInfo(SCHEMA_HINT);
   } finally {
-    if (btn) btn.disabled = false;
+    btn.disabled = false;
+  }
+}
+
+async function entrySaveEmployeeFields() {
+  const name = document.getElementById('enName').value.trim();
+  const role = document.getElementById('enRole').value.trim() || null;
+  const dept = cleanDept(document.getElementById('enDept').value) || null;
+  const is_manager = document.getElementById('enManager').checked;
+  const date_left = document.getElementById('enDateLeft').value || null;
+  if (!name) { showInfo('Name cannot be empty.'); return; }
+  const btn = document.getElementById('entrySaveBtn');
+  btn.disabled = true;
+  setStatus('Saving...');
+  try {
+    await sbPatch(`${EMP_URL}?id=eq.${detailEmployeeId}`, { name, role, dept, is_manager, date_left });
+    detailEmployee = Object.assign({}, detailEmployee, { name, role, dept, is_manager, date_left });
+    document.getElementById('entryEditName').textContent = name;
+    setStatus('Saved');
+  } catch (e) {
+    console.error(e);
+    setStatus(missingColumnHint(e) || 'Failed to save', true);
+    if (missingColumnHint(e)) showInfo(SCHEMA_HINT);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function entryDeleteEmployee() {
+  const name = (detailEmployee && detailEmployee.name) || 'this employee';
+  const confirmed = await askDeleteConfirmation(`This will remove ${name} from every month going forward. Type DELETE to confirm.`);
+  if (!confirmed) return;
+  setStatus('Removing...');
+  try {
+    const now = new Date().toISOString();
+    await sbPatch(`${EMP_URL}?id=eq.${detailEmployeeId}`, { deleted: true, deleted_at: now });
+    await sbPatch(`${SM_URL}?employee_id=eq.${detailEmployeeId}`, { deleted: true, deleted_at: now });
+    setStatus('Removed');
+    showListView();
+  } catch (e) {
+    console.error(e);
+    setStatus('Failed to remove', true);
   }
 }
 
@@ -2311,7 +2589,8 @@ async function removePayment(id) {
     setStatus('Removed');
   } catch (e) {
     console.error(e);
-    setStatus('Failed to remove payment', true);
+    setStatus(missingColumnHint(e) || 'Failed to remove payment', true);
+    if (missingColumnHint(e)) showInfo(SCHEMA_HINT);
   }
 }
 
@@ -2334,12 +2613,8 @@ async function saveThisMonth() {
   }
 }
 
-// ---------------------------------------------------------------------
-// Edit Employee modal — Personal Detail is read-only until you open this;
-// Save writes it back and returns to the read-only display.
-// ---------------------------------------------------------------------
-let eDateLeftPicker = null;
 let newPayDatePicker = null; // flatpickr instance for the Given section's payment-date field
+let entryEmployeeDateLeftPicker = null; // flatpickr for the entry page's Date Left field
 
 // ---------------------------------------------------------------------
 // Duplicate — copy this person's role, group and their whole month/salary
@@ -2395,47 +2670,6 @@ async function duplicateConfirm() {
   } catch (e) {
     console.error(e);
     setStatus(missingColumnHint(e) || 'Failed to duplicate', true);
-    if (missingColumnHint(e)) showInfo(SCHEMA_HINT);
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-}
-
-function openEditEmployeeModal() {
-  document.getElementById('eName').value = detailEmployee.name || '';
-  document.getElementById('eRole').value = detailEmployee.role || '';
-  document.getElementById('eDept').value = detailEmployee.dept || '';
-  document.getElementById('eManager').checked = !!detailEmployee.is_manager;
-  refreshRoleOptions(detailEmployee.dept);
-  if (eDateLeftPicker) eDateLeftPicker.setDate(detailEmployee.date_left || null, false);
-  else document.getElementById('eDateLeft').value = detailEmployee.date_left || '';
-  document.getElementById('editEmployeeModal').classList.add('active');
-}
-function editEmployeeCancel() { document.getElementById('editEmployeeModal').classList.remove('active'); }
-function clearEDateLeft() {
-  if (eDateLeftPicker) eDateLeftPicker.clear();
-  else document.getElementById('eDateLeft').value = '';
-}
-
-async function editEmployeeSave() {
-  const name = document.getElementById('eName').value.trim();
-  const role = document.getElementById('eRole').value.trim() || null;
-  const dept = cleanDept(document.getElementById('eDept').value) || null;
-  const is_manager = document.getElementById('eManager').checked;
-  const date_left = document.getElementById('eDateLeft').value || null;
-  if (!name) { showInfo('Name cannot be empty.'); return; }
-  const btn = document.querySelector('#editEmployeeModal .primary');
-  if (btn) btn.disabled = true;
-  setStatus('Saving...');
-  try {
-    await sbPatch(`${EMP_URL}?id=eq.${detailEmployeeId}`, { name, role, dept, is_manager, date_left });
-    detailEmployee = Object.assign({}, detailEmployee, { name, role, dept, is_manager, date_left });
-    renderPersonalDetail();
-    document.getElementById('editEmployeeModal').classList.remove('active');
-    setStatus('Saved');
-  } catch (e) {
-    console.error(e);
-    setStatus(missingColumnHint(e) || 'Failed to save', true);
     if (missingColumnHint(e)) showInfo(SCHEMA_HINT);
   } finally {
     if (btn) btn.disabled = false;
@@ -2536,8 +2770,9 @@ window.onunhandledrejection = (event) => {
 async function init() {
   console.log('App starting...');
   if (typeof flatpickr !== 'undefined') {
-    eDateLeftPicker = flatpickr('#eDateLeft', { dateFormat: 'Y-m-d', altInput: true, altFormat: 'j M Y' });
     newPayDatePicker = flatpickr('#newPayDate', { dateFormat: 'Y-m-d', altInput: true, altFormat: 'j M Y' });
+    entryEmployeeDateLeftPicker = flatpickr('#enDateLeft', { dateFormat: 'Y-m-d', altInput: true, altFormat: 'j M Y' });
+    entryPayDatePicker = flatpickr('#enPayDate', { dateFormat: 'Y-m-d', altInput: true, altFormat: 'j M Y' });
   }
   loadList();
 }
