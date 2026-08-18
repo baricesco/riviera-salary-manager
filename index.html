@@ -199,18 +199,19 @@
 
   /* ---- group (department) chips + sections ---------------------------- */
   .grp-chips {
-    display: flex; gap: var(--sp-2); margin: 0 0 var(--sp-4); overflow-x: auto;
-    padding-bottom: var(--sp-1); scrollbar-width: thin; -webkit-overflow-scrolling: touch;
+    display: flex; gap: var(--sp-3); margin: 0 0 var(--sp-5); overflow-x: auto;
+    padding-bottom: var(--sp-2); scrollbar-width: thin; -webkit-overflow-scrolling: touch;
   }
   .grp-chip {
-    flex: none; min-height: 44px; display: flex; flex-direction: column; justify-content: center;
-    gap: 1px; padding: 6px var(--sp-3); border: 1px solid var(--c-border-strong);
-    border-radius: var(--r-full); background: var(--c-surface); cursor: pointer; white-space: nowrap;
+    flex: none; min-height: 64px; display: flex; flex-direction: column; justify-content: center;
+    gap: 3px; padding: var(--sp-2) var(--sp-5); border: 2px solid var(--c-border-strong);
+    border-radius: var(--r-lg); background: var(--c-surface); cursor: pointer; white-space: nowrap;
+    box-shadow: var(--shadow-sm);
     transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast);
   }
   .grp-chip:hover { border-color: var(--c-primary); background: var(--c-primary-soft); }
-  .grp-chip .gc-name { font-size: 13px; font-weight: 600; }
-  .grp-chip .gc-meta { font-size: 11px; color: var(--c-fg-muted); font-variant-numeric: tabular-nums; }
+  .grp-chip .gc-name { font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+  .grp-chip .gc-meta { font-size: 13px; font-weight: 500; color: var(--c-fg-muted); font-variant-numeric: tabular-nums; }
   .grp-chip.active { background: var(--c-primary); border-color: var(--c-primary); color: #fff; }
   .grp-chip.active .gc-meta { color: rgba(255,255,255,.8); }
 
@@ -310,10 +311,14 @@
 
   /* ---- detail view ---------------------------------------------------- */
   .backlink {
-    display: inline-flex; align-items: center; gap: 6px; min-height: 40px; cursor: pointer;
-    color: var(--c-primary); font-weight: 600; font-size: 14px; margin-bottom: var(--sp-2);
+    display: inline-flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer;
+    padding: 0 var(--sp-4); border: 1px solid var(--c-border-strong); border-radius: var(--r-md);
+    background: var(--c-surface); box-shadow: var(--shadow-sm);
+    color: var(--c-fg); font-weight: 600; font-size: 14px; margin-bottom: var(--sp-4);
+    transition: background var(--t-fast), border-color var(--t-fast);
   }
-  .backlink:hover { text-decoration: underline; }
+  .backlink:hover { background: var(--c-muted); border-color: var(--c-fg-muted); }
+  .backlink:active { background: var(--c-border); }
   .section-title {
     font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
     color: var(--c-fg-muted); margin: var(--sp-6) 0 var(--sp-3); padding-bottom: var(--sp-2);
