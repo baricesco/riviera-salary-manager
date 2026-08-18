@@ -2767,6 +2767,15 @@ window.onunhandledrejection = (event) => {
   console.error('=== UNHANDLED PROMISE REJECTION ===', event.reason);
 };
 
+// Scrolling the mouse wheel over a focused number input silently changes
+// its value in Chrome/Edge — blurring it on wheel turns that into a normal
+// page scroll instead, the same as every other input type already does.
+document.addEventListener('wheel', () => {
+  if (document.activeElement && document.activeElement.tagName === 'INPUT' && document.activeElement.type === 'number') {
+    document.activeElement.blur();
+  }
+}, { passive: true });
+
 async function init() {
   console.log('App starting...');
   if (typeof flatpickr !== 'undefined') {
