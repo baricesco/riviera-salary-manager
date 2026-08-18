@@ -65,3 +65,7 @@ create policy "public all payments" on riviera_salary_payments for all using (tr
 alter table riviera_employees add column if not exists dept text;
 alter table riviera_employees add column if not exists is_manager boolean not null default false;
 create index if not exists riviera_employees_dept_idx on riviera_employees (dept);
+
+-- How the money was handed over: 'Cash' or 'Online'. Older rows stay null,
+-- which the app shows as Cash.
+alter table riviera_salary_payments add column if not exists method text;

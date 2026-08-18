@@ -242,6 +242,8 @@
   .grp-val.pos { color: #86EFAC; }
   /* Tinted well behind the cards so the white cards lift off the group. */
   .grp-body { padding: var(--sp-4); background: var(--c-bg); border-left: 5px solid var(--c-accent); }
+  .grp-id { min-width: 0; }
+  .grp-body > .table-wrap { border-color: var(--c-border-strong); background: var(--c-surface); }
   .grp-count { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: var(--r-full); background: rgba(255,255,255,.15); }
 
   .badge {
@@ -307,24 +309,35 @@
   tr.person-row { cursor: pointer; }
   tr.person-row:hover { background: var(--c-primary-soft); }
 
-  /* Group rows carry the same dark band + amber spine as the card view,
-     so a group boundary looks the same whichever view you are in. */
-  tr.grp-row td {
-    background: #1E293B; color: #fff;
-    font-weight: 700; font-size: 15px; letter-spacing: -.01em;
-    padding: 14px; border-bottom: none;
-    box-shadow: inset 5px 0 0 var(--c-accent);
-  }
-  tr.grp-row .grp-row-sub { font-weight: 400; font-size: 13px; color: rgba(255,255,255,.65); }
-  /* A gap above every group except the first, so blocks don't run together. */
-  tr.grp-row:not(:first-child) td { border-top: var(--sp-4) solid var(--c-bg); }
-  tr.grp-total-row td {
-    background: var(--c-muted); font-weight: 700;
+  /* Each group's table carries its own total row in the footer. */
+  tfoot tr.grp-total-row td {
+    background: var(--c-muted); font-weight: 700; font-size: 15px;
     border-top: 2px solid var(--c-border-strong); border-bottom: none;
-    box-shadow: inset 5px 0 0 var(--c-accent);
   }
 
   /* ---- detail view ---------------------------------------------------- */
+  /* The person page is three numbered steps: who, which month, what was
+     given. The number is the anchor your eye lands on. */
+  .step { margin-bottom: var(--sp-8); }
+  .step-head { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-3); }
+  .step-head h2 { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -.01em; }
+  .step-no {
+    width: 30px; height: 30px; flex: none; border-radius: 50%;
+    background: var(--c-primary); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700;
+  }
+  .step-hint { margin-left: auto; font-size: 13px; color: var(--c-fg-muted); }
+  .step .panel { margin-bottom: 0; }
+  /* Sub-blocks divide one step's card without adding another card. */
+  .sub-block { margin-top: var(--sp-5); padding-top: var(--sp-5); border-top: 1px solid var(--c-border); }
+  .sub-block h3 { margin: 0; font-size: 15px; font-weight: 600; }
+  .sub-block .summary-bar { margin: var(--sp-4) 0 0; }
+  .sub-block .readout { margin-top: var(--sp-2); }
+
+  .badge.method.cash { background: var(--c-success-soft); color: var(--c-success); }
+  .badge.method.online { background: var(--c-primary-soft); color: var(--c-primary); }
+
   .backlink {
     display: inline-flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer;
     padding: 0 var(--sp-4); border: 1px solid var(--c-border-strong); border-radius: var(--r-md);
@@ -356,9 +369,9 @@
   .hint { font-size: 11px; color: var(--c-fg-muted); font-weight: 400; text-transform: none; letter-spacing: 0; display: block; margin-top: 3px; }
 
   .payments-list { display: flex; flex-direction: column; gap: var(--sp-2); margin-bottom: var(--sp-3); }
-  .payment-row { display: grid; grid-template-columns: 140px auto 1fr 44px; gap: var(--sp-3); align-items: center; padding: var(--sp-2) var(--sp-3); border: 1px solid var(--c-border); border-radius: var(--r-md); background: var(--c-muted); min-height: 48px; }
+  .payment-row { display: grid; grid-template-columns: 130px auto auto 1fr 44px; gap: var(--sp-3); align-items: center; padding: var(--sp-2) var(--sp-3); border: 1px solid var(--c-border); border-radius: var(--r-md); background: var(--c-muted); min-height: 48px; }
   .payment-row .amt { font-weight: 700; font-variant-numeric: tabular-nums; }
-  .payment-add-row { display: grid; grid-template-columns: 160px 160px 1fr auto; gap: var(--sp-3); align-items: end; }
+  .payment-add-row { display: grid; grid-template-columns: 150px 140px 130px 1fr auto; gap: var(--sp-3); align-items: end; }
   .icon-btn {
     min-height: 44px; min-width: 44px; background: none; border: none; cursor: pointer;
     padding: 4px 6px; color: var(--c-fg-muted); border-radius: var(--r-sm); display: inline-flex;
@@ -403,8 +416,9 @@
      of forcing a sideways scroll on a 375px screen. */
   @media (max-width: 1024px) {
     .payment-add-row { grid-template-columns: 1fr 1fr; }
-    .payment-add-row > div:nth-child(3) { grid-column: 1 / -1; }
-    .payment-add-row button { grid-column: 1 / -1; }
+    .payment-add-row > div:nth-child(4) { grid-column: 1 / -1; }
+    .payment-add-row > div:last-child { grid-column: 1 / -1; }
+    .payment-add-row button { width: 100%; }
   }
 
   @media (max-width: 768px) {
@@ -425,6 +439,9 @@
     .stats-head select { flex: 1; min-width: 0; }
     .stat-value { font-size: 20px; }
     .people-grid { grid-template-columns: 1fr; }
+    .step { margin-bottom: var(--sp-6); }
+    .step-head h2 { font-size: 17px; }
+    .step-hint { width: 100%; margin-left: 0; }
     .grp-section { margin-bottom: var(--sp-6); }
     .grp-body { padding: var(--sp-3); }
     .grp-head { padding: var(--sp-3); }
@@ -440,9 +457,10 @@
     .ms-row-head { display: none; }
     .ms-row { grid-template-columns: 1fr 1fr 44px; }
     .payment-add-row { grid-template-columns: 1fr 1fr; }
-    .payment-add-row > div:nth-child(3) { grid-column: 1 / -1; }
-    .payment-add-row button { grid-column: 1 / -1; min-height: 44px; }
-    .payment-row { grid-template-columns: 1fr auto 44px; }
+    .payment-add-row > div:nth-child(4) { grid-column: 1 / -1; }
+    .payment-add-row > div:last-child { grid-column: 1 / -1; }
+    .payment-add-row button { width: 100%; min-height: 44px; }
+    .payment-row { grid-template-columns: 1fr auto auto 44px; }
     .payment-row .note-cell { grid-column: 1 / -1; font-size: 13px; color: var(--c-fg-muted); }
     .modal-overlay { align-items: flex-end; padding: 0; }
     .modal-box { max-width: 100%; border-radius: var(--r-lg) var(--r-lg) 0 0; padding: var(--sp-4); max-height: 88dvh; }
@@ -467,19 +485,10 @@
     }
     .stack-table td:first-child { font-size: 17px; font-weight: 700; border-bottom: 1px solid var(--c-border); padding-bottom: var(--sp-2); margin-bottom: var(--sp-1); }
     .stack-table td:first-child::before { content: none; }
-    /* Group bands stay — they are the separation. Only their inner cell
-       needs to stop behaving like a stacked field. */
-    .stack-table tr.grp-row, .stack-table tr.grp-total-row {
-      border: none; border-radius: var(--r-md); padding: 0; box-shadow: none; margin-bottom: var(--sp-2);
-    }
-    .stack-table tr.grp-row:not(:first-child) { margin-top: var(--sp-5); }
-    .stack-table tr.grp-row td {
-      display: block; text-align: left; border-radius: var(--r-md); border-top: none;
-    }
-    .stack-table tr.grp-row td::before { content: none; }
-    .stack-table tr.grp-total-row { background: var(--c-muted); padding: var(--sp-2) var(--sp-3); }
-    .stack-table tr.grp-total-row td { border-top: none; box-shadow: none; background: none; }
-    .stack-table tr.grp-total-row td:first-child { box-shadow: none; }
+    .stack-table tfoot { display: block; }
+    .stack-table tr.grp-total-row { background: var(--c-muted); border-color: var(--c-border-strong); }
+    .stack-table tr.grp-total-row td { border-top: none; }
+    .stack-table tr.grp-total-row td:first-child { border-bottom: 1px solid var(--c-border-strong); }
   }
 
   @media (max-width: 768px) {
@@ -603,94 +612,117 @@
 
   <span class="backlink" onclick="showListView()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'){showListView();}">&larr; Back</span>
 
-  <div class="panel">
-    <div class="detail-header">
-      <div>
-        <div class="detail-name-display" id="dNameDisplay">—</div>
-        <div class="detail-role-display" id="dRoleDisplay">—</div>
-        <div class="detail-badges" id="dBadges"></div>
-        <div class="hint" id="dDateLeftDisplay"></div>
-      </div>
-      <div class="detail-side">
-        <button type="button" onclick="openEditEmployeeModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Edit</button>
-        <button type="button" onclick="openDuplicateModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Duplicate</button>
-        <button type="button" class="danger" onclick="deleteEmployee()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Remove</button>
-      </div>
-    </div>
-  </div>
-
-  <h2 class="section-title">Months</h2>
-
-  <div class="panel">
-    <div class="table-wrap">
-      <table class="ledger-table stack-table">
-        <thead>
-          <tr>
-            <th>Month</th><th class="num">Base Salary</th><th class="num">Days</th><th class="num">Earned</th>
-            <th class="num">Given</th><th class="num">This Month Pending</th><th class="num">Carried Over</th><th class="num">Total Pending</th><th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="ledgerBody"><tr><td colspan="9" class="empty-note">Loading...</td></tr></tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="panel">
-    <div class="panel-head">
-      <h2><span id="dMonthLabel"></span></h2>
-      <button type="button" class="link-btn" id="jumpCurrentBtn" onclick="jumpToCurrentMonth()" style="display:none;">This month</button>
-    </div>
-    <div class="grid-2col">
-      <div>
-        <label>Base Salary</label>
-        <input type="number" id="dBaseSalary" oninput="recalcDetailPreview()" onchange="saveThisMonth()">
-      </div>
-      <div>
-        <label>Days Worked</label>
-        <input type="number" id="dDaysWorked" placeholder="Full" oninput="recalcDetailPreview()" onchange="saveThisMonth()">
-      </div>
-      <div>
-        <label>Carried Over</label>
-        <input type="number" id="dPrevPending" oninput="recalcDetailPreview()" onchange="saveThisMonth()">
-        <span class="hint" id="dPrevPendingHint"></span>
-      </div>
-      <div>
-        <label>Notes</label>
-        <input type="text" id="dNotes" onchange="saveThisMonth()">
+  <!-- 1 of 3 — who this is -->
+  <section class="step">
+    <div class="step-head"><span class="step-no">1</span><h2>Person</h2></div>
+    <div class="panel">
+      <div class="detail-header">
+        <div>
+          <div class="detail-name-display" id="dNameDisplay">—</div>
+          <div class="detail-role-display" id="dRoleDisplay">—</div>
+          <div class="detail-badges" id="dBadges"></div>
+          <div class="hint" id="dDateLeftDisplay"></div>
+        </div>
+        <div class="detail-side">
+          <button type="button" onclick="openEditEmployeeModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Edit</button>
+          <button type="button" onclick="openDuplicateModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Duplicate</button>
+          <button type="button" class="danger" onclick="deleteEmployee()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Remove</button>
+        </div>
       </div>
     </div>
-    <div class="readout">Earned this month: <b>Rs. <span id="dProrated">0</span></b><span class="hint">Full month = 30 days, so 15 days = half.</span></div>
-  </div>
+  </section>
 
-  <div class="panel" id="addMonthsPanel">
-    <h2>Add Months</h2>
-    <div class="ms-row-head"><label>Month</label><label>Salary</label><span></span></div>
-    <div class="ms-rows" id="bulkRowsList"></div>
-    <button type="button" onclick="bulkAddRow()">+ Add Row</button>
-    <button type="button" class="primary" style="margin-left:8px;" onclick="saveBulkMonths()">Save</button>
-  </div>
-
-  <h2 class="section-title">Given</h2>
-  <div class="panel">
-    <h2><span id="dPaymentsMonthLabel"></span></h2>
-    <div class="payments-list" id="paymentsList"></div>
-    <div class="payment-add-row">
-      <div><label>Date</label><input type="text" id="newPayDate" placeholder="Today"></div>
-      <div><label>Amount</label><input type="number" id="newPayAmount" placeholder="0"></div>
-      <div><label>Note</label><input type="text" id="newPayNote" placeholder="Optional"></div>
-      <div><button type="button" class="primary" onclick="addPayment()">Add</button></div>
+  <!-- 2 of 3 — the month being worked on, and its salary -->
+  <section class="step">
+    <div class="step-head">
+      <span class="step-no">2</span><h2>Months</h2>
+      <span class="step-hint">Tap a month to edit it</span>
     </div>
-  </div>
+    <div class="panel">
+      <div class="table-wrap">
+        <table class="ledger-table stack-table">
+          <thead>
+            <tr>
+              <th>Month</th><th class="num">Base Salary</th><th class="num">Days</th><th class="num">Earned</th>
+              <th class="num">Given</th><th class="num">This Month Pending</th><th class="num">Carried Over</th><th class="num">Total Pending</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="ledgerBody"><tr><td colspan="9" class="empty-note">Loading...</td></tr></tbody>
+        </table>
+      </div>
 
-  <div class="summary-bar">
-    <div class="summary-box"><div class="lbl">Earned</div><div class="val" id="sumProrated">0</div></div>
-    <div class="summary-box"><div class="lbl">Given</div><div class="val" id="sumPaid">0</div></div>
-    <div class="summary-box"><div class="lbl">Carried Over</div><div class="val" id="sumPrevPending">0</div></div>
-    <div class="summary-box"><div class="lbl">Pending</div><div class="val" id="sumRemaining">0</div></div>
-    <div class="summary-box"><div class="lbl">Status</div><div class="val"><span class="status-pill" id="sumStatus">—</span></div></div>
-  </div>
+      <div class="sub-block">
+        <div class="panel-head">
+          <h3>Editing <span id="dMonthLabel"></span></h3>
+          <button type="button" class="link-btn" id="jumpCurrentBtn" onclick="jumpToCurrentMonth()" style="display:none;">This month</button>
+        </div>
+        <div class="grid-2col">
+          <div>
+            <label>Base Salary</label>
+            <input type="number" id="dBaseSalary" oninput="recalcDetailPreview()" onchange="saveThisMonth()">
+          </div>
+          <div>
+            <label>Days Worked</label>
+            <input type="number" id="dDaysWorked" placeholder="Full" oninput="recalcDetailPreview()" onchange="saveThisMonth()">
+          </div>
+          <div>
+            <label>Carried Over</label>
+            <input type="number" id="dPrevPending" oninput="recalcDetailPreview()" onchange="saveThisMonth()">
+            <span class="hint" id="dPrevPendingHint"></span>
+          </div>
+          <div>
+            <label>Notes</label>
+            <input type="text" id="dNotes" onchange="saveThisMonth()">
+          </div>
+        </div>
+
+        <div class="summary-bar">
+          <div class="summary-box"><div class="lbl">Earned</div><div class="val" id="sumProrated">0</div></div>
+          <div class="summary-box"><div class="lbl">Given</div><div class="val" id="sumPaid">0</div></div>
+          <div class="summary-box"><div class="lbl">Carried Over</div><div class="val" id="sumPrevPending">0</div></div>
+          <div class="summary-box"><div class="lbl">Pending</div><div class="val" id="sumRemaining">0</div></div>
+          <div class="summary-box"><div class="lbl">Status</div><div class="val"><span class="status-pill" id="sumStatus">—</span></div></div>
+        </div>
+        <div class="readout" id="dProratedReadout">Earned this month: <b>Rs. <span id="dProrated">0</span></b></div>
+      </div>
+
+      <div class="sub-block">
+        <button type="button" id="addMonthsToggle" onclick="toggleAddMonths()">+ Add months</button>
+        <div id="addMonthsPanel" style="display:none; margin-top:12px;">
+          <div class="ms-row-head"><label>Month</label><label>Salary</label><span></span></div>
+          <div class="ms-rows" id="bulkRowsList"></div>
+          <button type="button" onclick="bulkAddRow()">+ Row</button>
+          <button type="button" class="primary" style="margin-left:8px;" onclick="saveBulkMonths()">Save</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 of 3 — money actually handed over for that month -->
+  <section class="step">
+    <div class="step-head">
+      <span class="step-no">3</span><h2>Given</h2>
+      <span class="step-hint" id="dPaymentsMonthLabel"></span>
+    </div>
+    <div class="panel">
+      <div class="payments-list" id="paymentsList"></div>
+      <div class="payment-add-row">
+        <div><label>Date</label><input type="text" id="newPayDate" placeholder="Today"></div>
+        <div><label>Amount</label><input type="number" id="newPayAmount" placeholder="0"></div>
+        <div><label>How</label>
+          <select id="newPayMethod">
+            <option value="Cash">Cash</option>
+            <option value="Online">Online</option>
+          </select>
+        </div>
+        <div><label>Note</label><input type="text" id="newPayNote" placeholder="Optional"></div>
+        <div><button type="button" class="primary" onclick="addPayment()">Add</button></div>
+      </div>
+    </div>
+  </section>
 
 </div>
+
 
 </div>
 
@@ -1292,7 +1324,7 @@ function renderPeople() {
   const shownGroups = activeGroup === 'ALL' ? groups : groups.filter(g => g.name === activeGroup);
   container.innerHTML = viewMode === 'table'
     ? renderGroupedTable(shownGroups)
-    : shownGroups.map(renderGroupSection).join('');
+    : shownGroups.map(renderGroupCards).join('');
 }
 
 function groupTotalsHtml(g) {
@@ -1304,22 +1336,31 @@ function groupTotalsHtml(g) {
     </div>`;
 }
 
-function renderGroupSection(g) {
+// Cards and table share this header, so a group looks identical either
+// way and the boundary between groups reads the same in both views.
+function groupHeaderHtml(g) {
+  return `
+    <header class="grp-head">
+      <div class="grp-id">
+        <div class="grp-title">${escapeHtml(g.name)} <span class="grp-count">${g.members.length}</span></div>
+        <div class="grp-manager">${g.manager
+          ? '<b>' + escapeHtml(g.manager.name) + '</b>' + (g.manager.role ? ' &middot; ' + escapeHtml(g.manager.role) : '')
+          : 'No head assigned'}</div>
+      </div>
+      ${groupTotalsHtml(g)}
+    </header>`;
+}
+
+function renderGroupSection(g, bodyHtml) {
   return `
     <section class="grp-section">
-      <header class="grp-head">
-        <div>
-          <div class="grp-title">${escapeHtml(g.name)} <span class="grp-count">${g.members.length}</span></div>
-          <div class="grp-manager">${g.manager
-            ? '<b>' + escapeHtml(g.manager.name) + '</b>' + (g.manager.role ? ' &middot; ' + escapeHtml(g.manager.role) : '')
-            : 'No head assigned'}</div>
-        </div>
-        ${groupTotalsHtml(g)}
-      </header>
-      <div class="grp-body">
-        <div class="people-grid">${g.members.map(personCardHtml).join('')}</div>
-      </div>
+      ${groupHeaderHtml(g)}
+      <div class="grp-body">${bodyHtml}</div>
     </section>`;
+}
+
+function renderGroupCards(g) {
+  return renderGroupSection(g, `<div class="people-grid">${g.members.map(personCardHtml).join('')}</div>`);
 }
 
 function initials(name) {
@@ -1356,41 +1397,37 @@ function personCardHtml(p) {
     </div>`;
 }
 
-// Table view keeps the same grouping: a header row per group, its people,
-// then a subtotal row. On phones the group rows collapse away and each
-// person becomes a labelled card (see .stack-table in the stylesheet).
+// Table view is the same group shells as the cards, each holding a table
+// instead of a card grid — so the dark band, the amber spine and the
+// labelled totals are literally the same component in both views.
 function renderGroupedTable(groups) {
-  const body = groups.map(g => {
-    const head = `<tr class="grp-row"><td colspan="6">${escapeHtml(g.name)}
-      <span class="grp-row-sub">${g.members.length} ${g.members.length === 1 ? 'person' : 'people'}${g.manager ? ' &middot; ' + escapeHtml(g.manager.name) : ' &middot; no head'} &middot; Pending Rs. ${money(g.pending)}</span></td></tr>`;
+  return groups.map(g => {
     const rows = g.members.map(p => `
       <tr class="person-row" onclick="openDetail('${p.employeeId}')">
         <td data-label="Name">${escapeHtml(p.name)}${p.isManager ? ' <span class="badge manager">Head</span>' : ''}</td>
         <td data-label="Role">${escapeHtml(p.role || '—')}</td>
-        <td data-label="Group">${escapeHtml(groupNameOf(p))}</td>
         <td class="num" data-label="Total Salary">${money(p.total)}</td>
         <td class="num" data-label="Given">${money(p.given)}</td>
         <td class="num ${p.pending > 0 ? 'neg' : 'pos'}" data-label="Pending">${money(p.pending)}</td>
       </tr>`).join('');
-    const sub = `
-      <tr class="grp-total-row">
-        <td colspan="3">${escapeHtml(g.name)} total</td>
-        <td class="num" data-label="Total Salary">${money(g.total)}</td>
-        <td class="num" data-label="Given">${money(g.given)}</td>
-        <td class="num ${g.pending > 0 ? 'neg' : 'pos'}" data-label="Pending">${money(g.pending)}</td>
-      </tr>`;
-    return head + rows + sub;
+    const table = `
+      <div class="table-wrap">
+        <table class="stack-table">
+          <thead><tr>
+            <th>Name</th><th>Role</th>
+            <th class="num">Total Salary</th><th class="num">Given</th><th class="num">Pending</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+          <tfoot><tr class="grp-total-row">
+            <td colspan="2">Group total</td>
+            <td class="num" data-label="Total Salary">${money(g.total)}</td>
+            <td class="num" data-label="Given">${money(g.given)}</td>
+            <td class="num ${g.pending > 0 ? 'neg' : 'pos'}" data-label="Pending">${money(g.pending)}</td>
+          </tr></tfoot>
+        </table>
+      </div>`;
+    return renderGroupSection(g, table);
   }).join('');
-  return `
-    <div class="table-wrap">
-      <table class="stack-table">
-        <thead><tr>
-          <th>Name</th><th>Role</th><th>Group</th>
-          <th class="num">Total Salary</th><th class="num">Given</th><th class="num">Pending</th>
-        </tr></thead>
-        <tbody>${body}</tbody>
-      </table>
-    </div>`;
 }
 
 function statusPillHtml(pending) {
@@ -1679,6 +1716,8 @@ async function openDetail(employeeId) {
 
     bulkRows = [{ month: ymAdd(targetMonth, 1), salary: '' }];
     renderBulkRows();
+    document.getElementById('addMonthsPanel').style.display = 'none';
+    document.getElementById('addMonthsToggle').textContent = '+ Add months';
 
     await loadMonthPanel(targetMonth);
     await refreshLedger();
@@ -1813,6 +1852,15 @@ async function selectLedgerMonth(month) {
     setStatus('Failed to load month', true);
   }
 }
+// "Add months" is a rare action, so it stays folded away until asked for.
+function toggleAddMonths() {
+  const panel = document.getElementById('addMonthsPanel');
+  const btn = document.getElementById('addMonthsToggle');
+  const open = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : '';
+  btn.textContent = open ? '+ Add months' : 'Done adding';
+}
+
 function jumpToCurrentMonth() { selectLedgerMonth(currentCalendarMonth()); }
 
 function recalcDetailPreview() {
@@ -1835,13 +1883,18 @@ function renderPayments() {
     el.innerHTML = '<div class="empty-note"><b>Nothing given yet</b></div>';
     return;
   }
-  el.innerHTML = currentPayments.map(p => `
+  el.innerHTML = currentPayments.map(p => {
+    // Rows saved before the method column existed are cash by default.
+    const method = p.method || 'Cash';
+    return `
     <div class="payment-row">
       <div>${p.pay_date || ''}</div>
       <div class="amt">Rs. ${money(p.amount)}</div>
+      <div><span class="badge method ${method.toLowerCase() === 'online' ? 'online' : 'cash'}">${escapeHtml(method)}</span></div>
       <div class="note-cell">${escapeHtml(p.note || '')}</div>
       <button type="button" class="icon-btn" onclick="removePayment('${p.id}')" aria-label="Remove payment">${ICON_TRASH}</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 function totalPaid() { return currentPayments.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0); }
 
@@ -1849,12 +1902,16 @@ async function addPayment() {
   const dateEl = document.getElementById('newPayDate');
   const amountEl = document.getElementById('newPayAmount');
   const noteEl = document.getElementById('newPayNote');
+  const methodEl = document.getElementById('newPayMethod');
   const amount = parseFloat(amountEl.value);
   if (!amount || amount <= 0) { showInfo('Enter a valid payment amount.'); return; }
   const pay_date = dateEl.value || new Date().toISOString().slice(0, 10);
   setStatus('Saving...');
   try {
-    await sbPost(PAY_URL, { salary_month_id: detailSalaryMonthId, amount, pay_date, note: noteEl.value.trim() || null });
+    await sbPost(PAY_URL, {
+      salary_month_id: detailSalaryMonthId, amount, pay_date,
+      method: methodEl.value, note: noteEl.value.trim() || null
+    });
     if (newPayDatePicker) newPayDatePicker.clear(); else dateEl.value = '';
     amountEl.value = ''; noteEl.value = '';
     await loadPayments();
