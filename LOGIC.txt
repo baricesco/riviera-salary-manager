@@ -1,7 +1,7 @@
 ================================================================================
 RIVIERA SALARY MANAGER - HOW IT ALL WORKS
 Plain-English explanation of every rule, calculation and technique in the app.
-Last updated: 2026-08-18
+Last updated: 2026-08-18 — all months are now flat 30-day months
 ================================================================================
 
 --------------------------------------------------------------------------------
@@ -107,32 +107,20 @@ WHY PAYMENTS ARE THEIR OWN TABLE
 
 3.1 PRORATION - what someone actually earned this month
 --------------------------------------------------------------------------------
-  earned = base_salary * (days_worked / days in that calendar month)
+  earned = base_salary * (days_worked / 30)
+
+  Every month is treated as 30 days. A day of work is always worth base/30,
+  whether it is in January, February or September.
 
   days_worked = null means the full month, so earned = base_salary exactly.
 
-  The divisor is the REAL number of days in that month, not a flat 30:
-
-      daysInMonth('2026-08') = 31
-      daysInMonth('2026-09') = 30
-      daysInMonth('2026-02') = 28   (29 in a leap year)
-
-  It is computed with new Date(year, month, 0).getDate(). Day 0 of the next month
-  is the last day of this one, which gets February and leap years right without
-  any special-casing.
-
-  Why this matters: with a fixed 30-day divisor, someone who worked all 31 days
-  of August was paid 31/30 = 103% of their salary, and someone who worked all 28
-  days of February was paid 28/30 = 93%. Both are now exactly 100%.
-
-  days_worked is clamped to the range 0..daysInMonth, so a typo of 40 days pays a
-  full month and never more.
+  days_worked is clamped to the range 0..30, so a typo of 40 days pays a full
+  month and never more.
 
   Worked examples (base 30,000):
-      August,    31 of 31 days -> 30,000.00
-      August,    15 of 31 days -> 14,516.13
-      September, 15 of 30 days -> 15,000.00
-      February,  14 of 28 days -> 15,000.00
+      Any month,  30 of 30 days -> 30,000.00
+      Any month,  15 of 30 days -> 15,000.00
+      Any month,  10 of 30 days -> 10,000.00
 
 3.2 GIVEN
 --------------------------------------------------------------------------------
@@ -140,11 +128,14 @@ WHY PAYMENTS ARE THEIR OWN TABLE
 
 3.3 PENDING FOR ONE MONTH
 --------------------------------------------------------------------------------
-  pending = earned - given + prev_pending
+  When viewing a specific month's detail panel, pending shows only that month's
+  balance:
 
-  prev_pending is the debt carried in from last month. It is a stored column, not
-  something recomputed on the fly, so a month row is a complete, standalone
-  statement of that month even if earlier months are later edited.
+    pending (detail) = earned - given
+
+  This shows what is owed FOR THAT MONTH ALONE, not including debt from before.
+  The Carried Over field exists in the database (prev_pending) to maintain the
+  accurate chain, but is not shown in the detail summary.
 
 3.4 THE CARRY-FORWARD CHAIN - the heart of the app
 --------------------------------------------------------------------------------
