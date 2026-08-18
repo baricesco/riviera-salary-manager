@@ -688,6 +688,7 @@
 </div>
 
 <datalist id="deptOptions"></datalist>
+<datalist id="roleOptions"></datalist>
 
 <div class="modal-overlay" id="addEmployeeModal">
   <div class="modal-box" style="max-width:440px;">
@@ -696,15 +697,15 @@
       <div class="field"><label>How many</label><input type="number" id="newEmpCount" value="1" min="1" max="50" oninput="previewEmpNames()"></div>
     </div>
     <div class="hint" id="newEmpNamePreview" style="margin:-8px 0 12px;"></div>
-    <div class="field"><label>Role</label><input type="text" id="newEmpRole" placeholder="Washer"></div>
+    <div class="field"><label>Role</label><input type="text" id="newEmpRole" list="roleOptions" placeholder="Chef, Cook, Washer..."></div>
     <div class="field">
       <label for="newEmpDept">Group</label>
-      <input type="text" id="newEmpDept" list="deptOptions" placeholder="Laundry" oninput="previewEmpNames()">
+      <input type="text" id="newEmpDept" list="deptOptions" placeholder="Laundry" oninput="previewEmpNames(); refreshRoleOptions(this.value);">
     </div>
     <div class="field">
       <label class="check-row" for="newEmpManager">
         <input type="checkbox" id="newEmpManager">
-        <span>Manager</span>
+        <span>Head of this group</span>
       </label>
     </div>
     <div class="field">
@@ -737,15 +738,15 @@
 <div class="modal-overlay" id="editEmployeeModal">
   <div class="modal-box">
     <div class="field"><label>Name</label><input type="text" id="eName"></div>
-    <div class="field"><label>Role</label><input type="text" id="eRole"></div>
+    <div class="field"><label>Role</label><input type="text" id="eRole" list="roleOptions" placeholder="Chef, Cook, Washer..."></div>
     <div class="field">
       <label for="eDept">Group</label>
-      <input type="text" id="eDept" list="deptOptions" placeholder="Unassigned">
+      <input type="text" id="eDept" list="deptOptions" placeholder="Unassigned" oninput="refreshRoleOptions(this.value)">
     </div>
     <div class="field">
       <label class="check-row" for="eManager">
         <input type="checkbox" id="eManager">
-        <span>Manager</span>
+        <span>Head of this group</span>
       </label>
     </div>
     <div class="field">
@@ -1282,7 +1283,9 @@ function renderGroupSection(g) {
       <header class="grp-head">
         <div>
           <div class="grp-title">${escapeHtml(g.name)} <span class="grp-count">${g.members.length}</span></div>
-          <div class="grp-manager">${g.manager ? '<b>' + escapeHtml(g.manager.name) + '</b>' : 'No manager'}</div>
+          <div class="grp-manager">${g.manager
+            ? '<b>' + escapeHtml(g.manager.name) + '</b>' + (g.manager.role ? ' &middot; ' + escapeHtml(g.manager.role) : '')
+            : 'No head assigned'}</div>
         </div>
         ${groupTotalsHtml(g)}
       </header>
@@ -1312,7 +1315,7 @@ function personCardHtml(p) {
           <div class="pc-name">${escapeHtml(p.name)}</div>
           <div class="pc-role">${escapeHtml(p.role || '—')}</div>
         </div>
-        ${p.isManager ? '<span class="badge manager">Manager</span>' : statusPillHtml(p.pending)}
+        ${p.isManager ? '<span class="badge manager">Head</span>' : statusPillHtml(p.pending)}
       </div>
       <div class="pc-rows">
         <div class="pc-row"><span class="lbl">Total Salary</span><span>Rs. ${money(p.total)}</span></div>
@@ -1334,7 +1337,7 @@ function renderGroupedTable(groups) {
     const head = `<tr class="grp-row"><td colspan="6">${escapeHtml(g.name)} &middot; ${g.members.length}${g.manager ? ' &middot; ' + escapeHtml(g.manager.name) : ''}</td></tr>`;
     const rows = g.members.map(p => `
       <tr class="person-row" onclick="openDetail('${p.employeeId}')">
-        <td data-label="Name">${escapeHtml(p.name)}${p.isManager ? ' <span class="badge manager">Manager</span>' : ''}</td>
+        <td data-label="Name">${escapeHtml(p.name)}${p.isManager ? ' <span class="badge manager">Head</span>' : ''}</td>
         <td data-label="Role">${escapeHtml(p.role || '—')}</td>
         <td data-label="Group">${escapeHtml(groupNameOf(p))}</td>
         <td class="num" data-label="Total Salary">${money(p.total)}</td>
@@ -1388,6 +1391,66 @@ let addEmpRows = [];
 // Group names go through this on the way in so a stored name always
 // matches the one rendered into the chip's onclick handler.
 function cleanDept(v) { return String(v || '').split('\\').join('').trim(); }
+
+// ---------------------------------------------------------------------
+// Role suggestions. The Role field stays free text — type anything — but
+// it offers the usual roles for whichever group you picked, with the
+// group's senior role listed first, then everything else, then any custom
+// role already in use elsewhere in your own data.
+// ---------------------------------------------------------------------
+const ROLES_BY_GROUP = {
+  kitchen:      ['Head Chef', 'Sous Chef', 'Chef', 'Cook', 'Assistant Cook', 'Baker', 'Butcher', 'Kitchen Helper', 'Dish Washer', 'Steward'],
+  housekeeping: ['Housekeeping Supervisor', 'Room Attendant', 'Housekeeper', 'Cleaner', 'Public Area Attendant', 'Linen Attendant', 'Houseman'],
+  laundry:      ['Laundry Supervisor', 'Laundry Attendant', 'Washer', 'Presser', 'Ironer', 'Dry Cleaner', 'Linen Attendant'],
+  restaurant:   ['Restaurant Manager', 'Head Waiter', 'Waiter', 'Waitress', 'Busser', 'Host', 'Bartender', 'Barista'],
+  reception:    ['Front Office Manager', 'Receptionist', 'Front Desk Agent', 'Concierge', 'Bell Boy', 'Porter', 'Night Auditor'],
+  security:     ['Security Supervisor', 'Security Guard', 'Watchman', 'Gate Keeper'],
+  maintenance:  ['Maintenance Supervisor', 'Technician', 'Electrician', 'Plumber', 'Carpenter', 'Painter', 'AC Technician'],
+  office:       ['General Manager', 'Operations Manager', 'Accountant', 'Cashier', 'Store Keeper', 'HR Officer', 'Clerk'],
+  garden:       ['Head Gardener', 'Gardener', 'Landscaper'],
+  transport:    ['Head Driver', 'Driver', 'Valet']
+};
+
+// Group names people actually type don't always match the keys above.
+const GROUP_ALIASES = {
+  kitchen: ['kitchen', 'kitchn', 'kitcher', 'cook', 'food', 'f&b', 'catering'],
+  housekeeping: ['housekeeping', 'house keeping', 'house', 'cleaning', 'rooms'],
+  laundry: ['laundry', 'laundary', 'wash'],
+  restaurant: ['restaurant', 'resturant', 'dining', 'service', 'bar', 'cafe'],
+  reception: ['reception', 'front office', 'front desk', 'lobby'],
+  security: ['security', 'guard'],
+  maintenance: ['maintenance', 'maintainance', 'engineering', 'technical', 'repair'],
+  office: ['office', 'admin', 'administration', 'accounts', 'management', 'hr'],
+  garden: ['garden', 'gardening', 'landscape', 'grounds'],
+  transport: ['transport', 'driver', 'drivers', 'fleet']
+};
+
+function rolesForGroup(dept) {
+  const d = String(dept || '').trim().toLowerCase();
+  if (d) {
+    for (const key of Object.keys(GROUP_ALIASES)) {
+      if (GROUP_ALIASES[key].some(a => d.includes(a) || a.includes(d))) return ROLES_BY_GROUP[key];
+    }
+  }
+  return null;
+}
+
+function allPresetRoles() {
+  return [...new Set([].concat(...Object.values(ROLES_BY_GROUP)))];
+}
+
+// Roles already used in this hotel's own data, so a custom one you typed
+// last week comes back as a suggestion this week.
+function rolesInUse() {
+  return [...new Set(peopleCache.map(p => (p.role || '').trim()).filter(Boolean))];
+}
+
+function refreshRoleOptions(dept) {
+  const matched = rolesForGroup(dept);
+  const ordered = [...new Set([].concat(matched || [], rolesInUse(), allPresetRoles()))];
+  document.getElementById('roleOptions').innerHTML =
+    ordered.map(r => `<option value="${escapeAttr(r)}"></option>`).join('');
+}
 
 // ---------------------------------------------------------------------
 // Adding several people at once. When names aren't known yet you give a
@@ -1454,6 +1517,7 @@ function openAddEmployeeModal() {
   document.getElementById('newEmpDept').value = activeGroup === 'ALL' || activeGroup === UNASSIGNED ? '' : activeGroup;
   document.getElementById('newEmpManager').checked = false;
   document.getElementById('newEmpCount').value = 1;
+  refreshRoleOptions(document.getElementById('newEmpDept').value);
   document.getElementById('newEmpNamePreview').textContent = '';
   addEmpRows = [{ month: currentCalendarMonth(), salary: '' }];
   renderAddEmpRows();
@@ -1881,6 +1945,7 @@ function openEditEmployeeModal() {
   document.getElementById('eRole').value = detailEmployee.role || '';
   document.getElementById('eDept').value = detailEmployee.dept || '';
   document.getElementById('eManager').checked = !!detailEmployee.is_manager;
+  refreshRoleOptions(detailEmployee.dept);
   if (eDateLeftPicker) eDateLeftPicker.setDate(detailEmployee.date_left || null, false);
   else document.getElementById('eDateLeft').value = detailEmployee.date_left || '';
   document.getElementById('editEmployeeModal').classList.add('active');
