@@ -567,8 +567,8 @@
       <table class="ledger-table stack-table">
         <thead>
           <tr>
-            <th>Month</th><th class="num">Base Salary</th><th class="num">Days</th><th class="num">Prorated</th>
-            <th class="num">Given</th><th class="num">This Month Pending</th><th class="num">Prev Pending In</th><th class="num">Total Pending</th><th>Status</th>
+            <th>Month</th><th class="num">Base Salary</th><th class="num">Days</th><th class="num">Earned</th>
+            <th class="num">Given</th><th class="num">This Month Pending</th><th class="num">Carried Over</th><th class="num">Total Pending</th><th>Status</th>
           </tr>
         </thead>
         <tbody id="ledgerBody"><tr><td colspan="9" class="empty-note">Loading...</td></tr></tbody>
@@ -600,7 +600,7 @@
         <input type="text" id="dNotes" onchange="saveThisMonth()">
       </div>
     </div>
-    <div class="readout">Prorated this month: <b>Rs. <span id="dProrated">0</span></b><span class="hint">30-day month — 15 days = half.</span></div>
+    <div class="readout">Earned this month: <b>Rs. <span id="dProrated">0</span></b><span class="hint">Full month = 30 days, so 15 days = half.</span></div>
   </div>
 
   <div class="panel" id="addMonthsPanel">
@@ -624,9 +624,9 @@
   </div>
 
   <div class="summary-bar">
-    <div class="summary-box"><div class="lbl">Prorated Salary</div><div class="val" id="sumProrated">0</div></div>
+    <div class="summary-box"><div class="lbl">Earned</div><div class="val" id="sumProrated">0</div></div>
     <div class="summary-box"><div class="lbl">Given</div><div class="val" id="sumPaid">0</div></div>
-    <div class="summary-box"><div class="lbl">Prev Pending</div><div class="val" id="sumPrevPending">0</div></div>
+    <div class="summary-box"><div class="lbl">Carried Over</div><div class="val" id="sumPrevPending">0</div></div>
     <div class="summary-box"><div class="lbl">Pending</div><div class="val" id="sumRemaining">0</div></div>
     <div class="summary-box"><div class="lbl">Status</div><div class="val"><span class="status-pill" id="sumStatus">—</span></div></div>
   </div>
@@ -1881,10 +1881,10 @@ async function refreshLedger() {
           <td class="${tm}" data-label="Month">${formatMonthLabel(m.month)}${isCurrentCalendarMonth ? ' (current)' : ''}</td>
           <td class="num ${tm}" data-label="Base Salary">${money(m.base_salary)}</td>
           <td class="num ${tm}" data-label="Days">${m.days_worked ? m.days_worked + '/' + STANDARD_DAYS : 'Full'}</td>
-          <td class="num ${tm}" data-label="Prorated">${money(prorated)}</td>
+          <td class="num ${tm}" data-label="Earned">${money(prorated)}</td>
           <td class="num ${tm}" data-label="Given">${money(paid)}</td>
           <td class="num ${tm} ${thisMonthOwed > 0 ? 'neg' : 'pos'}" data-label="This Month Pending">${money(thisMonthOwed)}</td>
-          <td class="num ${tm}" data-label="Prev Pending In">${money(prevPending)}</td>
+          <td class="num ${tm}" data-label="Carried Over">${money(prevPending)}</td>
           <td class="num ${tm} ${remaining > 0 ? 'neg' : 'pos'}" data-label="Total Pending"><b>${money(remaining)}</b></td>
           <td class="${tm}" data-label="Status">${statusPillHtml(remaining)}</td>
         </tr>`;
