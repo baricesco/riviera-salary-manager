@@ -171,6 +171,10 @@
   .view.active { display: block; }
 
   /* ---- stat tiles ----------------------------------------------------- */
+  .stats-head { display: flex; align-items: center; gap: var(--sp-2); margin: 0 0 var(--sp-3); }
+  .stats-head label { margin: 0; white-space: nowrap; }
+  .stats-head select { width: auto; min-width: 190px; }
+
   .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--sp-3); margin: 0 0 var(--sp-5); }
   .stat-card {
     background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg);
@@ -210,21 +214,34 @@
   .grp-chip.active { background: var(--c-primary); border-color: var(--c-primary); color: #fff; }
   .grp-chip.active .gc-meta { color: rgba(255,255,255,.8); }
 
-  .grp-section { margin-bottom: var(--sp-5); border: 1px solid var(--c-border); border-radius: var(--r-lg); overflow: hidden; }
+  .grp-section {
+    margin-bottom: var(--sp-8);
+    border: 1px solid var(--c-border-strong);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+  }
+  /* The header is a solid dark band with a coloured spine down the left,
+     so where one group ends and the next begins is unmistakable even when
+     you are scrolling a wall of near-identical cards. */
   .grp-head {
     display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap;
-    padding: var(--sp-3) var(--sp-4); background: var(--c-muted); border-bottom: 1px solid var(--c-border);
+    padding: var(--sp-3) var(--sp-4);
+    background: #1E293B; color: #fff;
+    border-left: 5px solid var(--c-accent);
   }
-  .grp-title { font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
-  .grp-manager { font-size: 12px; color: var(--c-fg-muted); }
-  .grp-manager b { color: var(--c-fg); font-weight: 600; }
-  .grp-totals { display: flex; gap: var(--sp-4); margin-left: auto; flex-wrap: wrap; }
+  .grp-title { font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
+  .grp-manager { font-size: 12px; color: rgba(255,255,255,.65); }
+  .grp-manager b { color: #fff; font-weight: 600; }
+  .grp-totals { display: flex; gap: var(--sp-5); margin-left: auto; flex-wrap: wrap; }
   .grp-tot { display: flex; flex-direction: column; }
-  .grp-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--c-fg-muted); font-weight: 600; }
-  .grp-val { font-size: 15px; font-weight: 700; }
-  .grp-val.neg { color: var(--c-danger); }
-  .grp-val.pos { color: var(--c-success); }
-  .grp-body { padding: var(--sp-4); }
+  .grp-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: rgba(255,255,255,.6); font-weight: 600; }
+  .grp-val { font-size: 16px; font-weight: 700; color: #fff; }
+  .grp-val.neg { color: #FCA5A5; }
+  .grp-val.pos { color: #86EFAC; }
+  /* Tinted well behind the cards so the white cards lift off the group. */
+  .grp-body { padding: var(--sp-4); background: var(--c-bg); border-left: 5px solid var(--c-accent); }
+  .grp-count { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: var(--r-full); background: rgba(255,255,255,.15); }
 
   .badge {
     display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: var(--r-full);
@@ -385,10 +402,15 @@
     .cs-item { padding: var(--sp-2) var(--sp-3); }
     .cs-item .cs-value { font-size: 19px; }
     .stats-grid { grid-template-columns: 1fr 1fr; gap: var(--sp-2); }
+    .stats-head select { flex: 1; min-width: 0; }
     .stat-value { font-size: 20px; }
     .people-grid { grid-template-columns: 1fr; }
+    .grp-section { margin-bottom: var(--sp-6); }
     .grp-body { padding: var(--sp-3); }
     .grp-head { padding: var(--sp-3); }
+    .grp-title { font-size: 16px; }
+    .grp-totals { gap: var(--sp-3); }
+    .grp-val { font-size: 15px; }
     .grp-totals { margin-left: 0; width: 100%; justify-content: space-between; gap: var(--sp-2); }
     .detail-side { width: 100%; }
     .detail-side button { flex: 1; min-height: 44px; }
@@ -521,17 +543,22 @@
 
   <div class="grp-chips" id="grpChips" role="tablist" aria-label="Groups"></div>
 
+  <div class="stats-head">
+    <label for="statPeriod">Showing</label>
+    <select id="statPeriod" onchange="setStatPeriod(this.value)"></select>
+  </div>
+
   <div class="stats-grid">
     <div class="stat-card">
-      <div class="stat-head"><span class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></span><span class="stat-label">Total Salary (Lifetime)</span></div>
+      <div class="stat-head"><span class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></span><span class="stat-label" id="statSalaryLabel">Salary</span></div>
       <div class="stat-value" id="statSalary">0</div>
     </div>
     <div class="stat-card is-success">
-      <div class="stat-head"><span class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg></span><span class="stat-label">Total Given (Lifetime)</span></div>
+      <div class="stat-head"><span class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg></span><span class="stat-label" id="statGivenLabel">Given</span></div>
       <div class="stat-value" id="statGiven">0</div>
     </div>
     <div class="stat-card is-danger">
-      <div class="stat-head"><span class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/><path d="M9 12h6M9 16h6"/></svg></span><span class="stat-label">Total Pending — Right Now</span></div>
+      <div class="stat-head"><span class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/><path d="M9 12h6M9 16h6"/></svg></span><span class="stat-label">Still Owed</span></div>
       <div class="stat-value" id="statPending">0</div>
     </div>
   </div>
@@ -738,7 +765,7 @@ const SUPABASE_KEY = "sb_publishable_fenOA9Bs7g1T6ADn_FujMw_rZESIU_6";
 const EMP_URL = `${SUPABASE_URL}/rest/v1/riviera_employees`;
 const SM_URL = `${SUPABASE_URL}/rest/v1/riviera_salary_months`;
 const PAY_URL = `${SUPABASE_URL}/rest/v1/riviera_salary_payments`;
-const STANDARD_DAYS = 30; // proration base — 15 days = half salary, regardless of calendar month length
+const FALLBACK_DAYS = 30; // only used if a month string is somehow missing
 
 function sbHeaders(extra) {
   return Object.assign({
@@ -798,12 +825,22 @@ function money(n) {
 // across platforms, can't be color-matched to the button it's in).
 const ICON_TRASH = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
 
-function proratedSalary(base, daysWorked) {
+// Real number of days in a given 'YYYY-MM'. Day 0 of the next month is
+// the last day of this one, which also gets February and leap years right.
+function daysInMonth(month) {
+  if (!/^\d{4}-\d{2}$/.test(String(month || ''))) return FALLBACK_DAYS;
+  const [y, m] = month.split('-').map(Number);
+  return new Date(y, m, 0).getDate();
+}
+
+function proratedSalary(base, daysWorked, month) {
   base = parseFloat(base) || 0;
   if (daysWorked === null || daysWorked === undefined || daysWorked === '') return base;
   const dw = parseFloat(daysWorked);
   if (isNaN(dw)) return base;
-  return base * (dw / STANDARD_DAYS);
+  const total = daysInMonth(month);
+  // Working every day of the month is a full salary, never more.
+  return base * (Math.max(0, Math.min(dw, total)) / total);
 }
 
 // No date picker anywhere in this app — "now" always means the real
@@ -943,7 +980,7 @@ async function ensureEmployeeMonth(employeeId, month, dateLeft) {
   const prior = await fetchLatestPriorSalaryMonth(employeeId, month);
   if (!prior) return;
   const paid = await fetchPaymentsSum(prior.id);
-  const prorated = proratedSalary(prior.base_salary, prior.days_worked);
+  const prorated = proratedSalary(prior.base_salary, prior.days_worked, prior.month);
   const remaining = prorated - paid + (parseFloat(prior.prev_pending) || 0);
   await sbPost(SM_URL, {
     employee_id: employeeId, month,
@@ -964,7 +1001,7 @@ async function createSalaryMonthRow(employeeId, month, salary) {
   let prevPending = 0;
   if (prior) {
     const paid = await fetchPaymentsSum(prior.id);
-    const prorated = proratedSalary(prior.base_salary, prior.days_worked);
+    const prorated = proratedSalary(prior.base_salary, prior.days_worked, prior.month);
     prevPending = prorated - paid + (parseFloat(prior.prev_pending) || 0);
   }
   return sbPost(SM_URL, { employee_id: employeeId, month, base_salary: salary, days_worked: null, prev_pending: prevPending });
@@ -999,7 +1036,7 @@ async function recalcForward(employeeId, fromMonth) {
   let startIdx = months.findIndex(m => m.month === fromMonth);
   if (startIdx === -1) startIdx = 0;
   const m0 = months[startIdx];
-  let prevRemaining = proratedSalary(m0.base_salary, m0.days_worked) - (paidMap[m0.id] || 0) + (parseFloat(m0.prev_pending) || 0);
+  let prevRemaining = proratedSalary(m0.base_salary, m0.days_worked, m0.month) - (paidMap[m0.id] || 0) + (parseFloat(m0.prev_pending) || 0);
 
   const updates = [];
   for (let i = startIdx + 1; i < months.length; i++) {
@@ -1008,7 +1045,7 @@ async function recalcForward(employeeId, fromMonth) {
       updates.push({ id: m.id, prev_pending: prevRemaining });
       m.prev_pending = prevRemaining;
     }
-    prevRemaining = proratedSalary(m.base_salary, m.days_worked) - (paidMap[m.id] || 0) + (parseFloat(m.prev_pending) || 0);
+    prevRemaining = proratedSalary(m.base_salary, m.days_worked, m.month) - (paidMap[m.id] || 0) + (parseFloat(m.prev_pending) || 0);
   }
   await Promise.all(updates.map(u => sbPatch(`${SM_URL}?id=eq.${u.id}`, { prev_pending: u.prev_pending })));
 }
@@ -1035,18 +1072,20 @@ async function fetchAllEmployeesFullLedger() {
   return employees.map(emp => {
     const ms = (byEmp[emp.id] || []).slice().sort((a, b) => a.month.localeCompare(b.month));
     let total = 0, given = 0, pending = 0;
+    const byMonth = {};
     ms.forEach((m, i) => {
       const paid = paidMap[m.id] || 0;
-      const prorated = proratedSalary(m.base_salary, m.days_worked);
+      const earned = proratedSalary(m.base_salary, m.days_worked, m.month);
       const prevPending = parseFloat(m.prev_pending) || 0;
-      total += prorated;
+      total += earned;
       given += paid;
-      if (i === ms.length - 1) pending = prorated - paid + prevPending;
+      byMonth[m.month] = { earned, given: paid };
+      if (i === ms.length - 1) pending = earned - paid + prevPending;
     });
     return {
       employeeId: emp.id, name: emp.name, role: emp.role, dateLeft: emp.date_left,
       dept: (emp.dept || '').trim(), isManager: !!emp.is_manager,
-      total, given, pending, monthsCount: ms.length
+      total, given, pending, byMonth, monthsCount: ms.length
     };
   });
 }
@@ -1087,6 +1126,13 @@ let activeGroup = 'ALL';
 
 function groupNameOf(p) { return p.dept || UNASSIGNED; }
 
+// Plain localeCompare puts "Staff 10" before "Staff 2". Numeric collation
+// reads the digits as numbers, which is what anyone scanning a numbered
+// list expects.
+function byText(a, b) {
+  return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
+}
+
 function groupPeople(list) {
   const map = new Map();
   list.forEach(p => {
@@ -1097,7 +1143,7 @@ function groupPeople(list) {
   // Managers first, then by name, so the person in charge heads the group.
   const groups = [...map.entries()].map(([name, members]) => {
     members.sort((a, b) =>
-      (b.isManager - a.isManager) || a.name.localeCompare(b.name));
+      (b.isManager - a.isManager) || byText(a.name, b.name));
     const totals = members.reduce((acc, m) => {
       acc.total += m.total; acc.given += m.given; acc.pending += m.pending;
       return acc;
@@ -1106,7 +1152,7 @@ function groupPeople(list) {
   });
   // Real groups alphabetically; "Unassigned" always last.
   groups.sort((a, b) =>
-    (a.name === UNASSIGNED) - (b.name === UNASSIGNED) || a.name.localeCompare(b.name));
+    (a.name === UNASSIGNED) - (b.name === UNASSIGNED) || byText(a.name, b.name));
   return groups;
 }
 
@@ -1140,10 +1186,48 @@ function renderGroupChips(groups) {
           .map(g => `<option value="${escapeAttr(g.name)}"></option>`).join('');
 }
 
+// Salary and Given are flows, so they belong to a period. Still Owed is a
+// balance — it is whatever is outstanding right now, whichever period is
+// selected — so it never changes with this picker.
+let statPeriod = 'ALL';
+
+function setStatPeriod(v) {
+  statPeriod = v;
+  renderPeople();
+}
+
+function knownMonths() {
+  const set = new Set();
+  peopleCache.forEach(p => Object.keys(p.byMonth || {}).forEach(m => set.add(m)));
+  return [...set].sort().reverse();
+}
+
+function renderPeriodPicker() {
+  const sel = document.getElementById('statPeriod');
+  const months = knownMonths();
+  if (statPeriod !== 'ALL' && !months.includes(statPeriod)) statPeriod = 'ALL';
+  sel.innerHTML =
+    '<option value="ALL">All months</option>' +
+    months.map(m => `<option value="${m}">${formatMonthLabel(m)}</option>`).join('');
+  sel.value = statPeriod;
+}
+
 function renderStats(list) {
-  let total = 0, given = 0, pending = 0;
-  list.forEach(p => { total += p.total; given += p.given; pending += p.pending; });
-  document.getElementById('statSalary').textContent = money(total);
+  let salary = 0, given = 0, pending = 0;
+  list.forEach(p => {
+    pending += p.pending;
+    if (statPeriod === 'ALL') {
+      salary += p.total;
+      given += p.given;
+    } else {
+      const m = (p.byMonth || {})[statPeriod];
+      if (m) { salary += m.earned; given += m.given; }
+    }
+  });
+  const periodLabel = statPeriod === 'ALL' ? 'all months' : formatMonthLabel(statPeriod);
+  document.getElementById('statSalaryLabel').textContent = 'Salary — ' + periodLabel;
+  document.getElementById('statGivenLabel').textContent = 'Given — ' + periodLabel;
+  document.getElementById('statSalary').textContent = money(salary);
   document.getElementById('statGiven').textContent = money(given);
   document.getElementById('statPending').textContent = money(pending);
 }
@@ -1157,6 +1241,7 @@ function renderPeople() {
   renderGroupChips(groups);
 
   const shown = visiblePeople();
+  renderPeriodPicker();
   renderStats(shown);
   const scope = activeGroup === 'ALL' ? 'All groups' : activeGroup;
   document.querySelectorAll('.stat-scope').forEach(el => { el.textContent = scope; });
@@ -1191,8 +1276,8 @@ function renderGroupSection(g) {
     <section class="grp-section">
       <header class="grp-head">
         <div>
-          <div class="grp-title">${escapeHtml(g.name)}</div>
-          <div class="grp-manager">${g.manager ? '<b>' + escapeHtml(g.manager.name) + '</b> &middot; ' : ''}${g.members.length} ${g.members.length === 1 ? 'person' : 'people'}</div>
+          <div class="grp-title">${escapeHtml(g.name)} <span class="grp-count">${g.members.length}</span></div>
+          <div class="grp-manager">${g.manager ? '<b>' + escapeHtml(g.manager.name) + '</b>' : 'No manager'}</div>
         </div>
         ${groupTotalsHtml(g)}
       </header>
@@ -1204,7 +1289,11 @@ function renderGroupSection(g) {
 
 function initials(name) {
   const parts = String(name || '?').trim().split(/\s+/).filter(Boolean);
-  return ((parts[0] || '?')[0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+  const last = parts[parts.length - 1] || '';
+  // "Housekeeping Staff 12" -> "12". Taking first letters would give every
+  // one of them the same "H1" and make the avatars useless.
+  if (parts.length > 1 && /^\d+$/.test(last)) return last;
+  return ((parts[0] || '?')[0] + (parts.length > 1 ? last[0] : '')).toUpperCase();
 }
 
 function personCardHtml(p) {
@@ -1632,7 +1721,7 @@ function jumpToCurrentMonth() { selectLedgerMonth(currentCalendarMonth()); }
 function recalcDetailPreview() {
   const base = document.getElementById('dBaseSalary').value;
   const days = document.getElementById('dDaysWorked').value;
-  const prorated = proratedSalary(base, days === '' ? null : days);
+  const prorated = proratedSalary(base, days === '' ? null : days, detailMonth);
   document.getElementById('dProrated').textContent = money(prorated);
   updateSummaryBar(prorated);
 }
@@ -1767,7 +1856,7 @@ async function duplicateConfirm() {
         employee_id: emp.id, month: m.month,
         base_salary: m.base_salary, days_worked: m.days_worked, prev_pending: carry
       }));
-      carry += proratedSalary(m.base_salary, m.days_worked);
+      carry += proratedSalary(m.base_salary, m.days_worked, m.month);
     });
     await sbPostMany(SM_URL, monthRows);
     document.getElementById('duplicateModal').classList.remove('active');
@@ -1843,7 +1932,7 @@ async function deleteEmployee() {
 function updateSummaryBar(proratedOverride) {
   const base = document.getElementById('dBaseSalary').value;
   const days = document.getElementById('dDaysWorked').value;
-  const prorated = proratedOverride !== undefined ? proratedOverride : proratedSalary(base, days === '' ? null : days);
+  const prorated = proratedOverride !== undefined ? proratedOverride : proratedSalary(base, days === '' ? null : days, detailMonth);
   const paid = totalPaid();
   const prevPending = parseFloat(document.getElementById('dPrevPending').value) || 0;
   const remaining = prorated - paid + prevPending;
@@ -1869,7 +1958,7 @@ async function refreshLedger() {
     const nowMonth = currentCalendarMonth();
     const rowsHtml = months.map(m => {
       const paid = paidMap[m.id] || 0;
-      const prorated = proratedSalary(m.base_salary, m.days_worked);
+      const prorated = proratedSalary(m.base_salary, m.days_worked, m.month);
       const prevPending = parseFloat(m.prev_pending) || 0;
       const thisMonthOwed = prorated - paid;
       const remaining = thisMonthOwed + prevPending;
@@ -1880,7 +1969,7 @@ async function refreshLedger() {
         <tr${isEditing ? ' class="editing-row"' : ''} onclick="selectLedgerMonth('${m.month}')">
           <td class="${tm}" data-label="Month">${formatMonthLabel(m.month)}${isCurrentCalendarMonth ? ' (current)' : ''}</td>
           <td class="num ${tm}" data-label="Base Salary">${money(m.base_salary)}</td>
-          <td class="num ${tm}" data-label="Days">${m.days_worked ? m.days_worked + '/' + STANDARD_DAYS : 'Full'}</td>
+          <td class="num ${tm}" data-label="Days">${m.days_worked ? m.days_worked + '/' + daysInMonth(m.month) : 'Full'}</td>
           <td class="num ${tm}" data-label="Earned">${money(prorated)}</td>
           <td class="num ${tm}" data-label="Given">${money(paid)}</td>
           <td class="num ${tm} ${thisMonthOwed > 0 ? 'neg' : 'pos'}" data-label="This Month Pending">${money(thisMonthOwed)}</td>
