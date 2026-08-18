@@ -1248,18 +1248,18 @@ async function fetchAllEmployeesFullLedger() {
 let peopleCache = [];
 
 async function loadList() {
-  document.getElementById('peopleContainer').innerHTML = '<div class="empty-note">Loading...</div>';
+  document.getElementById(‘peopleContainer’).innerHTML = ‘<div class="empty-note">Loading...</div>’;
   try {
-    await ensureAllCurrentMonth();
     peopleCache = await fetchAllEmployeesFullLedger();
     renderPeople();
     renderCompanySnapshot();
     refreshTrashCount();
+    ensureAllCurrentMonth();
   } catch (e) {
-    console.error('Load failed', e);
-    document.getElementById('peopleContainer').innerHTML =
-      '<div class="empty-note"><b>Couldn’t load</b>Run supabase_schema.sql in Supabase, then reload.</div>';
-    setStatus('Load failed', true);
+    console.error(‘Load failed’, e);
+    document.getElementById(‘peopleContainer’).innerHTML =
+      ‘<div class="empty-note"><b>Couldn’t load</b>Run supabase_schema.sql in Supabase, then reload.</div>’;
+    setStatus(‘Load failed’, true);
   }
 }
 
