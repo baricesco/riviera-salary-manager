@@ -291,23 +291,38 @@
   /* ---- tables --------------------------------------------------------- */
   .table-wrap { overflow-x: auto; border: 1px solid var(--c-border); border-radius: var(--r-lg); -webkit-overflow-scrolling: touch; }
   table { border-collapse: separate; border-spacing: 0; width: 100%; background: var(--c-surface); }
-  th, td { padding: 10px 12px; text-align: left; font-size: 13px; border-bottom: 1px solid var(--c-border); }
+  th, td { padding: 13px 14px; text-align: left; font-size: 15px; border-bottom: 1px solid var(--c-border); }
   th {
     position: sticky; top: 0; z-index: 2;
-    background: var(--c-muted); color: var(--c-fg-muted); font-size: 11px; font-weight: 700;
+    background: var(--c-muted); color: var(--c-fg); font-size: 12px; font-weight: 700;
     text-transform: uppercase; letter-spacing: .05em; white-space: nowrap;
-    border-bottom: 1px solid var(--c-border-strong);
+    border-bottom: 2px solid var(--c-border-strong);
   }
   tbody tr:last-child td { border-bottom: none; }
-  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
   th.num { text-align: right; }
-  td.num.neg { color: var(--c-danger); font-weight: 600; }
-  td.num.pos { color: var(--c-success); font-weight: 600; }
+  td.num.neg { color: var(--c-danger); font-weight: 700; }
+  td.num.pos { color: var(--c-success); font-weight: 700; }
   tbody tr { transition: background var(--t-fast); }
   tr.person-row { cursor: pointer; }
   tr.person-row:hover { background: var(--c-primary-soft); }
-  tr.grp-row td { background: var(--c-muted); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--c-fg-muted); }
-  tr.grp-total-row td { background: #fff; font-weight: 700; border-top: 1px solid var(--c-border-strong); }
+
+  /* Group rows carry the same dark band + amber spine as the card view,
+     so a group boundary looks the same whichever view you are in. */
+  tr.grp-row td {
+    background: #1E293B; color: #fff;
+    font-weight: 700; font-size: 15px; letter-spacing: -.01em;
+    padding: 14px; border-bottom: none;
+    box-shadow: inset 5px 0 0 var(--c-accent);
+  }
+  tr.grp-row .grp-row-sub { font-weight: 400; font-size: 13px; color: rgba(255,255,255,.65); }
+  /* A gap above every group except the first, so blocks don't run together. */
+  tr.grp-row:not(:first-child) td { border-top: var(--sp-4) solid var(--c-bg); }
+  tr.grp-total-row td {
+    background: var(--c-muted); font-weight: 700;
+    border-top: 2px solid var(--c-border-strong); border-bottom: none;
+    box-shadow: inset 5px 0 0 var(--c-accent);
+  }
 
   /* ---- detail view ---------------------------------------------------- */
   .backlink {
@@ -443,16 +458,28 @@
       padding: var(--sp-2) var(--sp-3); background: var(--c-surface); box-shadow: var(--shadow-sm);
     }
     .stack-table td {
-      border: none; padding: 5px 0; display: flex; justify-content: space-between;
+      border: none; padding: 7px 0; font-size: 15px; display: flex; justify-content: space-between;
       align-items: center; gap: var(--sp-3); text-align: right;
     }
     .stack-table td::before {
       content: attr(data-label); text-align: left; flex: none;
-      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--c-fg-muted);
+      font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--c-fg-muted);
     }
-    .stack-table td:first-child { font-size: 15px; font-weight: 600; border-bottom: 1px solid var(--c-border); padding-bottom: var(--sp-2); margin-bottom: var(--sp-1); }
+    .stack-table td:first-child { font-size: 17px; font-weight: 700; border-bottom: 1px solid var(--c-border); padding-bottom: var(--sp-2); margin-bottom: var(--sp-1); }
     .stack-table td:first-child::before { content: none; }
-    .stack-table tr.grp-row, .stack-table tr.grp-total-row { display: none; }
+    /* Group bands stay — they are the separation. Only their inner cell
+       needs to stop behaving like a stacked field. */
+    .stack-table tr.grp-row, .stack-table tr.grp-total-row {
+      border: none; border-radius: var(--r-md); padding: 0; box-shadow: none; margin-bottom: var(--sp-2);
+    }
+    .stack-table tr.grp-row:not(:first-child) { margin-top: var(--sp-5); }
+    .stack-table tr.grp-row td {
+      display: block; text-align: left; border-radius: var(--r-md); border-top: none;
+    }
+    .stack-table tr.grp-row td::before { content: none; }
+    .stack-table tr.grp-total-row { background: var(--c-muted); padding: var(--sp-2) var(--sp-3); }
+    .stack-table tr.grp-total-row td { border-top: none; box-shadow: none; background: none; }
+    .stack-table tr.grp-total-row td:first-child { box-shadow: none; }
   }
 
   @media (max-width: 768px) {
@@ -1334,7 +1361,8 @@ function personCardHtml(p) {
 // person becomes a labelled card (see .stack-table in the stylesheet).
 function renderGroupedTable(groups) {
   const body = groups.map(g => {
-    const head = `<tr class="grp-row"><td colspan="6">${escapeHtml(g.name)} &middot; ${g.members.length}${g.manager ? ' &middot; ' + escapeHtml(g.manager.name) : ''}</td></tr>`;
+    const head = `<tr class="grp-row"><td colspan="6">${escapeHtml(g.name)}
+      <span class="grp-row-sub">${g.members.length} ${g.members.length === 1 ? 'person' : 'people'}${g.manager ? ' &middot; ' + escapeHtml(g.manager.name) : ' &middot; no head'} &middot; Pending Rs. ${money(g.pending)}</span></td></tr>`;
     const rows = g.members.map(p => `
       <tr class="person-row" onclick="openDetail('${p.employeeId}')">
         <td data-label="Name">${escapeHtml(p.name)}${p.isManager ? ' <span class="badge manager">Head</span>' : ''}</td>
@@ -1347,9 +1375,9 @@ function renderGroupedTable(groups) {
     const sub = `
       <tr class="grp-total-row">
         <td colspan="3">${escapeHtml(g.name)} total</td>
-        <td class="num">${money(g.total)}</td>
-        <td class="num">${money(g.given)}</td>
-        <td class="num ${g.pending > 0 ? 'neg' : 'pos'}">${money(g.pending)}</td>
+        <td class="num" data-label="Total Salary">${money(g.total)}</td>
+        <td class="num" data-label="Given">${money(g.given)}</td>
+        <td class="num ${g.pending > 0 ? 'neg' : 'pos'}" data-label="Pending">${money(g.pending)}</td>
       </tr>`;
     return head + rows + sub;
   }).join('');
