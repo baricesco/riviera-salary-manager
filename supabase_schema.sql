@@ -69,3 +69,7 @@ create index if not exists riviera_employees_dept_idx on riviera_employees (dept
 -- How the money was handed over: 'Cash' or 'Online'. Older rows stay null,
 -- which the app shows as Cash.
 alter table riviera_salary_payments add column if not exists method text;
+
+-- When a payment was removed. Employees and salary months already had this;
+-- payments did not, so the Deleted page had no timestamp to sort or show.
+alter table riviera_salary_payments add column if not exists deleted_at timestamptz;

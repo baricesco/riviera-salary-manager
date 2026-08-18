@@ -1,0 +1,433 @@
+================================================================================
+RIVIERA SALARY MANAGER - HOW IT ALL WORKS
+Plain-English explanation of every rule, calculation and technique in the app.
+Last updated: 2026-08-18
+================================================================================
+
+--------------------------------------------------------------------------------
+0. THE ONE-PARAGRAPH VERSION
+--------------------------------------------------------------------------------
+This is a single HTML file. There is no server of our own, no build step and no
+framework. The browser opens index.html, and index.html talks straight to a
+Supabase (Postgres) database over its REST API. Every calculation - proration,
+carry-forward of unpaid salary, group totals - happens in the browser. The
+database only stores rows; it does no arithmetic. That is why the whole app can
+be one file on Vercel with nothing to deploy but static assets.
+
+
+================================================================================
+1. ARCHITECTURE
+================================================================================
+
+  Browser (index.html)
+      |  fetch() with an apikey header
+      v
+  Supabase PostgREST  ->  Postgres tables
+
+  index.html            the entire application: markup, CSS and JavaScript
+  supabase_schema.sql   the database definition; run by hand in the Supabase SQL
+                        Editor. Every statement is "if not exists" / "add column
+                        if not exists", so re-running it is always safe.
+  LOGIC.txt             this file.
+
+WHY ONE FILE
+  No bundler, no node_modules, no build. Push to GitHub, Vercel serves the file.
+  A change is live in seconds and can be read end to end without jumping between
+  modules.
+
+THE KEY IN THE FILE
+  SUPABASE_KEY is the *publishable* (anon) key. It is meant to be public. It can
+  read and write the three riviera_* tables because the Row Level Security
+  policies on them allow it. It CANNOT run DDL - it cannot create or alter
+  tables. That is the reason schema changes must be pasted into the Supabase SQL
+  Editor by hand; the app can never do it for you.
+
+  Consequence: whenever a new column is added, the app breaks for anyone who has
+  not re-run the SQL. missingColumnHint() catches Postgres error PGRST204 /
+  "column ... does not exist" and turns it into a readable instruction instead
+  of an opaque failure.
+
+
+================================================================================
+2. THE DATA MODEL
+================================================================================
+
+Three tables. Read them as: a person, that person's month, and money handed over
+inside that month.
+
+riviera_employees            one row per person, forever
+  id            uuid
+  name          text
+  role          text         "Chef", "Room Attendant", free text
+  dept          text         the group: Kitchen, Laundry, ... (null = Unassigned)
+  is_manager    boolean      this person is the head of their group
+  date_left     date         when they stopped working (null = still here)
+  deleted       boolean      soft delete flag
+  deleted_at    timestamptz  when it was removed
+  created_at    timestamptz
+
+riviera_salary_months        one row per person PER MONTH
+  id            uuid
+  employee_id   uuid   -> riviera_employees
+  month         text   'YYYY-MM'. A string, not a date - there is no such thing
+                       as "the 0th of August", and string sorting on 'YYYY-MM'
+                       is already chronological order.
+  base_salary   numeric      the full-month salary agreed for THIS month
+  days_worked   numeric      null = worked the whole month
+  prev_pending  numeric      whatever was still owed at the end of last month
+  notes         text
+  deleted, deleted_at, created_at
+  UNIQUE (employee_id, month)   <- one row per person per month, enforced by the
+                                   database, so a double-click cannot create two
+                                   Augusts.
+
+riviera_salary_payments      one row per handover of money
+  id                uuid
+  salary_month_id   uuid -> riviera_salary_months
+  amount            numeric
+  pay_date          date
+  method            text     'Cash' or 'Online' (null on old rows = Cash)
+  note              text
+  deleted, deleted_at, created_at
+
+WHY THE PERSON AND THE MONTH ARE SEPARATE
+  A name and a role do not change every month, but a salary and days worked do.
+  Keeping them in one table would mean re-typing the name into every month, and
+  renaming someone would mean editing twelve rows.
+
+WHY PAYMENTS ARE THEIR OWN TABLE
+  Salary is rarely paid in one go. Three partial handovers in a month are three
+  rows. "Given" for that month is just their sum, so nothing has to be edited
+  when another payment happens - a row is only added.
+
+
+================================================================================
+3. THE MONEY MATHS
+================================================================================
+
+3.1 PRORATION - what someone actually earned this month
+--------------------------------------------------------------------------------
+  earned = base_salary * (days_worked / days in that calendar month)
+
+  days_worked = null means the full month, so earned = base_salary exactly.
+
+  The divisor is the REAL number of days in that month, not a flat 30:
+
+      daysInMonth('2026-08') = 31
+      daysInMonth('2026-09') = 30
+      daysInMonth('2026-02') = 28   (29 in a leap year)
+
+  It is computed with new Date(year, month, 0).getDate(). Day 0 of the next month
+  is the last day of this one, which gets February and leap years right without
+  any special-casing.
+
+  Why this matters: with a fixed 30-day divisor, someone who worked all 31 days
+  of August was paid 31/30 = 103% of their salary, and someone who worked all 28
+  days of February was paid 28/30 = 93%. Both are now exactly 100%.
+
+  days_worked is clamped to the range 0..daysInMonth, so a typo of 40 days pays a
+  full month and never more.
+
+  Worked examples (base 30,000):
+      August,    31 of 31 days -> 30,000.00
+      August,    15 of 31 days -> 14,516.13
+      September, 15 of 30 days -> 15,000.00
+      February,  14 of 28 days -> 15,000.00
+
+3.2 GIVEN
+--------------------------------------------------------------------------------
+  given(month) = sum of all non-deleted payments attached to that month's row.
+
+3.3 PENDING FOR ONE MONTH
+--------------------------------------------------------------------------------
+  pending = earned - given + prev_pending
+
+  prev_pending is the debt carried in from last month. It is a stored column, not
+  something recomputed on the fly, so a month row is a complete, standalone
+  statement of that month even if earlier months are later edited.
+
+3.4 THE CARRY-FORWARD CHAIN - the heart of the app
+--------------------------------------------------------------------------------
+  Months form a chain. Each month's closing balance becomes the next month's
+  prev_pending:
+
+      August:    earned 30,000, given 10,000, carried in 0
+                 -> closes at 20,000
+      September: prev_pending = 20,000
+                 earned 30,000, given 30,000
+                 -> closes at 20,000
+      October:   prev_pending = 20,000  ... and so on
+
+  So a person's Pending shown anywhere in the app is simply the closing balance
+  of their LATEST month. Everything before it is already folded into that number.
+
+  When you edit an old month - change its salary, its days, or add a payment to
+  it - every later month's prev_pending is now wrong. recalcForward(employeeId,
+  fromMonth) walks forward from the edited month to the newest one, recomputing
+  each closing balance and PATCHing only the rows whose prev_pending actually
+  changed. Rows that come out the same are left untouched, so an edit usually
+  writes one or two rows, not the whole history.
+
+3.5 AUTO-CREATING THE CURRENT MONTH
+--------------------------------------------------------------------------------
+  ensureAllCurrentMonth() runs on every load of the list. For each active
+  employee it checks whether a row exists for the current calendar month, and if
+  not, it creates one by copying the previous month's base_salary and setting
+  prev_pending to the previous month's closing balance.
+
+  Two guards:
+    - Someone with a date_left before this month gets no new row. They have left.
+    - Someone with no prior month at all gets no row. There is nothing to copy;
+      they are added with their months chosen explicitly.
+
+  Effect: you open the app on the 1st and everyone is already there with the
+  right carried-over debt. Nothing to click.
+
+3.6 THE THREE HEADLINE NUMBERS
+--------------------------------------------------------------------------------
+  Salary      - sum of earned across the selected period
+  Given       - sum of payments across the selected period
+  Still Owed  - sum of every person's CURRENT closing balance
+
+  Salary and Given are flows: they belong to a stretch of time, so the period
+  picker changes them. Still Owed is a balance: it is what is outstanding right
+  now regardless of which period you are looking at, so the picker deliberately
+  does NOT change it. This is why the old "Lifetime" wording was dropped - two of
+  the three numbers were never lifetime figures at all.
+
+
+================================================================================
+4. GROUPS
+================================================================================
+
+  A group is not a table. It is just every employee sharing the same dept string.
+  Nothing has to be created or deleted; typing "Kitchen" into a person's Group
+  field puts them in the Kitchen group, and the group appears. When the last
+  member leaves it, the group disappears by itself.
+
+  - dept empty  -> the person falls into "Unassigned", which always sorts last.
+  - is_manager  -> that person is the group's head. A group may have one head or
+                   none at all; both are normal. Heads sort to the top of their
+                   group and get an amber card and a "Head" badge.
+  - Group totals are the sums of the members' own totals, so they can never
+    disagree with the cards inside them.
+  - The chips at the top filter the list to one group. If the active group stops
+    existing (last member moved out), the selection silently falls back to All
+    Groups before the chips are drawn, so a dead chip can never stay highlighted.
+
+  ROLE SUGGESTIONS
+  Roles are free text - you can type anything - but the suggestion list adapts to
+  the group. ROLES_BY_GROUP holds about 60 preset roles across ten kinds of
+  department, and GROUP_ALIASES matches misspellings, because real data contains
+  "kitcher" and "laundary". Matching is a two-way substring test, so "kitchen
+  staff" matches "kitchen" and vice versa. The dropdown then lists, in order:
+  roles that fit this group, roles already used anywhere in your data, then every
+  other preset.
+
+
+================================================================================
+5. NATURAL SORTING AND AVATARS
+================================================================================
+
+  Plain alphabetical sorting puts "Staff 10" before "Staff 2", because it
+  compares "1" against "2" character by character. byText() uses localeCompare
+  with { numeric: true }, which reads runs of digits as numbers:
+
+      Staff 1, Staff 2, Staff 3, ... Staff 10, Staff 11
+
+  Card avatars use initials, but "Housekeeping Staff 12" would give every one of
+  them the identical "H1". So if the last word of a name is a number, that number
+  becomes the avatar: 1, 2, 12. The avatars stay distinguishable.
+
+
+================================================================================
+6. ADDING MANY PEOPLE AT ONCE
+================================================================================
+
+  Two paths, one mechanism.
+
+  ADD X STAFF - you do not know their names yet. Leave the name blank, set the
+  count, and the app generates "Kitchen Staff 3", "Kitchen Staff 4", ... The stem
+  comes from the group name; the starting number is one past the highest number
+  already in use with that stem, found by scanning existing names with a regex
+  built from the stem. So adding three more when 1 and 2 exist gives 3, 4 and 5 -
+  never a collision.
+
+  DUPLICATE - copy an existing person. Role, group and every month row (month,
+  base_salary, days_worked) are copied; the carry chain is rebuilt from scratch
+  for the copy. Two things deliberately do NOT carry over:
+    - is_manager: a copy is never automatically a second head.
+    - payments: money that was handed to one person was not handed to another.
+  A single copy is still numbered ("Wali 1"), otherwise it would land on exactly
+  the name it was copied from.
+
+  All of it goes over as ONE insert with an array body, not N requests.
+
+
+================================================================================
+7. DELETING AND UNDOING
+================================================================================
+
+  NOTHING IS EVER ERASED. There is not a single DELETE request in the app. Every
+  removal is a PATCH that sets deleted = true plus a deleted_at timestamp, and
+  every read filters with deleted=eq.false. The row stays in the database.
+
+  REMOVE ONE PERSON
+    Sets deleted on the employee AND on all of their salary month rows, with one
+    shared timestamp. The cascade matters: without it, orphaned month rows kept
+    turning up in totals, which is exactly the "deleted people keep coming back"
+    bug that was fixed earlier.
+
+  BULK REMOVE
+    Turn on Select in the toolbar. While it is on, tapping a card or a table row
+    picks it instead of opening it; the group header gets its own box that takes
+    the whole group in one tap (and a second tap clears it); the bar pinned to the
+    bottom of the screen offers Select all shown and Remove N. The ids go over in
+    batches of 40 because PostgREST puts them in the URL, and a hundred uuids in
+    one URL is a bad idea. The whole batch shares ONE timestamp.
+
+  DELETED PAGE
+    Lists every removed person and every removed payment, newest first, each with
+    Restore. Restoring a person flips their own flag back, then un-deletes only
+    the month rows whose deleted_at EQUALS the person's deleted_at. That is what
+    the shared timestamp is for: it identifies exactly the rows that went away in
+    that one action, so months deleted on some other occasion are not resurrected
+    by accident. If deleted_at is missing (rows from before it was recorded), it
+    falls back to restoring all of that person's deleted months.
+
+  WHY SOFT DELETE
+    Salary history is a record. A hard delete of one person also destroys the
+    audit trail of what they were paid. Soft delete costs a boolean and makes
+    every mistake reversible.
+
+  THE TRADE-OFF
+    Deleted rows accumulate forever. There is no purge in the app; clearing them
+    out permanently is a SQL Editor job, deliberately, so it cannot be done by
+    accident from a phone.
+
+
+================================================================================
+8. TALKING TO THE DATABASE (POSTGREST TECHNIQUES)
+================================================================================
+
+  FILTERS LIVE IN THE URL
+      ?select=*&deleted=eq.false&order=month.asc
+      &month=lt.2026-08        less than
+      &id=in.(uuid1,uuid2)     one request for many rows
+
+  BATCHING INSTEAD OF LOOPING
+    The old code fetched each employee's months one request at a time - 14 people
+    meant 14 round trips, then 14 more for payments. Now:
+      1 request for the employees
+      1 request for ALL their months           (employee_id=in.(...))
+      1 request for ALL those months' payments (salary_month_id=in.(...))
+    Three requests total, regardless of headcount. The rows are then grouped in
+    JavaScript. This is the single biggest reason the app feels fast.
+
+  EMBEDS
+    select=*,sm:riviera_salary_months(month,employee:riviera_employees(name))
+    follows the foreign keys and returns the related rows nested inside each
+    payment, so the Deleted page can name the person a payment belonged to
+    without a second request.
+
+  RETURNING WHAT WAS INSERTED
+    The header "Prefer: return=representation" makes Postgres send the new rows
+    back, including their generated uuids. That is how bulk-adding people can
+    immediately create their month rows - the ids are already in hand.
+
+  ARRAY INSERTS
+    POSTing a JSON array instead of an object inserts every row in one statement.
+
+  URL-ENCODING TIMESTAMPS
+    A timestamp contains "+00:00", and a raw + in a query string means a space.
+    Any deleted_at=eq.<timestamp> filter must be encodeURIComponent'd or it
+    silently matches nothing.
+
+  THE DELETE-LEAK LESSON
+    An embed that returns a row does not mean the joined parent is alive. The fix
+    was to stop trusting the join and drive every query off the set of active
+    employee ids, then also check membership of that set on the way back.
+
+
+================================================================================
+9. UI AND UX TECHNIQUES
+================================================================================
+
+  DESIGN TOKENS
+    Every colour, space, radius and shadow is a CSS custom property on :root
+    (--c-primary, --sp-3, --r-lg, --shadow-md). Nothing hardcodes a hex value, so
+    the whole app re-skins from about twenty lines.
+
+  MOBILE FIRST, AND WHY 16px
+    Inputs are exactly 16px. Below 16px, iOS Safari zooms the page in when a
+    field is focused and does not zoom back out. All touch targets are at least
+    44px tall, the Apple minimum.
+
+  STACKED TABLES
+    A wide table cannot work on a phone. Below 768px, .stack-table switches every
+    row to display: block and every cell gets its column name back through
+    td::before { content: attr(data-label) }. One table markup, two completely
+    different layouts, no JavaScript and no duplicate DOM.
+
+  ONE GROUP COMPONENT, TWO VIEWS
+    groupHeaderHtml() and renderGroupSection() are shared by the card view and
+    the table view. The dark band, the amber spine down the left edge and the
+    labelled Salary / Given / Pending totals are literally the same code in both.
+    That is why the two views separate groups identically - it is not two designs
+    kept in sync by hand, it is one design used twice.
+
+  THE THREE-STEP PERSON PAGE
+    Person, Months, Given - numbered 1, 2, 3. The numbers are the anchor the eye
+    lands on. Related controls that used to sit in five separate panels are now
+    sub-blocks divided by a rule inside three cards, and the month summary sits
+    next to the fields it describes instead of at the bottom of the page. Rare
+    actions (Add months) are folded behind a toggle rather than occupying space
+    on every visit.
+
+  DESTRUCTIVE ACTIONS
+    Anything that removes data requires typing DELETE. The confirm dialog is a
+    promise-based modal (askDeleteConfirmation returns a Promise that resolves
+    true or false), so the calling code reads as a straight line:
+        if (!await askDeleteConfirmation(...)) return;
+
+  ACCESSIBILITY
+    Cards are keyboard-activatable (tabindex, Enter/Space). In Select mode they
+    switch from role="button" to role="checkbox" with aria-checked, because that
+    is what they now are. Focus rings are never removed. prefers-reduced-motion
+    is respected. Status messages sit in an aria-live region.
+
+  PRINTING
+    A print stylesheet hides every control, checkbox, chip and modal, and forces
+    background colours to print (Chrome drops them by default, which would turn
+    every status pill and the black summary bar into identical white boxes).
+
+  NUMBERS
+    font-variant-numeric: tabular-nums everywhere money appears, so digits line
+    up in columns and figures do not jitter as they change.
+
+
+================================================================================
+10. HOW TO CHANGE THINGS SAFELY
+================================================================================
+
+  ADDING A COLUMN
+    1. Append "alter table X add column if not exists ..." to supabase_schema.sql
+    2. Run the whole file in the Supabase SQL Editor. It is idempotent.
+    3. Only then use the column in index.html.
+    Skipping step 2 gives PGRST204 and the app will tell the user to run the SQL.
+
+  BEFORE EVERY COMMIT
+    - Syntax check the inline script: extract it and run new Function(js).
+    - Grep that every getElementById id actually exists in the markup.
+    - Grep that every onclick handler name is a defined function.
+    - Count opening and closing div/section tags; they must match. A large block
+      replacement once silently ate a closing tag and two modals, and this check
+      is what catches that.
+
+  THINGS THAT WILL BITE
+    - Editing an old month without calling recalcForward leaves every later
+      month's prev_pending stale.
+    - Writing regex-heavy JavaScript through a shell heredoc mangles backslashes.
+      Edit the file directly.
+    - 'YYYY-MM' must stay a string. Turning it into a date reintroduces timezone
+      bugs where a month becomes the previous one for anybody east of UTC.

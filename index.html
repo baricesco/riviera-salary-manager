@@ -290,6 +290,60 @@
   .pc-pending-val.neg { color: var(--c-danger); }
   .pc-pending-val.pos { color: var(--c-success); }
 
+  /* ---- bulk select ---------------------------------------------------- */
+  /* One checkbox look shared by cards, table rows and the group header, so
+     "this is selected" reads the same everywhere. */
+  .chk {
+    width: 22px; height: 22px; flex: none; border-radius: var(--r-sm);
+    border: 2px solid var(--c-border-strong); background: var(--c-surface);
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: background var(--t-fast), border-color var(--t-fast);
+  }
+  .chk .tick { opacity: 0; color: #fff; }
+  .is-selected .chk, .grp-check[aria-checked="true"] .chk {
+    background: var(--c-primary); border-color: var(--c-primary);
+  }
+  .is-selected .chk .tick, .grp-check[aria-checked="true"] .chk .tick { opacity: 1; }
+
+  .person-card.is-selected { border-color: var(--c-primary); box-shadow: 0 0 0 2px var(--c-primary); }
+  tr.person-row.is-selected { background: var(--c-primary-soft); }
+  td.name-cell .chk { vertical-align: middle; margin-right: var(--sp-3); }
+
+  /* On the dark group band the empty box needs a light outline instead. */
+  .grp-check {
+    display: inline-flex; align-items: center; padding: 6px; margin-left: -6px;
+    background: none; border: none; min-height: 34px; cursor: pointer;
+  }
+  .grp-check .chk { background: transparent; border-color: rgba(255,255,255,.55); }
+  .grp-check:hover .chk { border-color: #fff; }
+
+  /* Pinned to the bottom edge: the action stays under the thumb no matter
+     how far down a long list you have scrolled. */
+  .sel-bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+    display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap;
+    padding: var(--sp-3) var(--sp-4);
+    padding-bottom: calc(var(--sp-3) + env(safe-area-inset-bottom));
+    background: #0F172A; color: #fff;
+    box-shadow: 0 -4px 16px rgba(15,23,42,.25);
+  }
+  .sel-count { font-size: 15px; font-weight: 700; margin-right: auto; }
+  .sel-bar button.ghost { background: transparent; color: #fff; border-color: rgba(255,255,255,.35); }
+  .sel-bar button.ghost:hover { background: rgba(255,255,255,.12); }
+  /* Keeps the last card clear of the bar. */
+  body.selecting { padding-bottom: 96px; }
+
+  /* ---- deleted (trash) ------------------------------------------------ */
+  .trash-row {
+    display: flex; align-items: center; gap: var(--sp-3);
+    padding: var(--sp-3) 0; border-bottom: 1px solid var(--c-border);
+  }
+  .trash-row:last-child { border-bottom: none; }
+  .tr-id { min-width: 0; flex: 1; }
+  .tr-name { font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+  .tr-meta { font-size: 12px; color: var(--c-fg-muted); overflow-wrap: anywhere; }
+  .trash-row button { flex: none; }
+
   /* ---- tables --------------------------------------------------------- */
   .table-wrap { overflow-x: auto; border: 1px solid var(--c-border); border-radius: var(--r-lg); -webkit-overflow-scrolling: touch; }
   table { border-collapse: separate; border-spacing: 0; width: 100%; background: var(--c-surface); }
@@ -485,6 +539,8 @@
     }
     .stack-table td:first-child { font-size: 17px; font-weight: 700; border-bottom: 1px solid var(--c-border); padding-bottom: var(--sp-2); margin-bottom: var(--sp-1); }
     .stack-table td:first-child::before { content: none; }
+    /* Checkbox then name, both left — not shoved to opposite edges. */
+    .stack-table td.name-cell { justify-content: flex-start; text-align: left; }
     .stack-table tfoot { display: block; }
     .stack-table tr.grp-total-row { background: var(--c-muted); border-color: var(--c-border-strong); }
     .stack-table tr.grp-total-row td { border-top: none; }
@@ -501,6 +557,11 @@
     .company-snapshot, .stats-grid { grid-template-columns: 1fr; }
     .summary-bar { grid-template-columns: 1fr; }
     .toolbar button { flex: 1 1 100%; }
+    .sel-count { flex: 1 1 100%; margin: 0 0 var(--sp-1); }
+    .sel-bar button { flex: 1; }
+    body.selecting { padding-bottom: 150px; }
+    .trash-row { flex-wrap: wrap; }
+    .trash-row button { width: 100%; }
   }
   /* flatpickr — themed to match the app's plain black/white look instead
      of its default blue, and kept looking like a normal editable field
@@ -530,7 +591,7 @@
     .app-head { position: static; margin: 0 0 8px; padding: 0; border: none; }
     .app-mark, .app-sub { display: none; }
     .grp-section, .panel, .table-wrap { box-shadow: none; }
-    .toolbar, .backlink, .icon-btn, #addPaymentBtn, .payment-add-row, #addMonthsPanel, .grp-chips,
+    .toolbar, .backlink, .icon-btn, #addPaymentBtn, .payment-add-row, #addMonthsPanel, .grp-chips, .sel-bar, .chk,
     .modal-overlay, .flatpickr-calendar, button { display: none !important; }
     input { border: none; background: transparent; padding: 2px; }
     .print-only { display: block; margin: -6px 0 16px; font-size: 12px; color: #666; }
@@ -558,6 +619,8 @@
     </div>
     <div class="toolbar">
       <button type="button" class="primary" onclick="openAddEmployeeModal()">+ Add Employee</button>
+      <button type="button" id="selectToggle" onclick="toggleSelectMode()">Select</button>
+      <button type="button" onclick="showTrashView()">Deleted <span id="trashCount" class="badge group" style="display:none;">0</span></button>
       <button type="button" onclick="preparePrint()">Print</button>
       <div class="rd-switch" id="viewSwitch" role="group" aria-label="View mode">
         <button type="button" class="rd-switch-btn active" id="switchCards" onclick="setViewMode('cards')" aria-pressed="true">Cards</button>
@@ -605,6 +668,29 @@
   </div>
 
   <div id="peopleContainer"><div class="empty-note">Loading...</div></div>
+
+</div>
+
+<!-- Nothing is ever erased, so everything removed can be put back. -->
+<div class="view" id="view-trash">
+
+  <span class="backlink" onclick="showListView()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'){showListView();}">&larr; Back</span>
+
+  <section class="step">
+    <div class="step-head">
+      <span class="step-no">1</span><h2>Removed People</h2>
+      <span class="step-hint">Restoring brings back every month they had</span>
+    </div>
+    <div class="panel"><div id="trashPeople"><div class="empty-note">Loading...</div></div></div>
+  </section>
+
+  <section class="step">
+    <div class="step-head">
+      <span class="step-no">2</span><h2>Removed Payments</h2>
+      <span class="step-hint">Single payments deleted from a person's Given list</span>
+    </div>
+    <div class="panel"><div id="trashPayments"><div class="empty-note">Loading...</div></div></div>
+  </section>
 
 </div>
 
@@ -724,6 +810,13 @@
 </div>
 
 
+</div>
+
+<div class="sel-bar" id="selBar" style="display:none;" role="region" aria-label="Selection">
+  <span class="sel-count" id="selCount">0 selected</span>
+  <button type="button" class="ghost" onclick="toggleSelectAllShown()" id="selAllBtn">Select all shown</button>
+  <button type="button" class="ghost" onclick="exitSelectMode()">Cancel</button>
+  <button type="button" class="danger" id="selDeleteBtn" onclick="bulkDeleteSelected()">Remove</button>
 </div>
 
 <div class="modal-overlay" id="confirmModal">
@@ -1167,6 +1260,7 @@ async function loadList() {
     peopleCache = await fetchAllEmployeesFullLedger();
     renderPeople();
     renderCompanySnapshot();
+    refreshTrashCount();
   } catch (e) {
     console.error('Load failed', e);
     document.getElementById('peopleContainer').innerHTML =
@@ -1297,6 +1391,100 @@ function renderStats(list) {
   document.getElementById('statPending').textContent = money(pending);
 }
 
+// ---------------------------------------------------------------------
+// Bulk select. Off by default so a normal tap still opens the person;
+// while it is on, tapping anywhere on a card or row toggles selection.
+// ---------------------------------------------------------------------
+let selectMode = false;
+const selectedIds = new Set();
+
+const TICK_SVG = '<svg class="tick" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+const checkboxHtml = () => `<span class="chk" aria-hidden="true">${TICK_SVG}</span>`;
+
+function toggleSelectMode() {
+  selectMode ? exitSelectMode() : enterSelectMode();
+}
+function enterSelectMode() {
+  selectMode = true;
+  selectedIds.clear();
+  document.getElementById('selectToggle').textContent = 'Done';
+  document.body.classList.add('selecting');
+  renderPeople();
+}
+function exitSelectMode() {
+  selectMode = false;
+  selectedIds.clear();
+  document.getElementById('selectToggle').textContent = 'Select';
+  document.body.classList.remove('selecting');
+  renderPeople();
+}
+function toggleSelect(id) {
+  selectedIds.has(id) ? selectedIds.delete(id) : selectedIds.add(id);
+  renderPeople();
+}
+// Whole group at once: if every member is already picked this clears them,
+// which is what a second tap on the same box should do.
+function toggleSelectGroup(name) {
+  const members = groupPeople(peopleCache).filter(g => g.name === name).flatMap(g => g.members);
+  const allOn = members.length > 0 && members.every(p => selectedIds.has(p.employeeId));
+  members.forEach(p => allOn ? selectedIds.delete(p.employeeId) : selectedIds.add(p.employeeId));
+  renderPeople();
+}
+function toggleSelectAllShown() {
+  const shown = visiblePeople();
+  const allOn = shown.length > 0 && shown.every(p => selectedIds.has(p.employeeId));
+  shown.forEach(p => allOn ? selectedIds.delete(p.employeeId) : selectedIds.add(p.employeeId));
+  renderPeople();
+}
+
+function renderSelBar() {
+  const bar = document.getElementById('selBar');
+  bar.style.display = selectMode ? '' : 'none';
+  if (!selectMode) return;
+  const n = selectedIds.size;
+  document.getElementById('selCount').textContent = n === 1 ? '1 selected' : `${n} selected`;
+  const shown = visiblePeople();
+  const allOn = shown.length > 0 && shown.every(p => selectedIds.has(p.employeeId));
+  document.getElementById('selAllBtn').textContent = allOn ? 'Clear shown' : 'Select all shown';
+  const del = document.getElementById('selDeleteBtn');
+  del.textContent = n ? `Remove ${n}` : 'Remove';
+  del.disabled = n === 0;
+}
+
+// PostgREST puts the id list in the URL, so it goes over in batches rather
+// than one enormous request.
+function chunked(arr, size) {
+  const out = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
+async function bulkDeleteSelected() {
+  const ids = [...selectedIds];
+  if (!ids.length) return;
+  const who = ids.length === 1 ? '1 person' : `${ids.length} people`;
+  const confirmed = await askDeleteConfirmation(
+    `This will remove ${who} and every month they had. You can put them back from Deleted. Type DELETE to confirm.`);
+  if (!confirmed) return;
+  setStatus('Removing...');
+  try {
+    // One timestamp for the whole batch — that shared stamp is what lets
+    // Restore bring a person back with exactly the months that went with them.
+    const now = new Date().toISOString();
+    for (const batch of chunked(ids, 40)) {
+      const list = batch.join(',');
+      await sbPatch(`${EMP_URL}?id=in.(${list})`, { deleted: true, deleted_at: now });
+      await sbPatch(`${SM_URL}?employee_id=in.(${list})`, { deleted: true, deleted_at: now });
+    }
+    setStatus(`Removed ${ids.length}`);
+    exitSelectMode();
+    await loadList();
+  } catch (e) {
+    console.error(e);
+    setStatus('Failed to remove', true);
+  }
+}
+
 function renderPeople() {
   const groups = groupPeople(peopleCache);
 
@@ -1305,7 +1493,12 @@ function renderPeople() {
   if (activeGroup !== 'ALL' && !groups.some(g => g.name === activeGroup)) activeGroup = 'ALL';
   renderGroupChips(groups);
 
+  // Anyone removed since the last render can't stay selected.
+  const live = new Set(peopleCache.map(p => p.employeeId));
+  [...selectedIds].forEach(id => { if (!live.has(id)) selectedIds.delete(id); });
+
   const shown = visiblePeople();
+  renderSelBar();
   renderPeriodPicker();
   renderStats(shown);
   const scope = activeGroup === 'ALL' ? 'All groups' : activeGroup;
@@ -1339,8 +1532,12 @@ function groupTotalsHtml(g) {
 // Cards and table share this header, so a group looks identical either
 // way and the boundary between groups reads the same in both views.
 function groupHeaderHtml(g) {
+  const allOn = g.members.length > 0 && g.members.every(p => selectedIds.has(p.employeeId));
   return `
     <header class="grp-head">
+      ${selectMode ? `<button type="button" class="grp-check" role="checkbox" aria-checked="${allOn}"
+             aria-label="Select all in ${escapeAttr(g.name)}"
+             onclick="toggleSelectGroup('${escapeAttr(g.name)}')">${checkboxHtml()}</button>` : ''}
       <div class="grp-id">
         <div class="grp-title">${escapeHtml(g.name)} <span class="grp-count">${g.members.length}</span></div>
         <div class="grp-manager">${g.manager
@@ -1373,12 +1570,17 @@ function initials(name) {
 }
 
 function personCardHtml(p) {
+  const picked = selectedIds.has(p.employeeId);
+  const act = selectMode ? `toggleSelect('${p.employeeId}')` : `openDetail('${p.employeeId}')`;
+  const role = selectMode
+    ? `role="checkbox" aria-checked="${picked}"`
+    : 'role="button"';
   return `
-    <div class="person-card${p.isManager ? ' is-manager' : ''}" role="button" tabindex="0"
-         onclick="openDetail('${p.employeeId}')"
-         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openDetail('${p.employeeId}');}">
+    <div class="person-card${p.isManager ? ' is-manager' : ''}${picked ? ' is-selected' : ''}" ${role} tabindex="0"
+         onclick="${act}"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();${act};}">
       <div class="pc-top">
-        <div class="pc-avatar" aria-hidden="true">${escapeHtml(initials(p.name))}</div>
+        ${selectMode ? checkboxHtml() : `<div class="pc-avatar" aria-hidden="true">${escapeHtml(initials(p.name))}</div>`}
         <div class="pc-id">
           <div class="pc-name">${escapeHtml(p.name)}</div>
           <div class="pc-role">${escapeHtml(p.role || '—')}</div>
@@ -1402,14 +1604,20 @@ function personCardHtml(p) {
 // labelled totals are literally the same component in both views.
 function renderGroupedTable(groups) {
   return groups.map(g => {
-    const rows = g.members.map(p => `
-      <tr class="person-row" onclick="openDetail('${p.employeeId}')">
-        <td data-label="Name">${escapeHtml(p.name)}${p.isManager ? ' <span class="badge manager">Head</span>' : ''}</td>
+    const rows = g.members.map(p => {
+      const picked = selectedIds.has(p.employeeId);
+      const act = selectMode ? `toggleSelect('${p.employeeId}')` : `openDetail('${p.employeeId}')`;
+      // The box rides inside the Name cell rather than in a column of its
+      // own, so the stacked phone layout needs no special case.
+      return `
+      <tr class="person-row${picked ? ' is-selected' : ''}" onclick="${act}">
+        <td class="name-cell" data-label="Name">${selectMode ? checkboxHtml() : ''}<span>${escapeHtml(p.name)}${p.isManager ? ' <span class="badge manager">Head</span>' : ''}</span></td>
         <td data-label="Role">${escapeHtml(p.role || '—')}</td>
         <td class="num" data-label="Total Salary">${money(p.total)}</td>
         <td class="num" data-label="Given">${money(p.given)}</td>
         <td class="num ${p.pending > 0 ? 'neg' : 'pos'}" data-label="Pending">${money(p.pending)}</td>
-      </tr>`).join('');
+      </tr>`;
+    }).join('');
     const table = `
       <div class="table-wrap">
         <table class="stack-table">
@@ -1688,6 +1896,7 @@ function renderPersonalDetail() {
 function showListView() {
   document.getElementById('view-list').classList.add('active');
   document.getElementById('view-detail').classList.remove('active');
+  document.getElementById('view-trash').classList.remove('active');
   // Cards/Table only means something on the list.
   document.getElementById('viewSwitch').style.display = '';
   window.scrollTo({ top: 0, behavior: 'auto' });
@@ -1698,10 +1907,138 @@ function showListView() {
   loadList();
 }
 
+// ---------------------------------------------------------------------
+// Deleted (trash). Every removal in this app is a soft delete — the row
+// stays put with deleted = true — so undoing one is just flipping it back.
+// ---------------------------------------------------------------------
+function showTrashView() {
+  if (selectMode) exitSelectMode();
+  document.getElementById('view-list').classList.remove('active');
+  document.getElementById('view-detail').classList.remove('active');
+  document.getElementById('view-trash').classList.add('active');
+  document.getElementById('viewSwitch').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'auto' });
+  loadTrash();
+}
+
+async function fetchDeletedEmployees() {
+  return sbGet(`${EMP_URL}?select=*&deleted=eq.true`);
+}
+// The month/employee names come along on the same request so the list can
+// say which person's payment this was, not just an amount and a date.
+async function fetchDeletedPayments() {
+  return sbGet(`${PAY_URL}?select=*,sm:riviera_salary_months(month,employee:riviera_employees(name))&deleted=eq.true`);
+}
+
+function trashWhen(row) {
+  const t = row.deleted_at || row.created_at;
+  if (!t) return '';
+  const d = new Date(t);
+  return isNaN(d) ? '' : d.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+async function loadTrash() {
+  const peopleEl = document.getElementById('trashPeople');
+  const paysEl = document.getElementById('trashPayments');
+  peopleEl.innerHTML = '<div class="empty-note">Loading...</div>';
+  paysEl.innerHTML = '<div class="empty-note">Loading...</div>';
+  try {
+    const [emps, pays] = await Promise.all([fetchDeletedEmployees(), fetchDeletedPayments()]);
+    // Newest removal first — the thing you just deleted by mistake is on top.
+    emps.sort((a, b) => String(b.deleted_at || '').localeCompare(String(a.deleted_at || '')));
+    pays.sort((a, b) => String(b.deleted_at || '').localeCompare(String(a.deleted_at || '')));
+
+    peopleEl.innerHTML = emps.length
+      ? emps.map(e => `
+        <div class="trash-row">
+          <div class="tr-id">
+            <div class="tr-name">${escapeHtml(e.name)}</div>
+            <div class="tr-meta">${escapeHtml(e.role || 'No role')} &middot; ${escapeHtml(e.dept || UNASSIGNED)}${trashWhen(e) ? ' &middot; removed ' + escapeHtml(trashWhen(e)) : ''}</div>
+          </div>
+          <button type="button" class="primary" onclick="restoreEmployee('${e.id}')">Restore</button>
+        </div>`).join('')
+      : '<div class="empty-note"><b>Nothing here</b>No removed people.</div>';
+
+    paysEl.innerHTML = pays.length
+      ? pays.map(p => {
+          const sm = p.sm || {};
+          const who = (sm.employee && sm.employee.name) || 'Unknown';
+          const when = sm.month ? formatMonthLabel(sm.month) : '';
+          return `
+        <div class="trash-row">
+          <div class="tr-id">
+            <div class="tr-name">Rs. ${money(p.amount)} &middot; ${escapeHtml(who)}</div>
+            <div class="tr-meta">${escapeHtml(when)}${p.note ? ' &middot; ' + escapeHtml(p.note) : ''}${trashWhen(p) ? ' &middot; removed ' + escapeHtml(trashWhen(p)) : ''}</div>
+          </div>
+          <button type="button" class="primary" onclick="restorePayment('${p.id}')">Restore</button>
+        </div>`;
+        }).join('')
+      : '<div class="empty-note"><b>Nothing here</b>No removed payments.</div>';
+  } catch (e) {
+    console.error(e);
+    const msg = '<div class="empty-note"><b>Couldn’t load</b>Run supabase_schema.sql in Supabase, then reload.</div>';
+    peopleEl.innerHTML = msg;
+    paysEl.innerHTML = msg;
+  }
+}
+
+async function restoreEmployee(id) {
+  setStatus('Restoring...');
+  try {
+    const emp = (await sbGet(`${EMP_URL}?select=*&id=eq.${id}`))[0];
+    if (!emp) throw new Error('not found');
+    await sbPatch(`${EMP_URL}?id=eq.${id}`, { deleted: false, deleted_at: null });
+    // Only the months that went away with this person come back. Matching on
+    // the delete timestamp keeps any months deleted on some other occasion
+    // exactly where the user left them.
+    const filter = emp.deleted_at
+      ? `employee_id=eq.${id}&deleted=eq.true&deleted_at=eq.${encodeURIComponent(emp.deleted_at)}`
+      : `employee_id=eq.${id}&deleted=eq.true`;
+    await sbPatch(`${SM_URL}?${filter}`, { deleted: false, deleted_at: null });
+    setStatus('Restored');
+    await loadTrash();
+    await refreshTrashCount();
+  } catch (e) {
+    console.error(e);
+    setStatus('Failed to restore', true);
+  }
+}
+
+async function restorePayment(id) {
+  setStatus('Restoring...');
+  try {
+    await sbPatch(`${PAY_URL}?id=eq.${id}`, { deleted: false, deleted_at: null });
+    setStatus('Restored');
+    await loadTrash();
+    await refreshTrashCount();
+  } catch (e) {
+    console.error(e);
+    setStatus('Failed to restore', true);
+  }
+}
+
+// A count on the button, so it is obvious there is something to undo
+// without having to open the page and look.
+async function refreshTrashCount() {
+  const el = document.getElementById('trashCount');
+  try {
+    const [emps, pays] = await Promise.all([
+      sbGet(`${EMP_URL}?select=id&deleted=eq.true`),
+      sbGet(`${PAY_URL}?select=id&deleted=eq.true`)
+    ]);
+    const n = emps.length + pays.length;
+    el.textContent = n;
+    el.style.display = n ? '' : 'none';
+  } catch (e) {
+    el.style.display = 'none';
+  }
+}
+
 async function openDetail(employeeId) {
   detailEmployeeId = employeeId;
   document.getElementById('view-list').classList.remove('active');
   document.getElementById('view-detail').classList.add('active');
+  document.getElementById('view-trash').classList.remove('active');
   document.getElementById('viewSwitch').style.display = 'none';
   window.scrollTo({ top: 0, behavior: 'auto' });
   setStatus('Loading...');
@@ -1928,7 +2265,7 @@ async function removePayment(id) {
   if (!confirmed) return;
   setStatus('Saving...');
   try {
-    await sbPatch(`${PAY_URL}?id=eq.${id}`, { deleted: true });
+    await sbPatch(`${PAY_URL}?id=eq.${id}`, { deleted: true, deleted_at: new Date().toISOString() });
     await loadPayments();
     await recalcForward(detailEmployeeId, detailMonth);
     await refreshLedger();
