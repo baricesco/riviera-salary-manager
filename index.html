@@ -3,175 +3,432 @@
 <head>
 <meta charset="UTF-8">
 <title>Riviera Salary Manager</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&family=Fira+Code:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
 <style>
+  /* ---- design tokens ------------------------------------------------
+     Blue-data + amber-accent palette, dense dashboard spacing scale.
+     Everything below references these, so re-theming is a one-spot edit. */
+  :root {
+    --c-primary:      #1E40AF;
+    --c-primary-soft: #EFF4FF;
+    --c-on-primary:   #FFFFFF;
+    --c-accent:       #B45309;
+    --c-accent-soft:  #FEF3C7;
+    --c-bg:           #F1F5F9;
+    --c-surface:      #FFFFFF;
+    --c-fg:           #0F172A;
+    --c-fg-muted:     #64748B;
+    --c-muted:        #F8FAFC;
+    --c-border:       #E2E8F0;
+    --c-border-strong:#CBD5E1;
+    --c-danger:       #C0392B;
+    --c-danger-soft:  #FDECEA;
+    --c-success:      #15803D;
+    --c-success-soft: #E7F6EC;
+    --c-ring:         #1E40AF;
+
+    --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+    --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
+
+    --r-sm: 6px; --r-md: 8px; --r-lg: 12px; --r-full: 999px;
+    --shadow-sm: 0 1px 2px rgba(15,23,42,.06);
+    --shadow-md: 0 2px 8px rgba(15,23,42,.08);
+    --shadow-lg: 0 8px 24px rgba(15,23,42,.12);
+    --t-fast: 140ms ease-out;
+  }
+
   * { box-sizing: border-box; }
   body {
-    font-family: Arial, sans-serif;
+    font-family: 'Fira Sans', -apple-system, Segoe UI, Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--c-fg);
     margin: 0;
-    padding: 20px;
-    background: #f4f6f8;
-    min-height: 100vh;
+    padding: var(--sp-5);
+    background: var(--c-bg);
+    min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
   }
   .container {
     max-width: 1400px;
     margin: 0 auto;
-    background: #fff;
-    padding: 24px;
-    border-radius: 12px;
-    border: 2px solid #000;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    background: var(--c-surface);
+    padding: var(--sp-6);
+    border-radius: var(--r-lg);
+    border: 1px solid var(--c-border);
+    box-shadow: var(--shadow-md);
   }
-  h1 { margin-bottom: 10px; }
-  h2 { font-size: 17px; margin: 0 0 12px; }
+  h1 { font-size: 26px; font-weight: 700; letter-spacing: -.02em; margin: 0 0 var(--sp-1); }
+  h2 { font-size: 16px; font-weight: 600; margin: 0 0 var(--sp-3); }
+  /* Money and any other figure that sits in a column: monospaced digits so
+     columns line up and values don't jitter as they update. */
+  .num, .stat-value, .cs-value, .pc-pending-val, .summary-box .val,
+  .grp-val, td.num, .payment-row .amt { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+
   input, select {
     width: 100%;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    padding: 5px 7px;
+    border: 1px solid var(--c-border-strong);
+    border-radius: var(--r-sm);
+    padding: 7px 9px;
     font-size: 14px;
     font-family: inherit;
+    color: var(--c-fg);
+    background: var(--c-surface);
+    transition: border-color var(--t-fast), box-shadow var(--t-fast);
   }
-  input[readonly] { background: #f7f7f7; color: #555; }
+  input:hover, select:hover { border-color: var(--c-fg-muted); }
+  input[type="number"] { font-family: 'Fira Code', ui-monospace, monospace; }
+  input[readonly] { background: var(--c-muted); color: var(--c-fg-muted); }
   input[type="number"] { -moz-appearance: textfield; }
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-  label { font-size: 11px; font-weight: bold; color: #555; text-transform: uppercase; letter-spacing: .02em; display: block; margin-bottom: 3px; }
+  label { font-size: 11px; font-weight: 600; color: var(--c-fg-muted); text-transform: uppercase; letter-spacing: .04em; display: block; margin-bottom: var(--sp-1); }
+
+  /* One visible focus treatment for everything keyboard-reachable. */
+  :focus-visible { outline: 2px solid var(--c-ring); outline-offset: 2px; border-radius: var(--r-sm); }
+  input:focus-visible, select:focus-visible { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px var(--c-primary-soft); }
+
   button {
-    padding: 7px 14px;
+    min-height: 38px;
+    padding: 8px 14px;
     cursor: pointer;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    background: #fff;
+    border-radius: var(--r-md);
+    border: 1px solid var(--c-border-strong);
+    background: var(--c-surface);
+    color: var(--c-fg);
     font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    transition: background var(--t-fast), border-color var(--t-fast), box-shadow var(--t-fast);
   }
-  button.primary { background: #000; color: #fff; border-color: #000; }
-  button.danger { background: #c0392b; color: #fff; border-color: #c0392b; }
-  button.link-btn { border: none; background: none; padding: 2px 4px; font-size: 12px; font-weight: bold; text-decoration: underline; color: #1a54c4; }
-  button:disabled { opacity: .5; cursor: not-allowed; }
+  button:hover { background: var(--c-muted); border-color: var(--c-fg-muted); }
+  button:active { background: var(--c-border); }
+  button.primary { background: var(--c-primary); color: var(--c-on-primary); border-color: var(--c-primary); box-shadow: var(--shadow-sm); }
+  button.primary:hover { background: #1B399C; border-color: #1B399C; }
+  button.danger { background: var(--c-danger); color: #fff; border-color: var(--c-danger); }
+  button.danger:hover { background: #A8321F; border-color: #A8321F; }
+  button.link-btn { min-height: 0; border: none; background: none; padding: 2px 4px; font-size: 12px; font-weight: 600; text-decoration: underline; color: var(--c-primary); }
+  button.link-btn:hover { background: none; color: #1B399C; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button:disabled:hover { background: var(--c-surface); border-color: var(--c-border-strong); }
 
-  .company-snapshot { display: flex; gap: 12px; margin: 4px 0 16px; flex-wrap: wrap; }
-  .cs-item { background: #000; color: #fff; border-radius: 10px; padding: 10px 18px; display: flex; flex-direction: column; gap: 3px; }
-  .cs-item .cs-label { font-size: 11px; text-transform: uppercase; opacity: .7; letter-spacing: .03em; }
-  .cs-item .cs-value { font-size: 20px; font-weight: bold; }
-  .cs-item.highlight { background: #c0392b; }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
 
-  .toolbar { margin: 12px 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  /* ---- page header ---------------------------------------------------
+     Sticks to the top so the title, the primary action and the sync
+     status stay reachable while a long list scrolls underneath. */
+  .app-head {
+    position: sticky; top: 0; z-index: 40;
+    background: var(--c-surface);
+    margin: calc(var(--sp-6) * -1) calc(var(--sp-6) * -1) var(--sp-4);
+    padding: var(--sp-4) var(--sp-6) var(--sp-3);
+    border-bottom: 1px solid var(--c-border);
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+  }
+  .app-head-row { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+  .app-title { display: flex; align-items: center; gap: var(--sp-3); min-width: 0; }
+  .app-mark {
+    width: 38px; height: 38px; flex: none; border-radius: 10px;
+    background: var(--c-primary); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 15px; letter-spacing: -.02em;
+  }
+  .app-sub { font-size: 12px; color: var(--c-fg-muted); margin-top: -2px; }
+
+  /* ---- headline numbers ---------------------------------------------- */
+  .company-snapshot { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--sp-3); margin: 0 0 var(--sp-4); }
+  .cs-item {
+    background: linear-gradient(135deg, #1E3A8A 0%, #1E40AF 100%);
+    color: #fff; border-radius: var(--r-lg); padding: var(--sp-3) var(--sp-4);
+    display: flex; flex-direction: column; gap: 2px; box-shadow: var(--shadow-sm);
+  }
+  .cs-item .cs-label { font-size: 11px; text-transform: uppercase; opacity: .75; letter-spacing: .05em; font-weight: 500; }
+  .cs-item .cs-value { font-size: 24px; font-weight: 700; letter-spacing: -.02em; }
+  .cs-item.highlight { background: linear-gradient(135deg, #B91C1C 0%, #C0392B 100%); }
+
+  .toolbar { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; margin-left: auto; }
   .toolbar label { margin: 0; }
-  #statusMsg { font-size: 13px; color: #666; margin-left: auto; white-space: nowrap; }
+  #statusMsg { font-size: 13px; color: var(--c-fg-muted); white-space: nowrap; min-width: 0; }
 
-  .rd-switch { display: inline-flex; border: 1px solid #000; border-radius: 8px; overflow: hidden; }
-  .rd-switch-btn { border: none; border-radius: 0; background: #fff; padding: 6px 14px; }
-  .rd-switch-btn.active { background: #000; color: #fff; }
+  .rd-switch { display: inline-flex; border: 1px solid var(--c-border-strong); border-radius: var(--r-md); overflow: hidden; background: var(--c-muted); padding: 2px; gap: 2px; }
+  .rd-switch-btn { min-height: 32px; border: none; border-radius: var(--r-sm); background: transparent; padding: 5px 12px; font-size: 12px; font-weight: 600; letter-spacing: .03em; color: var(--c-fg-muted); }
+  .rd-switch-btn:hover { background: #fff; color: var(--c-fg); }
+  .rd-switch-btn.active { background: var(--c-surface); color: var(--c-primary); box-shadow: var(--shadow-sm); }
 
   .view { display: none; }
   .view.active { display: block; }
 
-  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin: 16px 0 22px; }
-  .stat-card { background: #fff; border: 1px solid #999; border-radius: 10px; padding: 14px 16px; }
-  .stat-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-  .stat-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
-  .stat-label { font-size: 12px; font-weight: bold; color: #555; text-transform: uppercase; letter-spacing: .03em; }
-  .stat-value { font-size: 24px; font-weight: bold; }
-
-  .empty-note { color: #666; padding: 14px 2px; }
-
-  /* Person cards (list view) — same "total / given / pending" ledger-card
-     treatment as a hotel guest card (Total / Paid / Due). */
-  .people-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
-  .person-card {
-    background: #fff; border: 1px solid #999; border-radius: 10px; padding: 14px 16px;
-    cursor: pointer; transition: box-shadow .15s, border-color .15s;
+  /* ---- stat tiles ----------------------------------------------------- */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--sp-3); margin: 0 0 var(--sp-5); }
+  .stat-card {
+    background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg);
+    padding: var(--sp-3) var(--sp-4); box-shadow: var(--shadow-sm);
   }
-  .person-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.12); border-color: #000; }
-  .pc-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px; }
-  .pc-name { font-size: 16px; font-weight: bold; }
-  .pc-role { font-size: 12px; color: #666; }
-  .pc-rows { font-size: 13px; display: flex; flex-direction: column; gap: 4px; }
-  .pc-row { display: flex; justify-content: space-between; }
-  .pc-row .lbl { color: #666; }
-  .status-pill { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; white-space: nowrap; }
-  .status-pill.paid { background: #e6f4ea; color: #1e8e3e; }
-  .status-pill.pending { background: #fce8ef; color: #c0392b; }
+  .stat-head { display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-2); }
+  .stat-icon {
+    width: 30px; height: 30px; border-radius: var(--r-md); display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; background: var(--c-primary-soft); color: var(--c-primary);
+  }
+  .stat-icon svg { width: 16px; height: 16px; }
+  .stat-label { font-size: 11px; font-weight: 600; color: var(--c-fg-muted); text-transform: uppercase; letter-spacing: .05em; }
+  .stat-value { font-size: 26px; font-weight: 700; letter-spacing: -.02em; }
+  .stat-card.is-danger .stat-icon { background: var(--c-danger-soft); color: var(--c-danger); }
+  .stat-card.is-success .stat-icon { background: var(--c-success-soft); color: var(--c-success); }
 
-  .pc-divider { border-top: 1px dashed #ccc; margin: 12px 0 10px; }
-  .pc-pending-box { background: #f4f6f8; border-radius: 8px; padding: 8px 10px; text-align: center; }
-  .pc-pending-box.pc-pending-full { background: #fce8ef; }
-  .pc-pending-box.pc-pending-full.pc-paid-out { background: #e6f4ea; }
-  .pc-pending-lbl { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #666; letter-spacing: .02em; margin-bottom: 3px; }
-  .pc-pending-val { font-size: 16px; font-weight: bold; }
-  .pc-pending-val.neg { color: #c0392b; }
-  .pc-pending-val.pos { color: #1e8e3e; }
+  .empty-note {
+    color: var(--c-fg-muted); padding: var(--sp-8) var(--sp-4); text-align: center;
+    border: 1px dashed var(--c-border-strong); border-radius: var(--r-lg); background: var(--c-muted);
+  }
+  .empty-note b { display: block; color: var(--c-fg); font-size: 15px; margin-bottom: var(--sp-1); }
 
-  /* People table */
-  table { border-collapse: separate; border-spacing: 0; width: 100%; border: 1px solid #999; border-radius: 10px; overflow: hidden; }
-  th, td { border: 1px solid #999; padding: 8px 10px; text-align: left; font-size: 13px; }
-  th { background: #000; color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: .02em; white-space: nowrap; }
-  td.num, th:nth-child(n+3) { text-align: right; }
-  td.num { font-variant-numeric: tabular-nums; }
-  td.num.neg { color: #c0392b; }
-  td.num.pos { color: #1e8e3e; }
-  tbody tr:nth-child(even) { background: #fafafa; }
+  /* ---- group (department) chips + sections ---------------------------- */
+  .grp-chips {
+    display: flex; gap: var(--sp-2); margin: 0 0 var(--sp-4); overflow-x: auto;
+    padding-bottom: var(--sp-1); scrollbar-width: thin; -webkit-overflow-scrolling: touch;
+  }
+  .grp-chip {
+    flex: none; min-height: 44px; display: flex; flex-direction: column; justify-content: center;
+    gap: 1px; padding: 6px var(--sp-3); border: 1px solid var(--c-border-strong);
+    border-radius: var(--r-full); background: var(--c-surface); cursor: pointer; white-space: nowrap;
+    transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast);
+  }
+  .grp-chip:hover { border-color: var(--c-primary); background: var(--c-primary-soft); }
+  .grp-chip .gc-name { font-size: 13px; font-weight: 600; }
+  .grp-chip .gc-meta { font-size: 11px; color: var(--c-fg-muted); font-variant-numeric: tabular-nums; }
+  .grp-chip.active { background: var(--c-primary); border-color: var(--c-primary); color: #fff; }
+  .grp-chip.active .gc-meta { color: rgba(255,255,255,.8); }
+
+  .grp-section { margin-bottom: var(--sp-5); border: 1px solid var(--c-border); border-radius: var(--r-lg); overflow: hidden; }
+  .grp-head {
+    display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap;
+    padding: var(--sp-3) var(--sp-4); background: var(--c-muted); border-bottom: 1px solid var(--c-border);
+  }
+  .grp-title { font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
+  .grp-manager { font-size: 12px; color: var(--c-fg-muted); }
+  .grp-manager b { color: var(--c-fg); font-weight: 600; }
+  .grp-totals { display: flex; gap: var(--sp-4); margin-left: auto; flex-wrap: wrap; }
+  .grp-tot { display: flex; flex-direction: column; }
+  .grp-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--c-fg-muted); font-weight: 600; }
+  .grp-val { font-size: 15px; font-weight: 700; }
+  .grp-val.neg { color: var(--c-danger); }
+  .grp-val.pos { color: var(--c-success); }
+  .grp-body { padding: var(--sp-4); }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: var(--r-full);
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap;
+  }
+  .badge.manager { background: var(--c-accent-soft); color: var(--c-accent); }
+  .badge.group { background: var(--c-primary-soft); color: var(--c-primary); }
+
+  /* ---- person cards --------------------------------------------------- */
+  .people-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: var(--sp-3); }
+  .person-card {
+    background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg);
+    padding: var(--sp-3) var(--sp-4); cursor: pointer; box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
+  }
+  .person-card:hover { box-shadow: var(--shadow-lg); border-color: var(--c-primary); }
+  .person-card:active { transform: scale(.99); }
+  .person-card.is-manager { border-color: var(--c-accent); box-shadow: 0 0 0 1px var(--c-accent-soft), var(--shadow-sm); }
+  .pc-top { display: flex; align-items: flex-start; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+  .pc-avatar {
+    width: 36px; height: 36px; flex: none; border-radius: 50%; background: var(--c-primary-soft);
+    color: var(--c-primary); font-weight: 700; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .person-card.is-manager .pc-avatar { background: var(--c-accent-soft); color: var(--c-accent); }
+  .pc-id { min-width: 0; flex: 1; }
+  .pc-name { font-size: 15px; font-weight: 600; letter-spacing: -.01em; overflow-wrap: anywhere; }
+  .pc-role { font-size: 12px; color: var(--c-fg-muted); overflow-wrap: anywhere; }
+  .pc-rows { font-size: 13px; display: flex; flex-direction: column; gap: var(--sp-1); }
+  .pc-row { display: flex; justify-content: space-between; gap: var(--sp-2); }
+  .pc-row .lbl { color: var(--c-fg-muted); }
+  .pc-row span:last-child { font-variant-numeric: tabular-nums; font-weight: 500; }
+  .status-pill { display: inline-block; padding: 3px 10px; border-radius: var(--r-full); font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .status-pill.paid { background: var(--c-success-soft); color: var(--c-success); }
+  .status-pill.pending { background: var(--c-danger-soft); color: var(--c-danger); }
+
+  .pc-divider { border-top: 1px solid var(--c-border); margin: var(--sp-3) 0 var(--sp-2); }
+  .pc-pending-box { background: var(--c-muted); border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
+  .pc-pending-box.pc-pending-full { background: var(--c-danger-soft); }
+  .pc-pending-box.pc-pending-full.pc-paid-out { background: var(--c-success-soft); }
+  .pc-pending-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--c-fg-muted); letter-spacing: .05em; }
+  .pc-pending-val { font-size: 17px; font-weight: 700; letter-spacing: -.02em; }
+  .pc-pending-val.neg { color: var(--c-danger); }
+  .pc-pending-val.pos { color: var(--c-success); }
+
+  /* ---- tables --------------------------------------------------------- */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--c-border); border-radius: var(--r-lg); -webkit-overflow-scrolling: touch; }
+  table { border-collapse: separate; border-spacing: 0; width: 100%; background: var(--c-surface); }
+  th, td { padding: 10px 12px; text-align: left; font-size: 13px; border-bottom: 1px solid var(--c-border); }
+  th {
+    position: sticky; top: 0; z-index: 2;
+    background: var(--c-muted); color: var(--c-fg-muted); font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .05em; white-space: nowrap;
+    border-bottom: 1px solid var(--c-border-strong);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  th.num { text-align: right; }
+  td.num.neg { color: var(--c-danger); font-weight: 600; }
+  td.num.pos { color: var(--c-success); font-weight: 600; }
+  tbody tr { transition: background var(--t-fast); }
   tr.person-row { cursor: pointer; }
-  tr.person-row:hover { background: #f4f6f8 !important; }
+  tr.person-row:hover { background: var(--c-primary-soft); }
+  tr.grp-row td { background: var(--c-muted); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--c-fg-muted); }
+  tr.grp-total-row td { background: #fff; font-weight: 700; border-top: 1px solid var(--c-border-strong); }
 
-  /* Detail view */
-  .backlink { display: inline-block; cursor: pointer; color: #000; font-weight: bold; margin-bottom: 12px; }
+  /* ---- detail view ---------------------------------------------------- */
+  .backlink {
+    display: inline-flex; align-items: center; gap: 6px; min-height: 40px; cursor: pointer;
+    color: var(--c-primary); font-weight: 600; font-size: 14px; margin-bottom: var(--sp-2);
+  }
   .backlink:hover { text-decoration: underline; }
   .section-title {
-    font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em;
-    color: #666; margin: 24px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #000;
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--c-fg-muted); margin: var(--sp-6) 0 var(--sp-3); padding-bottom: var(--sp-2);
+    border-bottom: 1px solid var(--c-border);
   }
-  .section-title:first-of-type { margin-top: 4px; }
-  .detail-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
-  .detail-name-display { font-size: 24px; font-weight: bold; }
-  .detail-role-display { font-size: 14px; color: #666; margin-top: 2px; }
-  .detail-side { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-  .detail-side button svg { display: inline-block; }
+  .section-title:first-of-type { margin-top: var(--sp-2); }
+  .detail-header { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-4); flex-wrap: wrap; }
+  .detail-name-display { font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
+  .detail-role-display { font-size: 14px; color: var(--c-fg-muted); margin-top: 2px; }
+  .detail-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: var(--sp-2); }
+  .detail-side { display: flex; gap: var(--sp-2); align-items: center; flex-wrap: wrap; }
+  .detail-side button svg { display: inline-block; vertical-align: -2px; }
 
-  .panel { background: #fff; border: 1px solid #999; border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; }
-  .panel-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .panel { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg); padding: var(--sp-4); margin-bottom: var(--sp-4); box-shadow: var(--shadow-sm); }
+  .panel-head { display: flex; align-items: baseline; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-3); }
   .panel-head h2 { margin: 0; }
-  .grid-2col { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
-  .readout { margin-top: 10px; font-size: 13px; color: #444; background: #f4f6f8; border-radius: 8px; padding: 8px 10px; }
-  .hint { font-size: 11px; color: #888; font-weight: normal; text-transform: none; display: block; margin-top: 3px; }
+  .grid-2col { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--sp-3); }
+  .readout { margin-top: var(--sp-3); font-size: 13px; color: var(--c-fg-muted); background: var(--c-muted); border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); }
+  .readout b { color: var(--c-fg); }
+  .hint { font-size: 11px; color: var(--c-fg-muted); font-weight: 400; text-transform: none; letter-spacing: 0; display: block; margin-top: 3px; }
 
-  .payments-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
-  .payment-row { display: grid; grid-template-columns: 130px 1fr 1fr 90px 32px; gap: 8px; align-items: center; }
-  .payment-row .amt { font-weight: bold; }
-  .payment-add-row { display: grid; grid-template-columns: 130px 130px 1fr auto; gap: 8px; align-items: end; }
-  .icon-btn { background: none; border: none; cursor: pointer; font-size: 15px; padding: 2px 6px; }
+  .payments-list { display: flex; flex-direction: column; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+  .payment-row { display: grid; grid-template-columns: 130px 1fr 1fr 90px 40px; gap: var(--sp-2); align-items: center; padding: var(--sp-2); border: 1px solid var(--c-border); border-radius: var(--r-md); background: var(--c-muted); }
+  .payment-row .amt { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .payment-add-row { display: grid; grid-template-columns: 130px 130px 1fr auto; gap: var(--sp-2); align-items: end; }
+  .icon-btn {
+    min-height: 36px; min-width: 36px; background: none; border: none; cursor: pointer;
+    padding: 4px 6px; color: var(--c-fg-muted); border-radius: var(--r-sm); display: inline-flex;
+    align-items: center; justify-content: center;
+  }
+  .icon-btn:hover { background: var(--c-danger-soft); color: var(--c-danger); }
 
-  /* Month+Salary row pickers — same "add a row" idiom as Guest Entry's
-     room rows (Room+Rent), just Month+Salary instead. Used both when
-     creating an employee and for bulk-adding months on their own page. */
-  .ms-row-head { display: grid; grid-template-columns: 170px 1fr 32px; gap: 8px; margin-bottom: 4px; }
-  .ms-rows { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
-  .ms-row { display: grid; grid-template-columns: 170px 1fr 32px; gap: 8px; align-items: center; }
+  /* Month+Salary row pickers — queue up several Month+Salary rows and
+     save them all at once (Add Employee, and "+ Add Months" on a person). */
+  .ms-row-head { display: grid; grid-template-columns: 170px 1fr 40px; gap: var(--sp-2); margin-bottom: var(--sp-1); }
+  .ms-rows { display: flex; flex-direction: column; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+  .ms-row { display: grid; grid-template-columns: 170px 1fr 40px; gap: var(--sp-2); align-items: center; }
 
-  .summary-bar { display: flex; gap: 0; border: 1px solid #999; border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
-  .summary-box { flex: 1; padding: 12px 14px; border-right: 1px solid #999; }
+  .summary-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); border: 1px solid var(--c-border); border-radius: var(--r-lg); overflow: hidden; margin-bottom: var(--sp-4); background: var(--c-surface); box-shadow: var(--shadow-sm); }
+  .summary-box { padding: var(--sp-3) var(--sp-4); border-right: 1px solid var(--c-border); }
   .summary-box:last-child { border-right: none; }
-  .summary-box .lbl { font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 4px; }
-  .summary-box .val { font-size: 18px; font-weight: bold; }
+  .summary-box .lbl { font-size: 10px; color: var(--c-fg-muted); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; margin-bottom: 2px; }
+  .summary-box .val { font-size: 18px; font-weight: 700; letter-spacing: -.02em; }
 
   .ledger-table tbody tr { cursor: pointer; }
-  .ledger-table tbody tr:hover { background: #f4f6f8 !important; }
-  .ledger-table tr.editing-row { background: #eef0fd !important; }
-  .ledger-table td.this-month { background: #fff8e1; }
-  .ledger-table tr.editing-row td.this-month { background: #fdeec2; }
+  .ledger-table tbody tr:hover { background: var(--c-primary-soft); }
+  .ledger-table tr.editing-row { background: var(--c-primary-soft); box-shadow: inset 3px 0 0 var(--c-primary); }
+  .ledger-table td.this-month { background: var(--c-accent-soft); }
+  .ledger-table tr.editing-row td.this-month { background: #FDE8B0; }
 
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+  /* ---- modals --------------------------------------------------------- */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.5); align-items: center; justify-content: center; z-index: 1000; padding: var(--sp-4); }
   .modal-overlay.active { display: flex; }
-  .modal-box { background: #fff; border: 2px solid #000; border-radius: 12px; padding: 20px; max-width: 360px; width: 90%; }
+  .modal-box { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg); padding: var(--sp-5); max-width: 380px; width: 100%; max-height: 90dvh; overflow-y: auto; box-shadow: var(--shadow-lg); }
   .modal-box p { margin-top: 0; }
-  .modal-box .field { margin-bottom: 10px; }
-  .modal-actions { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; }
-  .modal-actions button.confirm-danger { background: #c0392b; color: #fff; border-color: #c0392b; }
+  .modal-box .field { margin-bottom: var(--sp-3); }
+  .modal-actions { display: flex; gap: var(--sp-2); margin-top: var(--sp-4); justify-content: flex-end; }
+  .modal-actions button.confirm-danger { background: var(--c-danger); color: #fff; border-color: var(--c-danger); }
+  .check-row { display: flex; align-items: center; gap: var(--sp-2); min-height: 44px; cursor: pointer; }
+  .check-row input[type="checkbox"] { width: 18px; height: 18px; margin: 0; flex: none; accent-color: var(--c-primary); cursor: pointer; }
+  .check-row span { font-size: 14px; }
+  .check-row .hint { margin-top: 0; }
 
+  /* ---- responsive ------------------------------------------------------
+     Phone-first adjustments: edge-to-edge surface, full-width actions,
+     stacked form rows, and tables that turn into labelled cards instead
+     of forcing a sideways scroll on a 375px screen. */
+  @media (max-width: 1024px) {
+    .payment-row { grid-template-columns: 120px 1fr 90px 40px; }
+    .payment-row .note-cell { grid-column: 1 / -1; }
+  }
+
+  @media (max-width: 768px) {
+    body { padding: 0; background: var(--c-surface); }
+    .container { border: none; border-radius: 0; box-shadow: none; padding: var(--sp-4) var(--sp-4) var(--sp-8); max-width: 100%; }
+    .app-head { margin: calc(var(--sp-4) * -1) calc(var(--sp-4) * -1) var(--sp-4); padding: var(--sp-3) var(--sp-4); border-radius: 0; }
+    .app-head-row { gap: var(--sp-2); }
+    .toolbar { width: 100%; margin-left: 0; }
+    .toolbar button { flex: 1 1 auto; min-height: 44px; }
+    .rd-switch { width: 100%; }
+    .rd-switch-btn { flex: 1; min-height: 40px; }
+    #statusMsg { width: 100%; }
+    h1 { font-size: 20px; }
+    .company-snapshot { grid-template-columns: 1fr 1fr; gap: var(--sp-2); }
+    .cs-item { padding: var(--sp-2) var(--sp-3); }
+    .cs-item .cs-value { font-size: 19px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; gap: var(--sp-2); }
+    .stat-value { font-size: 20px; }
+    .people-grid { grid-template-columns: 1fr; }
+    .grp-body { padding: var(--sp-3); }
+    .grp-head { padding: var(--sp-3); }
+    .grp-totals { margin-left: 0; width: 100%; justify-content: space-between; gap: var(--sp-2); }
+    .detail-side { width: 100%; }
+    .detail-side button { flex: 1; min-height: 44px; }
+    .grid-2col { grid-template-columns: 1fr; }
+    .summary-bar { grid-template-columns: 1fr 1fr; }
+    .summary-box { border-bottom: 1px solid var(--c-border); }
+    .ms-row-head { display: none; }
+    .ms-row { grid-template-columns: 1fr 1fr 40px; }
+    .payment-add-row { grid-template-columns: 1fr 1fr; }
+    .payment-add-row > div:nth-child(3) { grid-column: 1 / -1; }
+    .payment-add-row button { grid-column: 1 / -1; min-height: 44px; }
+    .payment-row { grid-template-columns: 1fr auto 40px; }
+    .payment-row .note-cell { grid-column: 1 / -1; }
+    .modal-overlay { align-items: flex-end; padding: 0; }
+    .modal-box { max-width: 100%; border-radius: var(--r-lg) var(--r-lg) 0 0; padding: var(--sp-4); max-height: 88dvh; }
+    .modal-actions button { flex: 1; min-height: 44px; }
+
+    /* Stacked "card" tables — each cell keeps its column name so nothing
+       needs a horizontal scrollbar on a phone. */
+    .table-wrap { border: none; overflow: visible; }
+    .stack-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .stack-table, .stack-table tbody, .stack-table tr, .stack-table td { display: block; width: 100%; }
+    .stack-table tr {
+      border: 1px solid var(--c-border); border-radius: var(--r-lg); margin-bottom: var(--sp-2);
+      padding: var(--sp-2) var(--sp-3); background: var(--c-surface); box-shadow: var(--shadow-sm);
+    }
+    .stack-table td {
+      border: none; padding: 5px 0; display: flex; justify-content: space-between;
+      align-items: center; gap: var(--sp-3); text-align: right;
+    }
+    .stack-table td::before {
+      content: attr(data-label); text-align: left; flex: none;
+      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--c-fg-muted);
+    }
+    .stack-table td:first-child { font-size: 15px; font-weight: 600; border-bottom: 1px solid var(--c-border); padding-bottom: var(--sp-2); margin-bottom: var(--sp-1); }
+    .stack-table td:first-child::before { content: none; }
+    .stack-table tr.grp-row, .stack-table tr.grp-total-row { display: none; }
+  }
+
+  @media (max-width: 480px) {
+    .company-snapshot, .stats-grid { grid-template-columns: 1fr; }
+    .summary-bar { grid-template-columns: 1fr; }
+    .toolbar button { flex: 1 1 100%; }
+  }
   /* flatpickr — themed to match the app's plain black/white look instead
      of its default blue, and kept looking like a normal editable field
      (not our usual grayed-out [readonly] style) since it opens the
@@ -197,14 +454,17 @@
   @media print {
     body { background: #fff; }
     .container { max-width: 100%; box-shadow: none; border: none; padding: 0; }
-    .toolbar, .backlink, .icon-btn, #addPaymentBtn, .payment-add-row, #addMonthsPanel,
+    .app-head { position: static; margin: 0 0 8px; padding: 0; border: none; }
+    .app-mark, .app-sub { display: none; }
+    .grp-section, .panel, .table-wrap { box-shadow: none; }
+    .toolbar, .backlink, .icon-btn, #addPaymentBtn, .payment-add-row, #addMonthsPanel, .grp-chips,
     .modal-overlay, .flatpickr-calendar, button { display: none !important; }
     input { border: none; background: transparent; padding: 2px; }
     .print-only { display: block; margin: -6px 0 16px; font-size: 12px; color: #666; }
     /* Chrome/Safari drop background colors by default when printing —
        status pills, stat tiles and the black company-snapshot bar would
        otherwise print as plain white boxes with no way to tell them apart. */
-    .status-pill, .cs-item, .stat-icon, .pc-pending-box, th, .ledger-table td.this-month {
+    .status-pill, .cs-item, .stat-icon, .pc-pending-box, .badge, .grp-head, th, .ledger-table td.this-month {
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
     .panel, .person-card, .stat-card, table, .summary-bar { break-inside: avoid; }
@@ -215,18 +475,27 @@
 
 <div class="container">
 
-<h1>Riviera Salary Manager</h1>
-<div class="print-only" id="printMeta"></div>
-
-<div class="toolbar">
-  <button type="button" class="primary" onclick="openAddEmployeeModal()">+ Add Employee</button>
-  <button type="button" onclick="preparePrint()">Print</button>
-  <div class="rd-switch" id="viewSwitch">
-    <button type="button" class="rd-switch-btn active" id="switchCards" onclick="setViewMode('cards')">CARDS</button>
-    <button type="button" class="rd-switch-btn" id="switchTable" onclick="setViewMode('table')">TABLE</button>
+<div class="app-head">
+  <div class="app-head-row">
+    <div class="app-title">
+      <span class="app-mark" aria-hidden="true">RS</span>
+      <div>
+        <h1>Riviera Salary Manager</h1>
+        <div class="app-sub">Salaries, payments and pending balances by group</div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button type="button" class="primary" onclick="openAddEmployeeModal()">+ Add Employee</button>
+      <button type="button" onclick="preparePrint()">Print</button>
+      <div class="rd-switch" id="viewSwitch" role="group" aria-label="View mode">
+        <button type="button" class="rd-switch-btn active" id="switchCards" onclick="setViewMode('cards')" aria-pressed="true">Cards</button>
+        <button type="button" class="rd-switch-btn" id="switchTable" onclick="setViewMode('table')" aria-pressed="false">Table</button>
+      </div>
+      <span id="statusMsg" role="status" aria-live="polite"></span>
+    </div>
   </div>
-  <span id="statusMsg"></span>
 </div>
+<div class="print-only" id="printMeta"></div>
 
 <div class="view active" id="view-list">
 
@@ -241,18 +510,23 @@
     </div>
   </div>
 
+  <div class="grp-chips" id="grpChips" role="tablist" aria-label="Groups"></div>
+
   <div class="stats-grid">
     <div class="stat-card">
-      <div class="stat-head"><span class="stat-icon" style="background:#eaf2fe; color:#1a54c4;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></span><span class="stat-label">Total Salary (Lifetime)</span></div>
+      <div class="stat-head"><span class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></span><span class="stat-label">Total Salary (Lifetime)</span></div>
       <div class="stat-value" id="statSalary">0</div>
+      <div class="hint stat-scope">All groups</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-head"><span class="stat-icon" style="background:#e6f4ea; color:#1e8e3e;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg></span><span class="stat-label">Total Given (Lifetime)</span></div>
+    <div class="stat-card is-success">
+      <div class="stat-head"><span class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg></span><span class="stat-label">Total Given (Lifetime)</span></div>
       <div class="stat-value" id="statGiven">0</div>
+      <div class="hint stat-scope">All groups</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-head"><span class="stat-icon" style="background:#fce8ef; color:#c0392b;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/><path d="M9 12h6M9 16h6"/></svg></span><span class="stat-label">Total Pending — Right Now</span></div>
+    <div class="stat-card is-danger">
+      <div class="stat-head"><span class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/><path d="M9 12h6M9 16h6"/></svg></span><span class="stat-label">Total Pending — Right Now</span></div>
       <div class="stat-value" id="statPending">0</div>
+      <div class="hint stat-scope">All groups</div>
     </div>
   </div>
 
@@ -270,6 +544,7 @@
       <div>
         <div class="detail-name-display" id="dNameDisplay">—</div>
         <div class="detail-role-display" id="dRoleDisplay">—</div>
+        <div class="detail-badges" id="dBadges"></div>
         <div class="hint" id="dDateLeftDisplay"></div>
       </div>
       <div class="detail-side">
@@ -284,12 +559,12 @@
   <div class="panel">
     <h2>All Months</h2>
     <div class="hint" style="margin-bottom:10px;">Click any month below to edit it — no date picker needed.</div>
-    <div style="overflow-x:auto;">
-      <table class="ledger-table">
+    <div class="table-wrap">
+      <table class="ledger-table stack-table">
         <thead>
           <tr>
-            <th>Month</th><th>Base Salary</th><th>Days</th><th>Prorated</th>
-            <th>Given</th><th>This Month Pending</th><th>Prev Pending In</th><th>Total Pending</th><th>Status</th>
+            <th>Month</th><th class="num">Base Salary</th><th class="num">Days</th><th class="num">Prorated</th>
+            <th class="num">Given</th><th class="num">This Month Pending</th><th class="num">Prev Pending In</th><th class="num">Total Pending</th><th>Status</th>
           </tr>
         </thead>
         <tbody id="ledgerBody"><tr><td colspan="9" class="empty-note">Loading...</td></tr></tbody>
@@ -377,11 +652,25 @@
   </div>
 </div>
 
+<datalist id="deptOptions"></datalist>
+
 <div class="modal-overlay" id="addEmployeeModal">
   <div class="modal-box" style="max-width:440px;">
     <p>Add a new employee — one row per month, same as adding rooms to a booking:</p>
     <div class="field"><label>Name</label><input type="text" id="newEmpName"></div>
-    <div class="field"><label>Role</label><input type="text" id="newEmpRole"></div>
+    <div class="field"><label>Role</label><input type="text" id="newEmpRole" placeholder="e.g. Washer, Cook"></div>
+    <div class="field">
+      <label for="newEmpDept">Group</label>
+      <input type="text" id="newEmpDept" list="deptOptions" placeholder="e.g. Laundry, Kitchen">
+      <span class="hint">Pick an existing group or type a new one. Leave blank for Unassigned.</span>
+    </div>
+    <div class="field">
+      <label class="check-row" for="newEmpManager">
+        <input type="checkbox" id="newEmpManager">
+        <span>Manager of this group</span>
+      </label>
+      <span class="hint">Optional — a group can run with or without a manager.</span>
+    </div>
     <div class="field">
       <div class="ms-row-head"><label>Month</label><label>Salary</label><span></span></div>
       <div class="ms-rows" id="addEmpRowsList"></div>
@@ -399,6 +688,16 @@
     <p>Edit employee</p>
     <div class="field"><label>Name</label><input type="text" id="eName"></div>
     <div class="field"><label>Role</label><input type="text" id="eRole"></div>
+    <div class="field">
+      <label for="eDept">Group</label>
+      <input type="text" id="eDept" list="deptOptions" placeholder="Unassigned">
+    </div>
+    <div class="field">
+      <label class="check-row" for="eManager">
+        <input type="checkbox" id="eManager">
+        <span>Manager of this group</span>
+      </label>
+    </div>
     <div class="field">
       <label>Date Left</label>
       <div style="display:flex; gap:6px;">
@@ -452,6 +751,15 @@ function setStatus(msg, isError) {
   el.textContent = msg;
   el.style.color = isError ? '#c0392b' : '#666';
   if (msg && !isError) setTimeout(() => { if (el.textContent === msg) el.textContent = ''; }, 2500);
+}
+
+// The Groups feature needs two columns that older databases don't have.
+// PostgREST answers with PGRST204 / "column ... does not exist", which is
+// otherwise a completely opaque failure from the user's side.
+const SCHEMA_HINT = 'Your database is missing the Groups columns. Open Supabase > SQL Editor and run supabase_schema.sql once (it is safe to re-run), then reload this page.';
+function missingColumnHint(e) {
+  const msg = String((e && e.message) || e || '');
+  return /dept|is_manager|PGRST204|does not exist/i.test(msg) ? 'Run supabase_schema.sql — Groups columns missing' : '';
 }
 
 function money(n) {
@@ -572,8 +880,12 @@ function infoModalOk() {
 
 function setViewMode(mode) {
   viewMode = mode;
-  document.getElementById('switchCards').classList.toggle('active', mode === 'cards');
-  document.getElementById('switchTable').classList.toggle('active', mode === 'table');
+  const cards = document.getElementById('switchCards');
+  const table = document.getElementById('switchTable');
+  cards.classList.toggle('active', mode === 'cards');
+  table.classList.toggle('active', mode === 'table');
+  cards.setAttribute('aria-pressed', String(mode === 'cards'));
+  table.setAttribute('aria-pressed', String(mode === 'table'));
   renderPeople();
 }
 let viewMode = 'cards';
@@ -707,6 +1019,7 @@ async function fetchAllEmployeesFullLedger() {
     });
     return {
       employeeId: emp.id, name: emp.name, role: emp.role, dateLeft: emp.date_left,
+      dept: (emp.dept || '').trim(), isManager: !!emp.is_manager,
       total, given, pending, monthsCount: ms.length
     };
   });
@@ -738,6 +1051,69 @@ function renderCompanySnapshot() {
   document.getElementById('csPending').textContent = 'Rs. ' + money(totalPending);
 }
 
+// ---------------------------------------------------------------------
+// Groups (Laundry, Kitchen, ...). A group is just employees sharing the
+// same `dept`. One of them may be flagged as manager — or none of them,
+// which is equally valid; the header simply says so.
+// ---------------------------------------------------------------------
+const UNASSIGNED = 'Unassigned';
+let activeGroup = 'ALL';
+
+function groupNameOf(p) { return p.dept || UNASSIGNED; }
+
+function groupPeople(list) {
+  const map = new Map();
+  list.forEach(p => {
+    const g = groupNameOf(p);
+    if (!map.has(g)) map.set(g, []);
+    map.get(g).push(p);
+  });
+  // Managers first, then by name, so the person in charge heads the group.
+  const groups = [...map.entries()].map(([name, members]) => {
+    members.sort((a, b) =>
+      (b.isManager - a.isManager) || a.name.localeCompare(b.name));
+    const totals = members.reduce((acc, m) => {
+      acc.total += m.total; acc.given += m.given; acc.pending += m.pending;
+      return acc;
+    }, { total: 0, given: 0, pending: 0 });
+    return { name, members, manager: members.find(m => m.isManager) || null, ...totals };
+  });
+  // Real groups alphabetically; "Unassigned" always last.
+  groups.sort((a, b) =>
+    (a.name === UNASSIGNED) - (b.name === UNASSIGNED) || a.name.localeCompare(b.name));
+  return groups;
+}
+
+function visiblePeople() {
+  return activeGroup === 'ALL'
+    ? peopleCache
+    : peopleCache.filter(p => groupNameOf(p) === activeGroup);
+}
+
+function selectGroup(name) {
+  activeGroup = name;
+  renderPeople();
+}
+
+function renderGroupChips(groups) {
+  const el = document.getElementById('grpChips');
+  const allPending = peopleCache.reduce((s, p) => s + p.pending, 0);
+  const chip = (key, label, count, pending) => `
+    <button type="button" role="tab" aria-selected="${activeGroup === key}"
+            class="grp-chip${activeGroup === key ? ' active' : ''}" onclick="selectGroup('${escapeAttr(key)}')">
+      <span class="gc-name">${escapeHtml(label)}</span>
+      <span class="gc-meta">${count} ${count === 1 ? 'person' : 'people'} &middot; Rs. ${money(pending)}</span>
+    </button>`;
+  el.innerHTML =
+    chip('ALL', 'All Groups', peopleCache.length, allPending) +
+    groups.map(g => chip(g.name, g.name, g.members.length, g.pending)).join('');
+
+  // Keep the Add/Edit forms' group suggestions in sync with what exists.
+  document.getElementById('deptOptions').innerHTML =
+    groups.filter(g => g.name !== UNASSIGNED)
+          .map(g => `<option value="${escapeAttr(g.name)}"></option>`).join('');
+}
+
 function renderStats(list) {
   let total = 0, given = 0, pending = 0;
   list.forEach(p => { total += p.total; given += p.given; pending += p.pending; });
@@ -747,50 +1123,125 @@ function renderStats(list) {
 }
 
 function renderPeople() {
-  const list = peopleCache;
-  renderStats(list);
+  const groups = groupPeople(peopleCache);
+
+  // A group that no longer exists (last member moved out) falls back to All.
+  // Resolved before the chips render so the highlighted chip is never stale.
+  if (activeGroup !== 'ALL' && !groups.some(g => g.name === activeGroup)) activeGroup = 'ALL';
+  renderGroupChips(groups);
+
+  const shown = visiblePeople();
+  renderStats(shown);
+  const scope = activeGroup === 'ALL' ? 'All groups' : activeGroup;
+  document.querySelectorAll('.stat-scope').forEach(el => { el.textContent = scope; });
+
   const container = document.getElementById('peopleContainer');
-  if (list.length === 0) {
-    container.innerHTML = '<div class="empty-note">No employees yet. Click "+ Add Employee" to get started.</div>';
+  if (peopleCache.length === 0) {
+    container.innerHTML = '<div class="empty-note"><b>No employees yet</b>Click "+ Add Employee" to add your first person and their monthly salary.</div>';
     return;
   }
-  if (viewMode === 'table') {
-    const rows = list.map(p => `
-      <tr class="person-row" onclick="openDetail('${p.employeeId}')">
-        <td>${escapeHtml(p.name)}</td>
-        <td>${escapeHtml(p.role || '')}</td>
-        <td class="num">${money(p.total)}</td>
-        <td class="num">${money(p.given)}</td>
-        <td class="num ${p.pending > 0 ? 'neg' : 'pos'}"><b>${money(p.pending)}</b></td>
-        <td>${statusPillHtml(p.pending)}</td>
-      </tr>`).join('');
-    container.innerHTML = `
-      <div style="overflow-x:auto;">
-        <table>
-          <thead><tr>
-            <th>Name</th><th>Role</th><th>Total Salary</th><th>Given</th><th>Pending</th><th>Status</th>
-          </tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>`;
-  } else {
-    container.innerHTML = `<div class="people-grid">${list.map(p => `
-      <div class="person-card" onclick="openDetail('${p.employeeId}')">
-        <div class="pc-top">
-          <div><div class="pc-name">${escapeHtml(p.name)}</div><div class="pc-role">${escapeHtml(p.role || '')}</div></div>
-          ${statusPillHtml(p.pending)}
-        </div>
-        <div class="pc-rows">
-          <div class="pc-row"><span class="lbl">Total Salary</span><span>Rs. ${money(p.total)}</span></div>
-          <div class="pc-row"><span class="lbl">Given</span><span>Rs. ${money(p.given)}</span></div>
-        </div>
-        <div class="pc-divider"></div>
-        <div class="pc-pending-box pc-pending-full ${p.pending > 0 ? '' : 'pc-paid-out'}">
-          <div class="pc-pending-lbl">Pending</div>
-          <div class="pc-pending-val ${p.pending > 0 ? 'neg' : 'pos'}">Rs. ${money(p.pending)}</div>
-        </div>
-      </div>`).join('')}</div>`;
+  if (shown.length === 0) {
+    container.innerHTML = '<div class="empty-note"><b>Nobody in this group</b>Add someone to it, or pick a different group above.</div>';
+    return;
   }
+
+  const shownGroups = activeGroup === 'ALL' ? groups : groups.filter(g => g.name === activeGroup);
+  container.innerHTML = viewMode === 'table'
+    ? renderGroupedTable(shownGroups)
+    : shownGroups.map(renderGroupSection).join('');
+}
+
+function groupTotalsHtml(g) {
+  return `
+    <div class="grp-totals">
+      <div class="grp-tot"><span class="grp-lbl">Salary</span><span class="grp-val">Rs. ${money(g.total)}</span></div>
+      <div class="grp-tot"><span class="grp-lbl">Given</span><span class="grp-val">Rs. ${money(g.given)}</span></div>
+      <div class="grp-tot"><span class="grp-lbl">Pending</span><span class="grp-val ${g.pending > 0 ? 'neg' : 'pos'}">Rs. ${money(g.pending)}</span></div>
+    </div>`;
+}
+
+function renderGroupSection(g) {
+  return `
+    <section class="grp-section">
+      <header class="grp-head">
+        <div>
+          <div class="grp-title">${escapeHtml(g.name)}</div>
+          <div class="grp-manager">${g.manager
+            ? 'Manager: <b>' + escapeHtml(g.manager.name) + '</b>'
+            : 'No manager assigned'} &middot; ${g.members.length} ${g.members.length === 1 ? 'person' : 'people'}</div>
+        </div>
+        ${groupTotalsHtml(g)}
+      </header>
+      <div class="grp-body">
+        <div class="people-grid">${g.members.map(personCardHtml).join('')}</div>
+      </div>
+    </section>`;
+}
+
+function initials(name) {
+  const parts = String(name || '?').trim().split(/\s+/).filter(Boolean);
+  return ((parts[0] || '?')[0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+}
+
+function personCardHtml(p) {
+  return `
+    <div class="person-card${p.isManager ? ' is-manager' : ''}" role="button" tabindex="0"
+         onclick="openDetail('${p.employeeId}')"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openDetail('${p.employeeId}');}">
+      <div class="pc-top">
+        <div class="pc-avatar" aria-hidden="true">${escapeHtml(initials(p.name))}</div>
+        <div class="pc-id">
+          <div class="pc-name">${escapeHtml(p.name)}</div>
+          <div class="pc-role">${escapeHtml(p.role || '—')}</div>
+        </div>
+        ${p.isManager ? '<span class="badge manager">Manager</span>' : statusPillHtml(p.pending)}
+      </div>
+      <div class="pc-rows">
+        <div class="pc-row"><span class="lbl">Total Salary</span><span>Rs. ${money(p.total)}</span></div>
+        <div class="pc-row"><span class="lbl">Given</span><span>Rs. ${money(p.given)}</span></div>
+      </div>
+      <div class="pc-divider"></div>
+      <div class="pc-pending-box pc-pending-full ${p.pending > 0 ? '' : 'pc-paid-out'}">
+        <span class="pc-pending-lbl">Pending</span>
+        <span class="pc-pending-val ${p.pending > 0 ? 'neg' : 'pos'}">Rs. ${money(p.pending)}</span>
+      </div>
+    </div>`;
+}
+
+// Table view keeps the same grouping: a header row per group, its people,
+// then a subtotal row. On phones the group rows collapse away and each
+// person becomes a labelled card (see .stack-table in the stylesheet).
+function renderGroupedTable(groups) {
+  const body = groups.map(g => {
+    const head = `<tr class="grp-row"><td colspan="6">${escapeHtml(g.name)} — ${g.members.length} ${g.members.length === 1 ? 'person' : 'people'}${g.manager ? ' &middot; Manager: ' + escapeHtml(g.manager.name) : ' &middot; No manager'}</td></tr>`;
+    const rows = g.members.map(p => `
+      <tr class="person-row" onclick="openDetail('${p.employeeId}')">
+        <td data-label="Name">${escapeHtml(p.name)}${p.isManager ? ' <span class="badge manager">Manager</span>' : ''}</td>
+        <td data-label="Role">${escapeHtml(p.role || '—')}</td>
+        <td data-label="Group">${escapeHtml(groupNameOf(p))}</td>
+        <td class="num" data-label="Total Salary">${money(p.total)}</td>
+        <td class="num" data-label="Given">${money(p.given)}</td>
+        <td class="num ${p.pending > 0 ? 'neg' : 'pos'}" data-label="Pending">${money(p.pending)}</td>
+      </tr>`).join('');
+    const sub = `
+      <tr class="grp-total-row">
+        <td colspan="3">${escapeHtml(g.name)} total</td>
+        <td class="num">${money(g.total)}</td>
+        <td class="num">${money(g.given)}</td>
+        <td class="num ${g.pending > 0 ? 'neg' : 'pos'}">${money(g.pending)}</td>
+      </tr>`;
+    return head + rows + sub;
+  }).join('');
+  return `
+    <div class="table-wrap">
+      <table class="stack-table">
+        <thead><tr>
+          <th>Name</th><th>Role</th><th>Group</th>
+          <th class="num">Total Salary</th><th class="num">Given</th><th class="num">Pending</th>
+        </tr></thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>`;
 }
 
 function statusPillHtml(pending) {
@@ -801,6 +1252,12 @@ function statusPillHtml(pending) {
 function escapeHtml(s) {
   return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+// For values that end up inside a quoted onclick="fn('...')" string:
+// escapeHtml already neutralises quotes and angle brackets, but a literal
+// backslash would still escape the JS string delimiter.
+function escapeAttr(s) {
+  return escapeHtml(String(s || '').split('\\').join(''));
+}
 
 // ---------------------------------------------------------------------
 // Add Employee modal — one row per month (Month + Salary), same idiom as
@@ -810,9 +1267,15 @@ function escapeHtml(s) {
 // ---------------------------------------------------------------------
 let addEmpRows = [];
 
+// Group names go through this on the way in so a stored name always
+// matches the one rendered into the chip's onclick handler.
+function cleanDept(v) { return String(v || '').split('\\').join('').trim(); }
+
 function openAddEmployeeModal() {
   document.getElementById('newEmpName').value = '';
   document.getElementById('newEmpRole').value = '';
+  document.getElementById('newEmpDept').value = activeGroup === 'ALL' || activeGroup === UNASSIGNED ? '' : activeGroup;
+  document.getElementById('newEmpManager').checked = false;
   addEmpRows = [{ month: currentCalendarMonth(), salary: '' }];
   renderAddEmpRows();
   document.getElementById('addEmployeeModal').classList.add('active');
@@ -846,6 +1309,8 @@ function addEmpRemoveRow(idx) {
 async function addEmployeeConfirm() {
   const name = document.getElementById('newEmpName').value.trim();
   const role = document.getElementById('newEmpRole').value.trim();
+  const dept = cleanDept(document.getElementById('newEmpDept').value);
+  const is_manager = document.getElementById('newEmpManager').checked;
   if (!name) { showInfo('Please enter a name.'); return; }
   const rows = addEmpRows
     .filter(r => r.month)
@@ -860,7 +1325,7 @@ async function addEmployeeConfirm() {
   if (btn) btn.disabled = true;
   setStatus('Creating...');
   try {
-    const emp = await sbPost(EMP_URL, { name, role: role || null });
+    const emp = await sbPost(EMP_URL, { name, role: role || null, dept: dept || null, is_manager });
     for (const r of rows) {
       await createSalaryMonthRow(emp.id, r.month, r.salary);
     }
@@ -868,7 +1333,8 @@ async function addEmployeeConfirm() {
     await loadList();
   } catch (e) {
     console.error(e);
-    setStatus('Failed to create employee', true);
+    setStatus(missingColumnHint(e) || 'Failed to create employee', true);
+    if (missingColumnHint(e)) showInfo(SCHEMA_HINT);
   } finally {
     if (btn) btn.disabled = false;
   }
@@ -889,11 +1355,17 @@ function renderPersonalDetail() {
   document.getElementById('dDateLeftDisplay').textContent = detailEmployee.date_left
     ? 'Left ' + formatDateDisplay(detailEmployee.date_left)
     : 'Currently employed';
+  const badges = [`<span class="badge group">${escapeHtml(detailEmployee.dept || UNASSIGNED)}</span>`];
+  if (detailEmployee.is_manager) badges.push('<span class="badge manager">Manager</span>');
+  document.getElementById('dBadges').innerHTML = badges.join('');
 }
 
 function showListView() {
   document.getElementById('view-list').classList.add('active');
   document.getElementById('view-detail').classList.remove('active');
+  // Cards/Table only means something on the list.
+  document.getElementById('viewSwitch').style.display = '';
+  window.scrollTo({ top: 0, behavior: 'auto' });
   detailEmployeeId = null;
   detailEmployee = null;
   detailSalaryMonthId = null;
@@ -905,6 +1377,8 @@ async function openDetail(employeeId) {
   detailEmployeeId = employeeId;
   document.getElementById('view-list').classList.remove('active');
   document.getElementById('view-detail').classList.add('active');
+  document.getElementById('viewSwitch').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'auto' });
   setStatus('Loading...');
   try {
     const emp = (await sbGet(`${EMP_URL}?select=*&id=eq.${employeeId}`))[0];
@@ -1070,14 +1544,14 @@ async function loadPayments() {
 function renderPayments() {
   const el = document.getElementById('paymentsList');
   if (currentPayments.length === 0) {
-    el.innerHTML = '<div class="empty-note">No payments logged this month yet.</div>';
+    el.innerHTML = '<div class="empty-note"><b>Nothing given yet</b>Log a payment below once money changes hands.</div>';
     return;
   }
   el.innerHTML = currentPayments.map(p => `
     <div class="payment-row">
       <div>${p.pay_date || ''}</div>
       <div class="amt">Rs. ${money(p.amount)}</div>
-      <div>${escapeHtml(p.note || '')}</div>
+      <div class="note-cell">${escapeHtml(p.note || '')}</div>
       <div></div>
       <button type="button" class="icon-btn" onclick="removePayment('${p.id}')" aria-label="Remove payment">${ICON_TRASH}</button>
     </div>`).join('');
@@ -1150,6 +1624,8 @@ let newPayDatePicker = null; // flatpickr instance for the Given section's payme
 function openEditEmployeeModal() {
   document.getElementById('eName').value = detailEmployee.name || '';
   document.getElementById('eRole').value = detailEmployee.role || '';
+  document.getElementById('eDept').value = detailEmployee.dept || '';
+  document.getElementById('eManager').checked = !!detailEmployee.is_manager;
   if (eDateLeftPicker) eDateLeftPicker.setDate(detailEmployee.date_left || null, false);
   else document.getElementById('eDateLeft').value = detailEmployee.date_left || '';
   document.getElementById('editEmployeeModal').classList.add('active');
@@ -1163,20 +1639,23 @@ function clearEDateLeft() {
 async function editEmployeeSave() {
   const name = document.getElementById('eName').value.trim();
   const role = document.getElementById('eRole').value.trim() || null;
+  const dept = cleanDept(document.getElementById('eDept').value) || null;
+  const is_manager = document.getElementById('eManager').checked;
   const date_left = document.getElementById('eDateLeft').value || null;
   if (!name) { showInfo('Name cannot be empty.'); return; }
   const btn = document.querySelector('#editEmployeeModal .primary');
   if (btn) btn.disabled = true;
   setStatus('Saving...');
   try {
-    await sbPatch(`${EMP_URL}?id=eq.${detailEmployeeId}`, { name, role, date_left });
-    detailEmployee = Object.assign({}, detailEmployee, { name, role, date_left });
+    await sbPatch(`${EMP_URL}?id=eq.${detailEmployeeId}`, { name, role, dept, is_manager, date_left });
+    detailEmployee = Object.assign({}, detailEmployee, { name, role, dept, is_manager, date_left });
     renderPersonalDetail();
     document.getElementById('editEmployeeModal').classList.remove('active');
     setStatus('Saved');
   } catch (e) {
     console.error(e);
-    setStatus('Failed to save', true);
+    setStatus(missingColumnHint(e) || 'Failed to save', true);
+    if (missingColumnHint(e)) showInfo(SCHEMA_HINT);
   } finally {
     if (btn) btn.disabled = false;
   }
@@ -1218,7 +1697,7 @@ async function refreshLedger() {
   const tbody = document.getElementById('ledgerBody');
   try {
     const months = await sbGet(`${SM_URL}?select=*&employee_id=eq.${detailEmployeeId}&deleted=eq.false&order=month.asc`);
-    if (months.length === 0) { tbody.innerHTML = '<tr><td colspan="9" class="empty-note">No months on record.</td></tr>'; return; }
+    if (months.length === 0) { tbody.innerHTML = '<tr><td colspan="9" class="empty-note"><b>No months on record</b>Use "+ Add Months" below to start this ledger.</td></tr>'; return; }
     // One batched query for every month's payments instead of one round
     // trip per row — this is what made opening a long-tenured employee
     // feel slow.
@@ -1238,15 +1717,15 @@ async function refreshLedger() {
       const tm = isCurrentCalendarMonth ? 'this-month' : '';
       return `
         <tr${isEditing ? ' class="editing-row"' : ''} onclick="selectLedgerMonth('${m.month}')">
-          <td class="${tm}">${formatMonthLabel(m.month)}${isCurrentCalendarMonth ? ' (current)' : ''}</td>
-          <td class="num ${tm}">${money(m.base_salary)}</td>
-          <td class="num ${tm}">${m.days_worked ? m.days_worked + '/' + STANDARD_DAYS : 'Full'}</td>
-          <td class="num ${tm}">${money(prorated)}</td>
-          <td class="num ${tm}">${money(paid)}</td>
-          <td class="num ${tm} ${thisMonthOwed > 0 ? 'neg' : 'pos'}">${money(thisMonthOwed)}</td>
-          <td class="num ${tm}">${money(prevPending)}</td>
-          <td class="num ${tm} ${remaining > 0 ? 'neg' : 'pos'}"><b>${money(remaining)}</b></td>
-          <td class="${tm}">${statusPillHtml(remaining)}</td>
+          <td class="${tm}" data-label="Month">${formatMonthLabel(m.month)}${isCurrentCalendarMonth ? ' (current)' : ''}</td>
+          <td class="num ${tm}" data-label="Base Salary">${money(m.base_salary)}</td>
+          <td class="num ${tm}" data-label="Days">${m.days_worked ? m.days_worked + '/' + STANDARD_DAYS : 'Full'}</td>
+          <td class="num ${tm}" data-label="Prorated">${money(prorated)}</td>
+          <td class="num ${tm}" data-label="Given">${money(paid)}</td>
+          <td class="num ${tm} ${thisMonthOwed > 0 ? 'neg' : 'pos'}" data-label="This Month Pending">${money(thisMonthOwed)}</td>
+          <td class="num ${tm}" data-label="Prev Pending In">${money(prevPending)}</td>
+          <td class="num ${tm} ${remaining > 0 ? 'neg' : 'pos'}" data-label="Total Pending"><b>${money(remaining)}</b></td>
+          <td class="${tm}" data-label="Status">${statusPillHtml(remaining)}</td>
         </tr>`;
     });
     tbody.innerHTML = rowsHtml.join('');

@@ -54,3 +54,14 @@ create policy "public all salary months" on riviera_salary_months for all using 
 
 drop policy if exists "public all payments" on riviera_salary_payments;
 create policy "public all payments" on riviera_salary_payments for all using (true) with check (true);
+
+-- ---------------------------------------------------------------------
+-- Groups / departments (Laundry, Kitchen, ...). Added later; re-running
+-- the whole file is safe because these are "if not exists" too.
+--   dept       : which group the person belongs to (null = Unassigned)
+--   is_manager : marks this person as that group's manager. A group can
+--                have a manager or no manager at all — both are fine.
+-- ---------------------------------------------------------------------
+alter table riviera_employees add column if not exists dept text;
+alter table riviera_employees add column if not exists is_manager boolean not null default false;
+create index if not exists riviera_employees_dept_idx on riviera_employees (dept);
