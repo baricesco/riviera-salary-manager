@@ -1292,20 +1292,20 @@ async function fetchAllEmployeesFullLedger() {
 let peopleCache = [];
 
 async function loadList() {
-  console.log(‘=== loadList starting ===’);
-  document.getElementById(‘peopleContainer’).innerHTML = ‘<div class="empty-note">Loading...</div>’;
+  console.log('=== loadList starting ===');
+  document.getElementById('peopleContainer').innerHTML = '<div class="empty-note">Loading...</div>';
   try {
     peopleCache = await fetchAllEmployeesFullLedger();
-    console.log(‘Fetched’, peopleCache.length, ‘employees’);
+    console.log('Fetched', peopleCache.length, 'employees');
     renderPeople();
     renderCompanySnapshot();
     refreshTrashCount();
     ensureAllCurrentMonth();
   } catch (e) {
-    console.error(‘=== Load failed ===’, e);
-    document.getElementById(‘peopleContainer’).innerHTML =
-      ‘<div class="empty-note"><b>Couldn’t load</b>Run supabase_schema.sql in Supabase, then reload.</div>’;
-    setStatus(‘Load failed’, true);
+    console.error('=== Load failed ===', e);
+    document.getElementById('peopleContainer').innerHTML =
+      '<div class="empty-note"><b>Couldn\'t load</b> Run supabase_schema.sql in Supabase, then reload.</div>';
+    setStatus('Load failed', true);
   }
 }
 
